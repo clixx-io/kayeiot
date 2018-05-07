@@ -13,6 +13,8 @@ tool to make designing and documenting IoT systems easier.
 
 # Screenshots
 
+![Screenshot](https://github.com/clixx-io/kayiot/raw/master/doc/images/2018-05-08-084500.png)
+
 # Install
 
 You will need Qt 5 to build and operate this program.
