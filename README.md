@@ -12,8 +12,7 @@ This (kayeiot) is fast and written in C++. It has been written as an Open-Source
 tool to make designing and documenting IoT systems easier.
 
 # Screenshots
-
-![Screenshot](https://github.com/clixx-io/kayiot/raw/master/doc/images/2018-05-08-084500.png)
+![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-05-08-084500.png)
 
 # Install
 
