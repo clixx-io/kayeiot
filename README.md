@@ -1,4 +1,6 @@
-KayeIoT (pronounced Coyote) is a Cable-Level IoT and Electronics System Design tool.
+# KayeIoT (pronounced Coyote) 
+
+This project is an Open-Source Cable-Level IoT and Electronics System Design tool.
 
 The originator describes it as follows:
 
@@ -21,11 +23,9 @@ Run from the command line:
 
     >kayeiot
 
-
 # Project
 
-The python-markdown2 project lives at
-<https://github.com/clixx-io/kayeiot/>.  
+The KayeIoT project lives at <https://github.com/clixx-io/kayeiot/>.  
 
 To report a bug: <https://github.com/clixx-io/kayiot/issues>
 
