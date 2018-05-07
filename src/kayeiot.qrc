@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/res">
+        <file>qt.png</file>
+        <file>res/cplus.png</file>
+        <file>res/build-32.png</file>
+        <file>res/run-32.png</file>
+        <file>res/save-32.png</file>
+        <file>res/welcome-32.png</file>
+        <file>res/device-32.png</file>
+        <file>res/logic-32.png</file>
+        <file>res/connectivity-32.png</file>
+        <file>res/mainboard-rpi0.PNG</file>
+        <file>res/mainboard-rpi3.PNG</file>
+    </qresource>
+</RCC>
