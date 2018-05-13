@@ -165,6 +165,8 @@ void MainWindow::setupMenuBar()
     menu->addSeparator();
     EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
     menu->addSeparator();
+    EditMenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
+    menu->addSeparator();
     EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
 
     buildWindowMenu = menuBar()->addMenu(tr("&Build"));
@@ -928,6 +930,21 @@ void MainWindow::addComponentWizard()
 {
     QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("New Component Wizard is not yet implemented"),QMessageBox::Ok);
     msgBox.exec();
+}
+
+void MainWindow::showLibrary()
+{
+    QString dirname = QDir::toNativeSeparators(settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString());
+
+    if (!QDir(dirname).exists())
+    {
+        // Create the board directory
+        QDir().mkdir(dirname);
+
+        showStatusMessage(tr("Created %1 directory for storage of .board files").arg(dirname));
+    }
+
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dirname));
 }
 
 void MainWindow::aboutDialog()
