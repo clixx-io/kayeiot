@@ -524,16 +524,10 @@ void HardwareLayoutWidget::SelectionChanged()
 
         // Check if the pin-numbers are 0 based or 1 based
         if (itemPinAssignments.size()){
-            if (itemPinAssignments[0] == "-")
-            {
-                qDebug() << "1 based offset";
-            }
-            else
+            if (itemPinAssignments[0] != "-")
             {
                 pinoffset = 0;
-                qDebug() << "0 based offset";
             }
-
         }
 
         foreach (QString pinvalue, itemPinAssignments)

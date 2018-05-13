@@ -868,7 +868,25 @@ void MainWindow::AddConnection()
         userchoices[tr("component_%1_name").arg(c)] = gfitem->getName();
         c++;
     }
-    userchoices["component_count"] = c;
+    userchoices["component_count"] = c - 1;
+
+    // Find the selected component
+    QString selectedID;
+    QList <QGraphicsItem *> selection = systemDesign->selectedItems();
+    foreach (QGraphicsItem *item, selection)
+    {
+        connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(item);
+        if (h)
+        {
+            selectedID = h->getID();
+        }
+        connectableGraphic *g = qgraphicsitem_cast<connectableGraphic *>(item);
+        if (g)
+        {
+            selectedID = g->getID();
+        }
+    }
+    userchoices["selected_component_id"] = selectedID;
 
     NewConnectionItemDialog *dlg = new NewConnectionItemDialog(this, &userchoices);
     if (dlg->exec())

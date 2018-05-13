@@ -233,6 +233,7 @@ public:
     QString getNextName(QString prefix);
     QList <connectableHardware *> getHardwareComponents();
     QList <connectableGraphic *> getGraphicComponents();
+    QList <QGraphicsItem *> selectedItems(){ return(scene->selectedItems());}
 
     QStringList getConnectionPointNames();
 

@@ -105,6 +105,9 @@ void NewConnectionItemDialog::loadParameters(QJsonObject &parameters)
     {
         QString ckeyid, ckeyname;
 
+        QString selectedID = parameters["selected_component_id"].toString();
+        qDebug() << "SelectedID" << selectedID;
+
         for (int i=0; i<parameters["component_count"].toInt(); i++)
         {
             ckeyid = QObject::tr("component_%1_id").arg(i+1);
@@ -112,11 +115,23 @@ void NewConnectionItemDialog::loadParameters(QJsonObject &parameters)
 
             qDebug() << parameters[ckeyname].toString();
 
-            ui->fromcomboBox->addItem(parameters[ckeyname].toString(),parameters[ckeyid].toString());
-            ui->tocomboBox->addItem(parameters[ckeyname].toString(),parameters[ckeyid].toString());
+            if (selectedID.length())
+            {
+                if (selectedID == parameters[ckeyid].toString())
+                    ui->fromcomboBox->addItem(parameters[ckeyname].toString(),parameters[ckeyid].toString());
+            }
+            else
+            {
+                ui->fromcomboBox->addItem(parameters[ckeyname].toString(),parameters[ckeyid].toString());
+            }
+
+            // -- Only add the destination if it's not selected
+            if (selectedID != parameters[ckeyid].toString())
+                ui->tocomboBox->addItem(parameters[ckeyname].toString(),parameters[ckeyid].toString());
 
         }
     }
+
 }
 
 void NewConnectionItemDialog::on_buttonBox_accepted()
