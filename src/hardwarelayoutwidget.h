@@ -174,6 +174,43 @@ private:
 
 };
 
+class cableDetailGraphic : public QGraphicsItem
+{
+public:
+
+    cableDetailGraphic(QString fromCableID, QGraphicsItem *parent = Q_NULLPTR);
+
+    enum { Type = UserType + 4 };
+    int type() const
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    }
+
+    QString getID(){ return(m_id); }
+    //QString getName(){ return(m_name); }
+    double getWidth(){ return(m_width); }
+    double getHeight(){ return(m_height); }
+
+    void setWidth(double w){m_width = w; update(); }
+    void setHeight(double h){m_width = h; update(); }
+
+protected:
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual QRectF boundingRect() const;
+
+    /*
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+    */
+
+private:
+    QString m_id, m_fromid;
+    double m_width, m_height;
+
+};
+
 class HardwareLayoutWidget : public QWidget
 {
     Q_OBJECT
@@ -203,6 +240,9 @@ public:
 
     void print();
     void printPreview();
+
+public slots:
+    void finalMode();
 
 private slots:
     void on_PropertiestreeWidget_itemDoubleClicked(QTreeWidgetItem *item, int column);

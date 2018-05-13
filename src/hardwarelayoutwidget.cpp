@@ -136,10 +136,28 @@ void connectableHardware::copyBoardFileProperties(QString boardfilename)
 
     int gpiocount = boardfile.value("gpio/pins").toInt();
     QString pinname,keyname;
+
+    // Check if there is a pin0_name otherwise use pin1_name
+    int pinoffset(0);
+    if (boardfile.allKeys().indexOf("gpio_assignments/pin0_name") == -1)
+    {
+        pinoffset = 1;
+        m_gpiopin_names.append("-");
+    }
+
+    // Read each of the pin names
     for (int i=0; i < gpiocount; i++)
     {
-        keyname = QObject::tr("gpio_assignments/pin%1_name").arg(i+1);
-        pinname = boardfile.value(keyname,"nc").toString();
+        keyname = QObject::tr("gpio_assignments/pin%1_name").arg(i+pinoffset);
+
+        // cater for values with comma's which are treated by Qt as lists
+        QVariant value = boardfile.value(keyname,"nc");
+        if (value.type() == QVariant::StringList) {
+          pinname = value.toStringList().join(",");
+        } else {
+          pinname = value.toString();
+        }
+
         m_gpiopin_names.append(pinname);
     }
 
@@ -254,6 +272,78 @@ QVariant connectableCable::itemChange(GraphicsItemChange change, const QVariant 
     return QGraphicsItem::itemChange(change, value);
 }
 
+cableDetailGraphic::cableDetailGraphic(QString fromCableID, QGraphicsItem *parent) :
+  QGraphicsItem(parent),
+  m_id(fromCableID)
+{
+    setWidth(200);
+    setHeight(40);
+
+}
+
+void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    // Double font size
+    QFont font = painter->font() ;
+    font.setPointSize(font.pointSize() * 2);
+
+    // set the modified font to the painter
+    painter->setFont(font);
+
+    QPoint titlepos(-50,-220);
+    painter->drawText(titlepos, "Diagram");
+
+    QPoint bomtitlepos(-50, -50);
+    painter->drawText(bomtitlepos, "BOM");
+
+    QPoint gpiotitlepos(-50,0);
+    painter->drawText(gpiotitlepos, "GPIO Usage");
+
+    QPoint cabletitlepos(-50,50);
+    painter->drawText(cabletitlepos, "Cables");
+
+    int cableheight(2),cablespacing(1), cablepos(80);
+
+    QPen pen;
+    pen.setWidth(0.5);
+    painter->setPen(pen);
+
+    painter->setBrush(Qt::black);
+    painter->drawRect(0, cablepos, 200, cableheight);
+    cablepos += cableheight + cablespacing;
+
+    painter->setBrush(Qt::red);
+    painter->drawRect(0, cablepos, 200, cableheight);
+    cablepos += cableheight + cablespacing;
+
+    painter->setBrush(Qt::blue);
+    painter->drawRect(0, cablepos, 200, cableheight);
+    cablepos += cableheight + cablespacing;
+
+    painter->setBrush(Qt::gray);
+    painter->drawRect(0, cablepos, 200, cableheight);
+
+    // Left End connector
+    painter->setBrush(Qt::gray);
+    painter->drawRect(-6, cablepos - 12, 6, cableheight + 16);
+
+    // Right End connector
+    painter->setBrush(Qt::gray);
+    painter->drawRect(200, cablepos - 12, 6, cableheight + 16);
+
+    QPoint logictitlepos(-50,200);
+    painter->drawText(logictitlepos, "Logic");
+
+
+}
+
+QRectF cableDetailGraphic::boundingRect() const
+{
+    QRectF result(0,0,200,40);
+
+    return (result);
+}
+
 HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::HardwareLayoutWidget),
@@ -290,6 +380,11 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     connect(upshortcut, SIGNAL(activated()), this, SLOT(panup()));
     QShortcut* downshortcut = new QShortcut(QKeySequence(Qt::Key_Down), ui->graphicsView);
     connect(downshortcut, SIGNAL(activated()), this, SLOT(pandown()));
+
+    // Shortcuts for seeing Cables
+    QShortcut* finalshortcut = new QShortcut(QKeySequence(Qt::Key_F), ui->componentslistWidget);
+    connect(finalshortcut, SIGNAL(activated()), this, SLOT(finalMode()));
+
 
 }
 
@@ -423,15 +518,32 @@ void HardwareLayoutWidget::SelectionChanged()
     if (clist.count()==1)
     {
         QString pinlabel;
-        int pinnumber(0);
+        int pinnumber(0),pinoffset(1);
 
         clist[0]->takeChildren();
+
+        // Check if the pin-numbers are 0 based or 1 based
+        if (itemPinAssignments.size()){
+            if (itemPinAssignments[0] == "-")
+            {
+                qDebug() << "1 based offset";
+            }
+            else
+            {
+                pinoffset = 0;
+                qDebug() << "0 based offset";
+            }
+
+        }
 
         foreach (QString pinvalue, itemPinAssignments)
         {
             QTreeWidgetItem *item = new QTreeWidgetItem();
 
-            pinlabel = tr("%1").arg(++pinnumber);
+            if ((pinvalue == "-") && (pinoffset == 1))
+                continue;
+
+            pinlabel = tr("%1").arg(pinoffset + pinnumber++);
 
             item->setText(0,pinlabel);
             item->setText(1,pinvalue);
@@ -1349,3 +1461,31 @@ void HardwareLayoutWidget::pandown()
                                    ui->graphicsView->sceneRect().height());
 }
 
+void HardwareLayoutWidget::finalMode()
+{
+    QString itemID,itemName;
+
+    foreach (QGraphicsItem *item, scene->items())
+    {
+        connectableCable *c = qgraphicsitem_cast<connectableCable *>(item);
+        if (c)
+        {
+            itemID = c->getID();
+            itemName = c->getName();
+
+            cableDetailGraphic *item = new cableDetailGraphic("x");
+
+            item->setX(50);
+            item->setY(50);
+
+            item->setFlag(QGraphicsItem::ItemIsSelectable);
+            item->setFlag(QGraphicsItem::ItemIsMovable);
+            item->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+            scene->addItem(item);
+
+        }
+
+    }
+
+
+}
