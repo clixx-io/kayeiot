@@ -272,6 +272,21 @@ QVariant connectableCable::itemChange(GraphicsItemChange change, const QVariant 
     return QGraphicsItem::itemChange(change, value);
 }
 
+bool connectableCable::connectNextAvailableWire(int sourcePin, int destPin)
+{
+    int wire_index = m_startpins.size();
+
+    m_startpins[wire_index] = sourcePin;
+    m_endpins[wire_index] = destPin;
+
+    qDebug() << " - Connecting " << sourcePin << " to " << destPin;
+
+    if (wire_index > m_wires)
+        return(false);
+    else
+        return(true);
+}
+
 cableDetailGraphic::cableDetailGraphic(QString fromCableID, QGraphicsItem *parent) :
   QGraphicsItem(parent),
   m_id(fromCableID)
@@ -941,6 +956,114 @@ void connectableHardware::setPrimaryConnectionIndex(int index)
         m_connectionpoints[0] = cpoint;
 }
 
+void connectableHardware::connectCommon(connectableHardware *target,connectableCable *cable)
+{
+    QStringList targetsplitoncommas,localsplitoncommas;
+    QStringList targetpins;
+
+    // Expand each of the pin names that have comma's
+    foreach (QString targetpinname, target->getPinAssignments())
+    {
+        targetpins.clear();
+        targetsplitoncommas = targetpinname.split(',');
+        targetpins.append(targetsplitoncommas);
+
+        // work through and find commonly named pins
+        int pinmatch(-1);
+        bool matched(false);
+        foreach (QString pinname, m_gpiopin_names)
+        {
+            localsplitoncommas = pinname.split(",");
+            foreach (QString searchpin,localsplitoncommas)
+            {
+                pinmatch = targetpins.indexOf(searchpin);
+                if (pinmatch != -1)
+                {
+                    qDebug() << "Common pin" << pinname.toStdString().c_str() << "found";
+                    cable->connectNextAvailableWire(m_gpiopin_names.indexOf(pinname),
+                                                    target->getPinAssignments().indexOf(targetpinname));
+                    matched = true;
+                    break;
+                }
+            }
+            if (matched)
+                break;
+        }
+
+        if (matched)
+            continue;
+    }
+}
+
+void connectableHardware::connectAnalogIO(connectableHardware *target,connectableCable *cable)
+{
+
+}
+
+void connectableHardware::connectDigitalIO(connectableHardware *target,connectableCable *cable)
+{
+    QStringList targetsplitoncommas,localsplitoncommas;
+    QStringList targetpins;
+    QStringList knowndatapins;
+
+    knowndatapins << "D0" << "D1" << "D2" << "D3" << "D4" << "D5" << "D6" << "D7" << "D8" <<
+                     "D9" << "D10" << "D11" << "D12" << "D13" <<
+                     "DOUT" << "OUT";
+
+    qDebug() << "Checking digital pins";
+
+    // Expand each of the pin names that have comma's
+    bool isdatapin;
+    foreach (QString targetpinname, target->getPinAssignments())
+    {
+        targetpins.clear();
+        targetsplitoncommas = targetpinname.split(',');
+        targetpins.append(targetsplitoncommas);
+
+        // check that this pin is a data pin
+        isdatapin = false;
+        foreach (QString t, targetsplitoncommas)
+        {
+            if (knowndatapins.indexOf(t)!=-1)
+            {
+                isdatapin = true;
+                break;
+            }
+        }
+        if (!isdatapin)
+            continue;
+
+        qDebug() << "Pin is digital " << targetpinname.toStdString().c_str();
+
+        // work through and find commonly named pins
+        int pinmatch(-1);
+        bool matched(false);
+        foreach (QString pinname, m_gpiopin_names)
+        {
+
+            localsplitoncommas = pinname.split(",");
+            foreach (QString searchpin,localsplitoncommas)
+            {
+                pinmatch = knowndatapins.indexOf(searchpin);
+                qDebug() << "Pin is not digital so no match " << searchpin.toStdString().c_str();
+                if (pinmatch != -1)
+                {
+                    qDebug() << "data pin match " << pinname.toStdString().c_str() << "found";
+                    cable->connectNextAvailableWire(m_gpiopin_names.indexOf(pinname),
+                                                    target->getPinAssignments().indexOf(targetpinname));
+                    matched = true;
+                    break;
+                }
+            }
+            if (matched)
+                break;
+        }
+
+        if (matched)
+            continue;
+    }
+}
+
 QStringList HardwareLayoutWidget::getConnectionPointNames()
 {
     QStringList items;
@@ -1133,6 +1256,15 @@ connectableCable * HardwareLayoutWidget::addCableToScene(QString componentID, QS
     QGraphicsItem *c2 = findByID(endItem);
 
     connectableCable *cable = new connectableCable(componentID, componentName, c1, c2, wires, rows, cablecolor);
+
+    // If these can support wires, then auto-wire them
+    connectableHardware *h1 = qgraphicsitem_cast<connectableHardware *>(c1);
+    connectableHardware *h2 = qgraphicsitem_cast<connectableHardware *>(c2);
+    if (h1 && h2)
+    {
+        h1->connectCommon(h2,cable);
+        h1->connectDigitalIO(h2,cable);
+    }
 
     cable->setFlag(QGraphicsItem::ItemIsSelectable);
     cable->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
@@ -1480,6 +1612,5 @@ void HardwareLayoutWidget::finalMode()
         }
 
     }
-
 
 }

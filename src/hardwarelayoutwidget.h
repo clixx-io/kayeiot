@@ -53,6 +53,10 @@ public:
     int getPrimaryConnectionIndex(){ return(m_connectionpoint);}
     void setPrimaryConnectionIndex(int index);
 
+    void connectCommon(connectableHardware *target,connectableCable *cable);
+    void connectAnalogIO(connectableHardware *target,connectableCable *cable);
+    void connectDigitalIO(connectableHardware *target,connectableCable *cable);
+
 protected:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     virtual QRectF boundingRect() const;
@@ -105,6 +109,8 @@ public:
 
     void setName(QString name){ m_name = name; }
 
+    bool connectNextAvailableWire(int sourcePin, int destPin);
+
 protected:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
@@ -116,6 +122,9 @@ private:
     QString m_id, m_name, m_type;
     QColor m_cablecolor;
     int m_wires, m_rows;
+
+    QMap <int, int> m_startpins;
+    QMap <int, int> m_endpins;
 
 };
 
