@@ -53,6 +53,8 @@ public:
     int getPrimaryConnectionIndex(){ return(m_connectionpoint);}
     void setPrimaryConnectionIndex(int index);
 
+    QList <connectableCable *> getCables(){ return cables;};
+
     void connectCommon(connectableHardware *target,connectableCable *cable);
     void connectAnalogIO(connectableHardware *target,connectableCable *cable);
     void connectDigitalIO(connectableHardware *target,connectableCable *cable);
@@ -107,9 +109,14 @@ public:
     int getWireCount(){ return m_wires; }
     int getRows(){ return(m_rows); }
 
+    QString getOtherEndConnection(QGraphicsItem *point, int pinnumber);
+
     void setName(QString name){ m_name = name; }
 
     bool connectNextAvailableWire(int sourcePin, int destPin);
+
+    QMap <int, int> getStartPins(){ return(m_startpins); }
+    QMap <int, int> getEndPins(){ return(m_endpins); }
 
 protected:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);

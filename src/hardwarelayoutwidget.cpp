@@ -276,15 +276,68 @@ bool connectableCable::connectNextAvailableWire(int sourcePin, int destPin)
 {
     int wire_index = m_startpins.size();
 
-    m_startpins[wire_index] = sourcePin;
-    m_endpins[wire_index] = destPin;
+    if (!m_startpins.values().contains(sourcePin) && !m_endpins.values().contains(destPin))
+    {
+        // Add the connection
+        m_startpins[wire_index] = sourcePin;
+        m_endpins[wire_index] = destPin;
 
-    qDebug() << " - Connecting " << sourcePin << " to " << destPin;
+        qDebug() << " - Connecting " << sourcePin << " to " << destPin;
+    }
 
     if (wire_index > m_wires)
         return(false);
     else
         return(true);
+}
+
+QString connectableCable::getOtherEndConnection(QGraphicsItem *point, int pinnumber)
+{
+    QGraphicsItem *otherend;
+    QString result;
+
+    if (point == m_startItem)
+    {
+        otherend = m_endItem;
+
+        // Find the wire-index
+        int wirenumber = m_startpins.values().indexOf(pinnumber);
+        if (wirenumber != -1)
+        {
+            connectableHardware *ohw = qgraphicsitem_cast<connectableHardware *>(otherend);
+            if (ohw)
+            {
+                QString ohwname = ohw->getName();
+                QString ohwpin = ohw->getPinAssignments()[m_endpins[wirenumber]];
+                result = QString::number(m_endpins[wirenumber]) + ", " + ohwpin + ":" + ohwname;
+            }
+            else
+                result = QString::number(m_endpins[wirenumber]);
+        }
+    }
+    else if (point == m_endItem)
+    {
+        otherend = m_startItem;
+
+        // Find the wire-index
+        int wirenumber = m_endpins.values().indexOf(pinnumber);
+        if (wirenumber != -1)
+        {
+            connectableHardware *ohw = qgraphicsitem_cast<connectableHardware *>(otherend);
+            if (ohw)
+            {
+                QString ohwname = ohw->getName();
+                QString ohwpin = ohw->getPinAssignments()[m_startpins[wirenumber]];
+                result = QString::number(m_startpins[wirenumber]) + ", " + ohwpin + ":" + ohwname;
+            }
+            else
+                result = QString::number(m_startpins[wirenumber]);
+
+        }
+    }
+
+    return(result);
+
 }
 
 cableDetailGraphic::cableDetailGraphic(QString fromCableID, QGraphicsItem *parent) :
@@ -298,27 +351,9 @@ cableDetailGraphic::cableDetailGraphic(QString fromCableID, QGraphicsItem *paren
 
 void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    // Double font size
-    QFont font = painter->font() ;
-    font.setPointSize(font.pointSize() * 2);
-
-    // set the modified font to the painter
-    painter->setFont(font);
-
-    QPoint titlepos(-50,-220);
-    painter->drawText(titlepos, "Diagram");
-
-    QPoint bomtitlepos(-50, -50);
-    painter->drawText(bomtitlepos, "BOM");
-
-    QPoint gpiotitlepos(-50,0);
-    painter->drawText(gpiotitlepos, "GPIO Usage");
-
-    QPoint cabletitlepos(-50,50);
-    painter->drawText(cabletitlepos, "Cables");
-
     int cableheight(2),cablespacing(1), cablepos(80);
 
+    // Draw the wires in the cable
     QPen pen;
     pen.setWidth(0.5);
     painter->setPen(pen);
@@ -342,9 +377,33 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
     painter->setBrush(Qt::gray);
     painter->drawRect(-6, cablepos - 12, 6, cableheight + 16);
 
+    QPoint pin1titlepos(-40,cablepos - 12);
+    painter->drawText(pin1titlepos, "Pin 1");
+    pin1titlepos.setX(210);
+    painter->drawText(pin1titlepos, "Pin 0");
+
     // Right End connector
     painter->setBrush(Qt::gray);
     painter->drawRect(200, cablepos - 12, 6, cableheight + 16);
+
+    // Double font size
+    QFont font = painter->font() ;
+    font.setPointSize(font.pointSize() * 2);
+
+    // set the modified font to the painter
+    painter->setFont(font);
+
+    QPoint titlepos(-50,-220);
+    painter->drawText(titlepos, "Diagram");
+
+    QPoint bomtitlepos(-50, -50);
+    painter->drawText(bomtitlepos, "BOM");
+
+    QPoint gpiotitlepos(-50,0);
+    painter->drawText(gpiotitlepos, "GPIO Usage");
+
+    QPoint cabletitlepos(-50,50);
+    painter->drawText(cabletitlepos, "Cables");
 
     QPoint logictitlepos(-50,200);
     painter->drawText(logictitlepos, "Logic");
@@ -545,21 +604,41 @@ void HardwareLayoutWidget::SelectionChanged()
             }
         }
 
-        foreach (QString pinvalue, itemPinAssignments)
+        // Reasonably safe to assume that this is connectable hardware
+        connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
+        if (h)
         {
-            QTreeWidgetItem *item = new QTreeWidgetItem();
+            foreach (QString pinvalue, itemPinAssignments)
+            {
+                QTreeWidgetItem *item = new QTreeWidgetItem();
 
-            if ((pinvalue == "-") && (pinoffset == 1))
-                continue;
+                if ((pinvalue == "-") && (pinoffset == 1))
+                    continue;
 
-            pinlabel = tr("%1").arg(pinoffset + pinnumber++);
+                pinlabel = tr("%1").arg(pinoffset + pinnumber);
 
-            item->setText(0,pinlabel);
-            item->setText(1,pinvalue);
+                // Try to identify where this pin goes to by looking in cables
+                QString otherEndPinName;
+                foreach (connectableCable *c, h->getCables())
+                {
+                    otherEndPinName = c->getOtherEndConnection(scene->selectedItems()[0],pinoffset + pinnumber);
+                    if (otherEndPinName.length())
+                    {
+                        pinvalue += QString(" -> ") + otherEndPinName;
+                        break;
+                    }
+                }
 
-            clist[0]->addChild(item);
+                item->setText(0,pinlabel);
+                item->setText(1,pinvalue);
 
+                clist[0]->addChild(item);
+
+                pinnumber++;
+
+            }
         }
+
         ui->PropertiestreeWidget->update();
 
     }
@@ -1045,7 +1124,6 @@ void connectableHardware::connectDigitalIO(connectableHardware *target,connectab
             foreach (QString searchpin,localsplitoncommas)
             {
                 pinmatch = knowndatapins.indexOf(searchpin);
-                qDebug() << "Pin is not digital so no match " << searchpin.toStdString().c_str();
                 if (pinmatch != -1)
                 {
                     qDebug() << "data pin match " << pinname.toStdString().c_str() << "found";
@@ -1053,7 +1131,8 @@ void connectableHardware::connectDigitalIO(connectableHardware *target,connectab
                                                     target->getPinAssignments().indexOf(targetpinname));
                     matched = true;
                     break;
-                }
+                } else
+                    qDebug() << "Pin is not digital so no match " << searchpin.toStdString().c_str();
             }
             if (matched)
                 break;
