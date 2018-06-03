@@ -151,6 +151,8 @@ public slots:
     void AddConnectableGraphic();
     void AddEventAnimation();
 
+    void designThemeSelect();
+
     void showLibrary();
     void aboutDialog();
 

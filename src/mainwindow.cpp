@@ -180,15 +180,19 @@ void MainWindow::setupMenuBar()
 
     QMenu *toolBarMenu = menuBar()->addMenu(tr("&Design"));
     toolBarMenu->addAction(tr("System"),this, &MainWindow::architectureSystem);
-    toolBarMenu->addAction(tr("GPIO Connections"),this, &MainWindow::architectureGpio);
+//  toolBarMenu->addAction(tr("GPIO Connections"),this, &MainWindow::architectureGpio);
 //  toolBarMenu->addAction(tr("Sensors/Actuators"), this, &MainWindow::architectureSensorsActuators);
     toolBarMenu->addAction(tr("Logic"), this, &MainWindow::architectureLogic);
     toolBarMenu->addAction(tr("Connectivity"), this, &MainWindow::architectureConnectivity);
+    toolBarMenu->addAction(tr("Color Theme"), this, &MainWindow::designThemeSelect);
 //  toolBarMenu->addAction(tr("Communication Buses"), this, &MainWindow::architectureBuses);
 //  toolBarMenu->addAction(tr("Software Interrupts"), this, &MainWindow::architectureInterrupts);
     QMenu* submenuA = toolBarMenu->addMenu(tr("Deployment Architecture"));
     QAction* actionNodeMcu = submenuA->addAction( "NodeMCU" );
     actionNodeMcu->setCheckable(true);
+
+    QAction* actionWiring = submenuA->addAction( "Wiring/Arduino" );
+    actionWiring->setCheckable(true);
 
     QAction* actionLinuxCplus = submenuA->addAction( "Linux C++" );
     actionLinuxCplus->setCheckable(true);
@@ -502,10 +506,11 @@ void MainWindow::loadProject()
 
     if (dir.length())
     {
+        if (projectWindow)
+            projectWindow->loadProject(dir);
+
         if (systemDesign)
             systemDesign->LoadComponents();
-        //else
-        //    projectWindow->loadProject(dir);
     }
 
     return;
@@ -694,6 +699,7 @@ void MainWindow::architectureLogic()
         UserMsgDock = new QDockWidget(tr("Output"), this);
         UserMsgDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
         userMessages = new QListWidget(UserMsgDock);
+        userMessages->setStyleSheet("background-color: rgb(188, 188, 188);");
         userMessages->addItems(QStringList() << "Ready.");
         UserMsgDock->setWidget(userMessages);
         addDockWidget(Qt::BottomDockWidgetArea, UserMsgDock);
@@ -754,6 +760,34 @@ void MainWindow::architectureOS()
     msgBox.exec();
 
     return;
+}
+
+void MainWindow::designThemeSelect()
+{
+    QStringList themes;
+    bool ok;
+
+    if (systemDesign)
+    {
+
+        themes = systemDesign->getAvailableDesignThemes();
+
+        QString item = QInputDialog::getItem(this, tr("Select Design Theme"),
+                                             tr("Theme:"), themes, 0, false, &ok);
+        if (ok && !item.isEmpty())
+        {
+            // Change the displayed theme
+            systemDesign->setDesignTheme(item);
+
+            // Save the value
+            settings->beginGroup("System_Designer");
+            settings->setValue("Theme",item);
+            settings->endGroup();
+
+        }
+
+    }
+
 }
 
 void MainWindow::Visualise()
