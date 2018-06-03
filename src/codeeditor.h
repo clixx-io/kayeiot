@@ -75,6 +75,8 @@ public:
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
 
+    void loadTheme(QString themename);
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
 

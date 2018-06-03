@@ -62,8 +62,11 @@ CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
     connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
 
+    loadTheme("");
+
     updateLineNumberAreaWidth(0);
     highlightCurrentLine();
+
 }
 
 //![constructor]
@@ -150,7 +153,7 @@ void CodeEditor::highlightCurrentLine()
 void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 {
     QPainter painter(lineNumberArea);
-    painter.fillRect(event->rect(), Qt::lightGray);
+    painter.fillRect(event->rect(), Qt::darkGray);
 
 //![extraAreaPaintEvent_0]
 
@@ -178,3 +181,7 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 }
 //![extraAreaPaintEvent_2]
 
+void CodeEditor::loadTheme(QString themename)
+{
+    this->setStyleSheet("color: rgb(232, 232, 232); background-color: rgba(43, 48, 59, 1);");
+}
