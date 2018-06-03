@@ -39,6 +39,31 @@ void connectableHardware::paint(QPainter *painter, const QStyleOptionGraphicsIte
 
     if ((hardwareType == 0) && (m_image))
     {
+
+        /*
+        // Create new picture for transparent
+        QPixmap transparent(m_image->size());
+        // Do transparency
+        transparent.fill(Qt::transparent);
+        painter->begin(&transparent);
+        painter->setCompositionMode(QPainter::CompositionMode_Source);
+        painter->drawImage(boundingRect(),m_image->toImage());
+        painter->setCompositionMode(QPainter::CompositionMode_DestinationIn);
+
+        // Set transparency level to 150 (possible values are 0-255)
+        // The alpha channel of a color specifies the transparency effect,
+        // 0 represents a fully transparent color, while 255 represents
+        // a fully opaque color.
+        painter->fillRect(boundingRect(), QColor(0, 0, 0, 150));
+//        painter.end()
+
+        // m_image->fill(Qt::transparent);
+        m_image->setMask(m_image->createHeuristicMask());
+        QPixmap mask = m_image->createHeuristicMask();
+
+        painter->setClipRegion(QRegion(mask));
+                */
+
         painter->drawImage(boundingRect(),m_image->toImage());
     }
     else
@@ -46,11 +71,21 @@ void connectableHardware::paint(QPainter *painter, const QStyleOptionGraphicsIte
         painter->setPen(Qt::yellow);
         painter->setBrush(Qt::gray);
         painter->drawRect(boundingRect());
+
     }
 
     if (option->state & QStyle::State_Selected)
     {
         painter->setPen(Qt::red);
+
+        /*
+        RoundedPolygon poly;
+//      poly << QPoint(0,0) << QPoint(boundingRect().width(),0) << QPoint(boundingRect().width(),boundingRect().height()) << QPoint(0,boundingRect().height());
+        int offset(10);
+        poly << QPoint(-1*offset,-1*offset) << QPoint(boundingRect().width()+offset,-1*offset) << QPoint(boundingRect().width()+offset,boundingRect().height()+offset) << QPoint(-1*offset,boundingRect().height()+offset);
+//      painter->drawPath(poly.GetPath());
+        */
+
         painter->drawRect(boundingRect());
     }
 }
@@ -168,6 +203,70 @@ void connectableHardware::addCableConnection(connectableCable *cable)
     cables.append(cable);
 }
 
+float RoundedPolygon::GetDistance(QPoint pt1, QPoint pt2) const
+{
+    float fD = (pt1.x() - pt2.x())*(pt1.x() - pt2.x()) +
+         (pt1.y() - pt2.y()) * (pt1.y() - pt2.y());
+    return sqrtf(fD);
+}
+
+QPointF RoundedPolygon::GetLineStart(int i) const
+{
+    QPointF pt;
+    QPoint pt1 = at(i);
+    QPoint pt2 = at((i+1) % count());
+    float fRat = m_iRadius / GetDistance(pt1, pt2);
+    if (fRat > 0.5f)
+     fRat = 0.5f;
+
+    pt.setX((1.0f-fRat)*pt1.x() + fRat*pt2.x());
+    pt.setY((1.0f-fRat)*pt1.y() + fRat*pt2.y());
+    return pt;
+}
+
+QPointF RoundedPolygon::GetLineEnd(int i) const
+{
+    QPointF pt;
+    QPoint pt1 = at(i);
+    QPoint pt2 = at((i+1) % count());
+    float fRat = m_iRadius / GetDistance(pt1, pt2);
+    if (fRat > 0.5f)
+     fRat = 0.5f;
+    pt.setX(fRat*pt1.x() + (1.0f - fRat)*pt2.x());
+    pt.setY(fRat*pt1.y() + (1.0f - fRat)*pt2.y());
+    return pt;
+}
+
+const QPainterPath& RoundedPolygon::GetPath()
+{
+    m_path = QPainterPath();
+
+    if (count() < 3) {
+     qWarning() << "Polygon should have at least 3 points!";
+     return m_path;
+    }
+
+    QPointF pt1;
+    QPointF pt2;
+    for (int i = 0; i < count(); i++) {
+     pt1 = GetLineStart(i);
+
+     if (i == 0)
+         m_path.moveTo(pt1);
+     else
+         m_path.quadTo(at(i), pt1);
+
+     pt2 = GetLineEnd(i);
+     m_path.lineTo(pt2);
+    }
+
+    // close the last corner
+    pt1 = GetLineStart(0);
+    m_path.quadTo(at(0), pt1);
+
+    return m_path;
+}
+
 connectableCable::connectableCable(QString componentID, QString componentName, QGraphicsItem *startItem, QGraphicsItem *endItem, int wires, int rows, QColor cablecolor, QGraphicsItem *parent)
     : QGraphicsLineItem(startItem->x(),startItem->y(),endItem->x(),endItem->y(),parent),
       m_startItem(startItem),
@@ -272,7 +371,7 @@ QVariant connectableCable::itemChange(GraphicsItemChange change, const QVariant 
     return QGraphicsItem::itemChange(change, value);
 }
 
-bool connectableCable::connectNextAvailableWire(int sourcePin, int destPin)
+bool connectableCable::connectNextAvailableWire(int sourcePin, int destPin, QString wireColor)
 {
     int wire_index = m_startpins.size();
 
@@ -281,8 +380,13 @@ bool connectableCable::connectNextAvailableWire(int sourcePin, int destPin)
         // Add the connection
         m_startpins[wire_index] = sourcePin;
         m_endpins[wire_index] = destPin;
+        m_wirecolors[wire_index] = wireColor;
 
-        qDebug() << " - Connecting " << sourcePin << " to " << destPin;
+        // Increment the number of wires in the cable
+        m_wires++;
+
+        qDebug() << " - Connecting " << sourcePin << " to " << destPin << " in " << wireColor;
+
     }
 
     if (wire_index > m_wires)
@@ -340,9 +444,9 @@ QString connectableCable::getOtherEndConnection(QGraphicsItem *point, int pinnum
 
 }
 
-cableDetailGraphic::cableDetailGraphic(QString fromCableID, QGraphicsItem *parent) :
+cableDetailGraphic::cableDetailGraphic(QGraphicsScene *scene, QGraphicsItem *parent) :
   QGraphicsItem(parent),
-  m_id(fromCableID)
+  m_scene(scene)
 {
     setWidth(200);
     setHeight(40);
@@ -351,63 +455,168 @@ cableDetailGraphic::cableDetailGraphic(QString fromCableID, QGraphicsItem *paren
 
 void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    int cableheight(2),cablespacing(1), cablepos(80);
-
-    // Draw the wires in the cable
-    QPen pen;
-    pen.setWidth(0.5);
-    painter->setPen(pen);
-
-    painter->setBrush(Qt::black);
-    painter->drawRect(0, cablepos, 200, cableheight);
-    cablepos += cableheight + cablespacing;
-
-    painter->setBrush(Qt::red);
-    painter->drawRect(0, cablepos, 200, cableheight);
-    cablepos += cableheight + cablespacing;
-
-    painter->setBrush(Qt::blue);
-    painter->drawRect(0, cablepos, 200, cableheight);
-    cablepos += cableheight + cablespacing;
-
-    painter->setBrush(Qt::gray);
-    painter->drawRect(0, cablepos, 200, cableheight);
-
-    // Left End connector
-    painter->setBrush(Qt::gray);
-    painter->drawRect(-6, cablepos - 12, 6, cableheight + 16);
-
-    QPoint pin1titlepos(-40,cablepos - 12);
-    painter->drawText(pin1titlepos, "Pin 1");
-    pin1titlepos.setX(210);
-    painter->drawText(pin1titlepos, "Pin 0");
-
-    // Right End connector
-    painter->setBrush(Qt::gray);
-    painter->drawRect(200, cablepos - 12, 6, cableheight + 16);
-
     // Double font size
-    QFont font = painter->font() ;
-    font.setPointSize(font.pointSize() * 2);
+    QFont titlefont = painter->font();
+    QFont headingfont = painter->font();
+    QFont normalfont = painter->font();
+    QFont smallfont = painter->font();
+    titlefont.setPointSize(normalfont.pointSize() * 2);
+    smallfont.setPointSize(normalfont.pointSize() / 2);
+
+    int cableheight(2), cablespacing(3), cablepos;
+    float ypos(0);
+
+    ypos = -220;
+    painter->setFont(titlefont);
+    QPoint titlepos(-50,ypos);
+    painter->drawText(titlepos, "Diagram");
+    ypos += 200;
 
     // set the modified font to the painter
-    painter->setFont(font);
-
-    QPoint titlepos(-50,-220);
-    painter->drawText(titlepos, "Diagram");
-
-    QPoint bomtitlepos(-50, -50);
+    QPoint bomtitlepos(-50, ypos);
+    painter->setFont(titlefont);
     painter->drawText(bomtitlepos, "BOM");
+    ypos += 30;
 
-    QPoint gpiotitlepos(-50,0);
-    painter->drawText(gpiotitlepos, "GPIO Usage");
+    QPoint bomitempos(-40,ypos);
+    QString bomitemtext;
+    painter->setFont(normalfont);
+    foreach (QGraphicsItem *item, m_scene->items())
+    {
 
-    QPoint cabletitlepos(-50,50);
+        bomitemtext.resize(0);
+
+        connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(item);
+        if (h)
+        {
+            bomitemtext = h->getName();
+        }
+        connectableGraphic *g = qgraphicsitem_cast<connectableGraphic *>(item);
+        if (g)
+        {
+            bomitemtext = g->getName();
+        }
+        connectableCable *c = qgraphicsitem_cast<connectableCable *>(item);
+        if (c)
+        {
+            bomitemtext = c->getName();
+        }
+
+        if (bomitemtext.size())
+        {
+            painter->drawText(bomitempos, QObject::tr("- %1").arg(bomitemtext));
+
+            ypos += 20;
+            bomitempos.setY(ypos);
+        }
+
+    }
+    ypos += 20;
+
+    // -- Cable Section
+    QPoint cabletitlepos(-50,ypos);
+    painter->setFont(titlefont);
     painter->drawText(cabletitlepos, "Cables");
+    painter->setFont(normalfont);
+    ypos += 30;
+    cablepos = ypos;
 
-    QPoint logictitlepos(-50,200);
+    // Draw every Cable
+    foreach (QGraphicsItem *item, m_scene->items())
+    {
+
+        connectableCable *c = qgraphicsitem_cast<connectableCable *>(item);
+        if (c)
+        {
+            QString cableName = c->getName();
+            int wiresused(c->getWireCount());
+
+            // Cablename
+            QPoint cablenamepos(-40, cablepos - 10);
+            painter->setFont(headingfont);
+            painter->drawText(cablenamepos, cableName);
+            cablepos += 5;
+
+            // Left End connector
+            painter->setBrush(Qt::gray);
+            painter->drawRect(-6, cablepos - 6, 6, 12 + ((cableheight + cablespacing) * wiresused));
+
+            // Left End connection name
+            QGraphicsItem *startitem = c->getStartItem();
+            connectableHardware *hw_left = qgraphicsitem_cast<connectableHardware *>(startitem);
+            if (hw_left)
+            {
+                QPoint connectionlabelpos(-6, ypos + 20 + ((cableheight + cablespacing) * wiresused));
+                painter->setFont(smallfont);
+                painter->drawText(connectionlabelpos, hw_left->getName());
+            }
+
+            // Right End connector
+            painter->setBrush(Qt::gray);
+            painter->drawRect(200, cablepos - 6, 6, 12 + ((cableheight + cablespacing) * wiresused));
+
+            // Right End connection name
+            QGraphicsItem *enditem = c->getEndItem();
+            connectableHardware *hw_right = qgraphicsitem_cast<connectableHardware *>(enditem);
+            if (hw_right)
+            {
+                QPoint connectionlabelpos(200, ypos + 20 + ((cableheight + cablespacing) * wiresused));
+                painter->setFont(smallfont);
+                painter->drawText(connectionlabelpos, hw_right->getName());
+            }
+
+            // Draw the wires in the cable
+            QPen pen;
+            pen.setWidth(0.5);
+            painter->setPen(pen);
+
+            QMap <int, int> startPins = c->getStartPins();
+            QMap <int, int> endPins = c->getEndPins();
+            QMap <int, QString> wirecolors = c->getWireColors();
+
+            for (int wire=0; wire < wiresused; wire++)
+            {
+                QColor wirecolor(wirecolors[wire]);
+                if (!wirecolor.isValid())
+                {
+                    wirecolor = Qt::black;
+                }
+                else
+                    qDebug() << wirecolors[wire] << " is not a valid wire color";
+
+                painter->setBrush(wirecolor);
+                painter->drawRect(0, cablepos, 200, cableheight);
+
+                painter->setFont(smallfont);
+
+                QPoint pin1titlepos(-35, cablepos + (wire * cablespacing));
+
+                painter->drawText(pin1titlepos, QObject::tr("Pin %1").arg(startPins[wire]));
+                pin1titlepos.setX(210);
+                painter->drawText(pin1titlepos, QObject::tr("Pin %2").arg(endPins[wire]));
+
+                cablepos += cableheight + cablespacing;
+
+            }
+
+            cablepos += 30;
+            ypos += cablepos;
+
+        }
+
+    }
+
+    /*
+    QPoint gpiotitlepos(-50,ypos);
+    painter->drawText(gpiotitlepos, "GPIO Usage");
+    ypos + 10;
+
+    QPoint logictitlepos(-50,ypos);
     painter->drawText(logictitlepos, "Logic");
+    ypos + 10;
+    */
 
+    painter->setFont(normalfont);
 
 }
 
@@ -459,6 +668,11 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     QShortcut* finalshortcut = new QShortcut(QKeySequence(Qt::Key_F), ui->componentslistWidget);
     connect(finalshortcut, SIGNAL(activated()), this, SLOT(finalMode()));
 
+    // Restore the last theme
+    QSettings settings("Clixx.io","IoT Developer");
+    settings.beginGroup("System_Designer");
+    setDesignTheme(settings.value("Theme","default").toString());
+    settings.endGroup();
 
 }
 
@@ -604,8 +818,10 @@ void HardwareLayoutWidget::SelectionChanged()
             }
         }
 
-        // Reasonably safe to assume that this is connectable hardware
-        connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
+        // Read connectable hardware
+        connectableHardware *h = nullptr;
+        if (scene->selectedItems().size())
+            h = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
         if (h)
         {
             foreach (QString pinvalue, itemPinAssignments)
@@ -635,6 +851,35 @@ void HardwareLayoutWidget::SelectionChanged()
                 clist[0]->addChild(item);
 
                 pinnumber++;
+
+            }
+        }
+
+        // Read connectable hardware
+        connectableCable *c = nullptr;
+        if (scene->selectedItems().size())
+            c = qgraphicsitem_cast<connectableCable *>(scene->selectedItems()[0]);
+        if (c)
+        {
+
+            QMap <int, int> startPins = c->getStartPins();
+            QMap <int, int> endPins = c->getEndPins();
+            QMap <int, QString> wireColors = c->getWireColors();
+
+            QString pinvalue;
+            int usedWires = c->getWireCount();
+
+            for (int wire=0; wire < usedWires; wire++)
+            {
+                QTreeWidgetItem *item = new QTreeWidgetItem();
+
+                pinlabel = wireColors[wire];
+                pinvalue = tr("%1 -> %2").arg(startPins[wire]).arg(endPins[wire]);
+
+                item->setText(0,pinlabel);
+                item->setText(1,pinvalue);
+
+                clist[0]->addChild(item);
 
             }
         }
@@ -957,7 +1202,7 @@ connectableHardware* HardwareLayoutWidget::findByName(QString componentName)
     return(result);
 }
 
-QPoint connectableHardware::getPrimaryConnectionPoint()
+QPoint connectableHardware::getPrimaryConnectionPoint() const
 {
     QPoint result(0.0,0.0);
 
@@ -1058,9 +1303,21 @@ void connectableHardware::connectCommon(connectableHardware *target,connectableC
                 pinmatch = targetpins.indexOf(searchpin);
                 if (pinmatch != -1)
                 {
+                    // Attempt to determine colour of wire
+                    QString wirecolor("gray");
+                    if (pinname.contains("vcc",Qt::CaseInsensitive) || targetpinname.contains("vcc",Qt::CaseInsensitive))
+                    {
+                        wirecolor = "red";
+                    }
+                    if (pinname.contains("gnd",Qt::CaseInsensitive) || targetpinname.contains("gnd",Qt::CaseInsensitive))
+                    {
+                        wirecolor = "black";
+                    }
+
                     qDebug() << "Common pin" << pinname.toStdString().c_str() << "found";
                     cable->connectNextAvailableWire(m_gpiopin_names.indexOf(pinname),
-                                                    target->getPinAssignments().indexOf(targetpinname));
+                                                    target->getPinAssignments().indexOf(targetpinname),
+                                                    wirecolor);
                     matched = true;
                     break;
                 }
@@ -1128,7 +1385,8 @@ void connectableHardware::connectDigitalIO(connectableHardware *target,connectab
                 {
                     qDebug() << "data pin match " << pinname.toStdString().c_str() << "found";
                     cable->connectNextAvailableWire(m_gpiopin_names.indexOf(pinname),
-                                                    target->getPinAssignments().indexOf(targetpinname));
+                                                    target->getPinAssignments().indexOf(targetpinname),
+                                                    "blue");
                     matched = true;
                     break;
                 } else
@@ -1580,6 +1838,37 @@ void HardwareLayoutWidget::print()
 
 }
 
+QStringList HardwareLayoutWidget::getAvailableDesignThemes()
+{
+    QStringList result;
+
+    result << "Orange" << "Red" << "Maroon" << "Fuchsia" << "Purple" << "Black" << "Gray" << "Silver";
+
+    return(result);
+}
+
+void HardwareLayoutWidget::setDesignTheme(QString themename)
+{
+
+    if (themename == "Orange")
+        ui->graphicsView->setStyleSheet("background-color: #FF851B;");
+    else if (themename == "Red")
+        ui->graphicsView->setStyleSheet("background-color: #FF4136;");
+    else if (themename == "Maroon")
+        ui->graphicsView->setStyleSheet("background-color: #85144b;");
+    else if (themename == "Fuchsia")
+        ui->graphicsView->setStyleSheet("background-color: #F012BE;");
+    else if (themename == "Purple")
+        ui->graphicsView->setStyleSheet("background-color: #B10DC9;");
+    else if (themename == "Black")
+        ui->graphicsView->setStyleSheet("background-color: #111111;");
+    else if (themename == "Gray")
+        ui->graphicsView->setStyleSheet("background-color: #AAAAAA;");
+    else if (themename == "Silver")
+        ui->graphicsView->setStyleSheet("background-color: #DDDDDD;");
+
+}
+
 void HardwareLayoutWidget::printPreview()
 {
     QPrinter printer;
@@ -1668,28 +1957,34 @@ void HardwareLayoutWidget::pandown()
 
 void HardwareLayoutWidget::finalMode()
 {
-    QString itemID,itemName;
-
-    foreach (QGraphicsItem *item, scene->items())
+    if (!m_finalmode)
     {
-        connectableCable *c = qgraphicsitem_cast<connectableCable *>(item);
-        if (c)
+
+        // Turn on final mode by creating the overlay
+        cableDetailGraphic *item = new cableDetailGraphic(scene);
+
+        item->setX(50);
+        item->setY(50);
+
+        item->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+        scene->addItem(item);
+
+        m_finalmode = true;
+
+    } else
+    {
+        // Remove all cableDetailGraphic Items
+        foreach (QGraphicsItem *item, scene->items())
         {
-            itemID = c->getID();
-            itemName = c->getName();
-
-            cableDetailGraphic *item = new cableDetailGraphic("x");
-
-            item->setX(50);
-            item->setY(50);
-
-            item->setFlag(QGraphicsItem::ItemIsSelectable);
-            item->setFlag(QGraphicsItem::ItemIsMovable);
-            item->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
-            scene->addItem(item);
-
+            cableDetailGraphic *d = qgraphicsitem_cast<cableDetailGraphic *>(item);
+            if (d)
+            {
+                scene->removeItem(item);
+            }
         }
 
+        m_finalmode = false;
     }
 
+    scene->update();
 }

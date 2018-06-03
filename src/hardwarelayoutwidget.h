@@ -31,16 +31,16 @@ public:
         return Type;
     }
 
-    QString getID(){ return(m_id); }
-    QString getName(){ return(m_name); }
-    QString getType(){ return(m_type); }
-    int getPinCount(){ return(m_pins); }
-    int getRowCount(){ return(m_rows); }
-    QString getBoardFile(){ return(m_boardfile); }
-    QString getImageFilename(){ return(m_imagefilename); }
-    double getWidth(){ return(m_width); }
-    double getHeight(){ return(m_height); }
-    QStringList getPinAssignments(){ return(m_gpiopin_names); }
+    QString getID() const { return(m_id); }
+    QString getName() const { return(m_name); }
+    QString getType() const { return(m_type); }
+    int getPinCount() const { return(m_pins); }
+    int getRowCount() const { return(m_rows); }
+    QString getBoardFile() const { return(m_boardfile); }
+    QString getImageFilename() const { return(m_imagefilename); }
+    double getWidth() const { return(m_width); }
+    double getHeight() const { return(m_height); }
+    QStringList getPinAssignments() const { return(m_gpiopin_names); }
 
     void setName(QString name){ m_name = name; }
     void setWidth(double w){m_width = w; update(); }
@@ -48,12 +48,12 @@ public:
 
     void addCableConnection(connectableCable *cable);
 
-    QPoint getPrimaryConnectionPoint();
+    QPoint getPrimaryConnectionPoint() const;
     void setPrimaryConnectionPoint(QPoint point);
-    int getPrimaryConnectionIndex(){ return(m_connectionpoint);}
+    int getPrimaryConnectionIndex() const { return(m_connectionpoint); }
     void setPrimaryConnectionIndex(int index);
 
-    QList <connectableCable *> getCables(){ return cables;};
+    QList <connectableCable *> getCables() const { return cables;}
 
     void connectCommon(connectableHardware *target,connectableCable *cable);
     void connectAnalogIO(connectableHardware *target,connectableCable *cable);
@@ -87,6 +87,24 @@ private:
 
 };
 
+class RoundedPolygon : public QPolygon
+{
+public:
+    RoundedPolygon()
+    {    SetRadius(10); }
+    void SetRadius(unsigned int iRadius)
+    {    m_iRadius = iRadius; }
+    const QPainterPath& GetPath();
+
+private:
+    QPointF GetLineStart(int i) const;
+    QPointF GetLineEnd(int i) const;
+    float GetDistance(QPoint pt1, QPoint pt2) const;
+private:
+    QPainterPath m_path;
+    unsigned int m_iRadius;
+};
+
 class connectableCable : public QGraphicsLineItem
 {
 public:
@@ -95,10 +113,7 @@ public:
 
     enum { Type = UserType + 2 };
     int type() const
-    {
-        // Enable the use of qgraphicsitem_cast with this item.
-        return Type;
-    }
+    {   return Type; }
 
     QString getID(){ return(m_id); }
     QString getName(){ return(m_name); }
@@ -113,10 +128,11 @@ public:
 
     void setName(QString name){ m_name = name; }
 
-    bool connectNextAvailableWire(int sourcePin, int destPin);
+    bool connectNextAvailableWire(int sourcePin, int destPin, QString wireColor="Gray");
 
     QMap <int, int> getStartPins(){ return(m_startpins); }
     QMap <int, int> getEndPins(){ return(m_endpins); }
+    QMap <int, QString> getWireColors() { return(m_wirecolors); }
 
 protected:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -132,6 +148,8 @@ private:
 
     QMap <int, int> m_startpins;
     QMap <int, int> m_endpins;
+
+    QMap <int, QString> m_wirecolors;
 
 };
 
@@ -194,7 +212,7 @@ class cableDetailGraphic : public QGraphicsItem
 {
 public:
 
-    cableDetailGraphic(QString fromCableID, QGraphicsItem *parent = Q_NULLPTR);
+    cableDetailGraphic(QGraphicsScene *scene, QGraphicsItem *parent = Q_NULLPTR);
 
     enum { Type = UserType + 4 };
     int type() const
@@ -225,6 +243,7 @@ private:
     QString m_id, m_fromid;
     double m_width, m_height;
 
+    QGraphicsScene *m_scene;
 };
 
 class HardwareLayoutWidget : public QWidget
@@ -252,6 +271,9 @@ public:
     QList <QGraphicsItem *> selectedItems(){ return(scene->selectedItems());}
 
     QStringList getConnectionPointNames();
+
+    QStringList getAvailableDesignThemes();
+    void setDesignTheme(QString themename);
 
     void deleteComponent(QString ID);
 
@@ -285,6 +307,8 @@ private:
     QString m_filename;
 
     int m_unitSystem;     // 0=mm, 1=100mil/0.1"
+
+    bool m_finalmode;
 
 };
 

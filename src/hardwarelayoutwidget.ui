@@ -59,7 +59,7 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(214, 214, 214);</string>
+        <string notr="true">background-color: rgb(188, 188, 188);</string>
        </property>
       </widget>
      </item>
@@ -78,7 +78,7 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(214, 214, 214);</string>
+        <string notr="true">background-color: rgb(188, 188, 188);</string>
        </property>
        <column>
         <property name="text">
