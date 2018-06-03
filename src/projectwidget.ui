@@ -40,6 +40,12 @@
    </property>
    <item>
     <widget class="QTreeWidget" name="projectFileList">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(188, 188, 188);</string>
+     </property>
+     <attribute name="headerVisible">
+      <bool>false</bool>
+     </attribute>
      <column>
       <property name="text">
        <string notr="true">Project</string>
