@@ -169,6 +169,26 @@ void connectableHardware::copyBoardFileProperties(QString boardfilename)
 {
     QSettings boardfile(boardfilename, QSettings::IniFormat);
 
+    QStringList connectionpointnames;
+    connectionpointnames << QObject::tr("Top Left").toLower() << QObject::tr("Top Centre").toLower() << QObject::tr("Top Right").toLower();
+    connectionpointnames << QObject::tr("Left Centre").toLower() << QObject::tr("Centre").toLower() << QObject::tr("Right Centre").toLower();
+    connectionpointnames << QObject::tr("Bottom Left").toLower() << QObject::tr("Bottom Centre").toLower() << QObject::tr("Bottom Right").toLower();
+
+    m_type = boardfile.value("overview/type").toString().toLower();
+
+    QString connectionpoint, defaultpoint;
+    connectionpoint = boardfile.value("gpio/connection_point").toString().toLower();
+    if (!connectionpoint.length())
+    {
+        if (m_type.contains("processor"))
+            defaultpoint = "top centre";
+        if (m_type.contains("sensor"))
+            defaultpoint = "bottom centre";
+        else
+            defaultpoint = "top left";
+    } else
+        setPrimaryConnectionIndex(connectionpointnames.indexOf(connectionpoint));
+
     int gpiocount = boardfile.value("gpio/pins").toInt();
     QString pinname,keyname;
 
