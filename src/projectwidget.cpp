@@ -16,10 +16,11 @@
 
 ProjectWidget::ProjectWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ProjectWidget)
+    ui(new Ui::ProjectWidget),
+    mainwindow(0),
+    builder(0)
 {
     ui->setupUi(this);
-
 }
 
 ProjectWidget::~ProjectWidget()
@@ -28,7 +29,6 @@ ProjectWidget::~ProjectWidget()
 
     if (builder)
         delete builder;
-
 }
 
 bool ProjectWidget::loadProject(const QString dir)

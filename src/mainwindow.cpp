@@ -90,7 +90,19 @@ Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
 
 MainWindow::MainWindow(const CustomSizeHintMap &customSizeHints,
                        QWidget *parent, Qt::WindowFlags flags)
-    : QMainWindow(parent, flags)
+    : QMainWindow(parent, flags),
+    projectWindow(Q_NULLPTR),
+    projectDock(Q_NULLPTR),
+    center(Q_NULLPTR),
+    systemDesign(Q_NULLPTR),
+    commWindow(Q_NULLPTR),
+    toolBar(Q_NULLPTR),
+    settings(Q_NULLPTR),
+    gpio(Q_NULLPTR),
+    gpioDock(Q_NULLPTR),
+    UserMsgDock(Q_NULLPTR),
+    userMessages(Q_NULLPTR),
+    designScene(Q_NULLPTR)
 {
 
     QCoreApplication::setOrganizationName("clixx.io");
@@ -142,6 +154,8 @@ void MainWindow::setupToolBar()
 void MainWindow::setupMenuBar()
 {
     QMenu *menu = menuBar()->addMenu(tr("&File"));
+
+#if QT_VERSION >= 0x050000
     menu->addAction(tr("New Project.."),this, &MainWindow::switchLayoutDirection);
     menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
     menu->addAction(tr("Recent Projects"), this, &MainWindow::saveLayout);
@@ -207,6 +221,81 @@ void MainWindow::setupMenuBar()
     NetworkMenu->addAction(tr("Generate Visualisation"), this, &MainWindow::Visualise);
     NetworkMenu->addAction(tr("Event Playback"), this, &MainWindow::EventPlayback);
 
+#else
+    menu->addAction(tr("New Project.."));
+
+    QAction* newProjectAction = new QAction("&New Project", this);
+    menu->addAction(newProjectAction);
+    connect(newProjectAction, SIGNAL(triggered()), qApp, SLOT(newProject()));
+
+/*
+    menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
+    menu->addAction(tr("Recent Projects"), this, &MainWindow::saveLayout);
+    menu->addSeparator();
+    menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
+    menu->addSeparator();
+
+    menu->addAction(tr("Print Pre&view"), this, &MainWindow::printPreview);
+    menu->addAction(tr("&Print"), this, &MainWindow::printFile);
+    menu->addSeparator();
+    menu->addAction(tr("&Quit"), this, &QWidget::close);
+
+    EditMenu = menuBar()->addMenu(tr("&Edit"));
+    EditMenu->addAction(tr("Cut"),this, &MainWindow::cutText);
+    EditMenu->addAction(tr("Copy"), this, &MainWindow::copyText);
+    EditMenu->addAction(tr("Paste"), this, &MainWindow::pasteText);
+    menu->addSeparator();
+    EditMenu->addAction(tr("Select All"), this, &MainWindow::selectAllText);
+    menu->addSeparator();
+    EditMenu->addAction(tr("Find/Replace"), this, &MainWindow::FindReplaceText);
+    menu->addSeparator();
+    EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
+    menu->addSeparator();
+    EditMenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
+    menu->addSeparator();
+    EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
+
+    buildWindowMenu = menuBar()->addMenu(tr("&Build"));
+    buildAction = buildWindowMenu->addAction(tr("Build.."),this, &MainWindow::buildProject);
+    deployAction = buildWindowMenu->addAction(tr("Deploy.."), this, &MainWindow::deployProject);
+    cleanAction = buildWindowMenu->addAction(tr("Clean"), this, &MainWindow::cleanProject);
+    checkAction = buildWindowMenu->addAction(tr("Unit Test"), this, &MainWindow::checkProject);
+    runAction = buildWindowMenu->addAction(tr("Run"), this, &MainWindow::runProject);
+
+    setBuildButtonToggles();
+
+    QMenu *toolBarMenu = menuBar()->addMenu(tr("&Design"));
+    toolBarMenu->addAction(tr("System"),this, &MainWindow::architectureSystem);
+//  toolBarMenu->addAction(tr("GPIO Connections"),this, &MainWindow::architectureGpio);
+//  toolBarMenu->addAction(tr("Sensors/Actuators"), this, &MainWindow::architectureSensorsActuators);
+    toolBarMenu->addAction(tr("Logic"), this, &MainWindow::architectureLogic);
+    toolBarMenu->addAction(tr("Connectivity"), this, &MainWindow::architectureConnectivity);
+    toolBarMenu->addAction(tr("Color Theme"), this, &MainWindow::designThemeSelect);
+//  toolBarMenu->addAction(tr("Communication Buses"), this, &MainWindow::architectureBuses);
+//  toolBarMenu->addAction(tr("Software Interrupts"), this, &MainWindow::architectureInterrupts);
+    QMenu* submenuA = toolBarMenu->addMenu(tr("Deployment Architecture"));
+    QAction* actionNodeMcu = submenuA->addAction( "NodeMCU" );
+    actionNodeMcu->setCheckable(true);
+
+    QAction* actionWiring = submenuA->addAction( "Wiring/Arduino" );
+    actionWiring->setCheckable(true);
+
+    QAction* actionLinuxCplus = submenuA->addAction( "Linux C++" );
+    actionLinuxCplus->setCheckable(true);
+
+    QAction* actionClixxIot = submenuA->addAction( "Clixx.io IoT C++" );
+    actionClixxIot->setCheckable(true);
+    actionClixxIot->setChecked(true);
+
+//  toolBarMenu->addAction(tr("Operating System"), this, &MainWindow::architectureOS);
+
+    NetworkMenu = menuBar()->addMenu(tr("&Analyse"));
+    NetworkMenu->addAction(tr("Generate Visualisation"), this, &MainWindow::Visualise);
+    NetworkMenu->addAction(tr("Event Playback"), this, &MainWindow::EventPlayback);
+    */
+
+#endif
+
 #ifdef Q_OS_OSX
     toolBarMenu->addSeparator();
 
@@ -220,35 +309,49 @@ void MainWindow::setupMenuBar()
     QAction *action = mainWindowMenu->addAction(tr("Animated docks"));
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
+#if QT_VERSION >= 0x050000
     connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+#endif
 
     action = mainWindowMenu->addAction(tr("Allow nested docks"));
     action->setCheckable(true);
     action->setChecked(dockOptions() & AllowNestedDocks);
+#if QT_VERSION >= 0x050000
     connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+#endif
 
     action = mainWindowMenu->addAction(tr("Allow tabbed docks"));
     action->setCheckable(true);
     action->setChecked(dockOptions() & AllowTabbedDocks);
+#if QT_VERSION >= 0x050000
     connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+#endif
 
     action = mainWindowMenu->addAction(tr("Force tabbed docks"));
     action->setCheckable(true);
     action->setChecked(dockOptions() & ForceTabbedDocks);
+#if QT_VERSION >= 0x050000
     connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+#endif
 
     action = mainWindowMenu->addAction(tr("Vertical tabs"));
     action->setCheckable(true);
     action->setChecked(dockOptions() & VerticalTabs);
+#if QT_VERSION >= 0x050000
     connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+#endif
 
     action = mainWindowMenu->addAction(tr("Grouped dragging"));
     action->setCheckable(true);
+#if QT_VERSION >= 0x050000
     action->setChecked(dockOptions() & GroupedDragging);
     connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+#endif
 
     dockWidgetMenu = menuBar()->addMenu(tr("&Help"));
+#if QT_VERSION >= 0x050000
     dockWidgetMenu->addAction(tr("About.."), this, &MainWindow::aboutDialog);
+#endif
 
 }
 
@@ -267,8 +370,10 @@ void MainWindow::setDockOptions()
         opts |= ForceTabbedDocks;
     if (actions.at(4)->isChecked())
         opts |= VerticalTabs;
+#if QT_VERSION >= 0x050000
     if (actions.at(5)->isChecked())
         opts |= GroupedDragging;
+#endif
 
     QMainWindow::setDockOptions(opts);
 }
@@ -307,10 +412,12 @@ void MainWindow::saveLayout()
 static QAction *addCornerAction(const QString &text, QMainWindow *mw, QMenu *menu, QActionGroup *group,
                                 Qt::Corner c, Qt::DockWidgetArea a)
 {
+#if QT_VERSION >= 0x050000
     QAction *result = menu->addAction(text, mw, [=]() { mw->setCorner(c, a); });
     result->setCheckable(true);
     group->addAction(result);
     return result;
+#endif
 }
 
 void MainWindow::setupDockWidgets(const CustomSizeHintMap &customSizeHints)
@@ -352,6 +459,7 @@ void MainWindow::setupDockWidgets(const CustomSizeHintMap &customSizeHints)
 
     dockWidgetMenu->addSeparator();
 
+#if QT_VERSION >= 0x050000
     destroyDockWidgetMenu = new QMenu(tr("Destroy dock widget"), this);
     destroyDockWidgetMenu->setEnabled(false);
     connect(destroyDockWidgetMenu, &QMenu::triggered, this, &MainWindow::destroyDockWidget);
@@ -359,6 +467,8 @@ void MainWindow::setupDockWidgets(const CustomSizeHintMap &customSizeHints)
     dockWidgetMenu->addSeparator();
     dockWidgetMenu->addAction(tr("Add dock widget..."), this, &MainWindow::createDockWidget);
     dockWidgetMenu->addMenu(destroyDockWidgetMenu);
+#endif
+
 }
 
 void MainWindow::switchLayoutDirection()
@@ -405,10 +515,13 @@ CreateDockWidgetDialog::CreateDockWidgetDialog(QWidget *parent)
     m_location->addItem(tr("Restore"));
     layout->addWidget(m_location, 1, 1);
 
+#if QT_VERSION >= 0x050000
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     layout->addWidget(buttonBox, 2, 0, 1, 2);
+#endif
+
 }
 
 Qt::DockWidgetArea CreateDockWidgetDialog::location() const
@@ -603,20 +716,20 @@ void MainWindow::architectureSystem()
     if (center)
     {
         delete center;
-        center = nullptr;
+        center = Q_NULLPTR;
     }
 
     if (projectDock)
     {
         delete projectDock;
-        projectDock = nullptr;
+        projectDock = Q_NULLPTR;
     }
 
     if (UserMsgDock)
     {
         delete UserMsgDock;
-        UserMsgDock = nullptr;
-        userMessages = nullptr;
+        UserMsgDock = Q_NULLPTR;
+        userMessages = Q_NULLPTR;
     }
 
     // Hardware Designer
@@ -690,7 +803,7 @@ void MainWindow::architectureLogic()
     if (systemDesign)
     {
         delete systemDesign;
-        systemDesign = nullptr;
+        systemDesign = Q_NULLPTR;
     }
 
     // Compiler Output Area
@@ -860,7 +973,11 @@ void MainWindow::loadDesignDiagram()
 
 void MainWindow::AddHardware()
 {
+#if QT_VERSION >= 0x050000
     QJsonObject userchoices;
+#else
+    QMap <QString, QVariant> userchoices;
+#endif
 
     architectureSystem();
 
@@ -884,7 +1001,11 @@ void MainWindow::AddHardware()
 
 void MainWindow::AddConnection()
 {
+#if QT_VERSION >= 0x050000
     QJsonObject userchoices;
+#else
+    QMap <QString, QVariant> userchoices;
+#endif
 
     architectureSystem();
 
@@ -945,7 +1066,11 @@ void MainWindow::AddConnection()
 
 void MainWindow::AddConnectableGraphic()
 {
+#if QT_VERSION >= 0x050000
     QJsonObject userchoices;
+#else
+    QMap <QString, QVariant> userchoices;
+#endif
 
     architectureSystem();
 
@@ -986,6 +1111,7 @@ void MainWindow::addComponentWizard()
 
 void MainWindow::showLibrary()
 {
+#if QT_VERSION >= 0x050000
     QString dirname = QDir::toNativeSeparators(settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString());
 
     if (!QDir(dirname).exists())
@@ -997,6 +1123,8 @@ void MainWindow::showLibrary()
     }
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(dirname));
+
+#endif
 }
 
 void MainWindow::aboutDialog()

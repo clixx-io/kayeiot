@@ -21,7 +21,7 @@ class connectableHardware : public QGraphicsItem
 {
 public:
 
-    connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = Q_NULLPTR);
+    connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = 0);
     ~connectableHardware();
 
     enum { Type = UserType + 1 };
@@ -76,7 +76,7 @@ private:
     QList <QPoint> m_connectionpoints;
     int m_connectionpoint;
 
-    QPixmap *m_image = nullptr;
+    QPixmap *m_image;
     int m_pins, m_rows;
 
     QStringList m_gpiopin_names;
@@ -109,7 +109,7 @@ class connectableCable : public QGraphicsLineItem
 {
 public:
 
-    connectableCable(QString componentID, QString componentName, QGraphicsItem *startItem, QGraphicsItem *endItem, int wires=-1, int rows=-1, QColor cablecolor=QColor(12,56,99), QGraphicsItem *parent = Q_NULLPTR);
+    connectableCable(QString componentID, QString componentName, QGraphicsItem *startItem, QGraphicsItem *endItem, int wires=-1, int rows=-1, QColor cablecolor=QColor(12,56,99), QGraphicsItem *parent = 0);
 
     enum { Type = UserType + 2 };
     int type() const
@@ -141,7 +141,7 @@ protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
 
 private:
-    QGraphicsItem *m_startItem = nullptr, *m_endItem = nullptr;
+    QGraphicsItem *m_startItem, *m_endItem;
     QString m_id, m_name, m_type;
     QColor m_cablecolor;
     int m_wires, m_rows;
@@ -157,7 +157,7 @@ class connectableGraphic : public QGraphicsItem
 {
 public:
 
-    connectableGraphic(QString ID, QString name, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = Q_NULLPTR);
+    connectableGraphic(QString ID, QString name, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = 0);
 //    connectableGraphic(QString ID, QGraphicsItem *parent = Q_NULLPTR);
 
     enum { Type = UserType + 3 };
@@ -202,7 +202,7 @@ private:
     QList <QPoint> m_connectionpoints;
     int m_connectionpoint;
 
-    QPixmap *m_image = nullptr;
+    QPixmap *m_image;
 
     QList <connectableCable *> cables;
 
@@ -212,7 +212,7 @@ class cableDetailGraphic : public QGraphicsItem
 {
 public:
 
-    cableDetailGraphic(QGraphicsScene *scene, QGraphicsItem *parent = Q_NULLPTR);
+    cableDetailGraphic(QGraphicsScene *scene, QGraphicsItem *parent = 0);
 
     enum { Type = UserType + 4 };
     int type() const
@@ -303,7 +303,7 @@ private:
 
     Ui::HardwareLayoutWidget *ui;
 
-    QGraphicsScene *scene = nullptr;
+    QGraphicsScene *scene;
     QString m_filename;
 
     int m_unitSystem;     // 0=mm, 1=100mil/0.1"

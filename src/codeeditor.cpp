@@ -48,7 +48,12 @@
 **
 ****************************************************************************/
 
-#include <QtWidgets>
+#include <QApplication>
+#if QT_VERSION >= 0x050000
+    #include <QtWidgets>
+#else
+    #include <QWidget>
+#endif
 
 #include "codeeditor.h"
 
@@ -152,12 +157,16 @@ void CodeEditor::highlightCurrentLine()
 
 void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 {
+#if QT_VERSION >= 0x050000
     QPainter painter(lineNumberArea);
     painter.fillRect(event->rect(), Qt::darkGray);
+#else
+#endif
 
 //![extraAreaPaintEvent_0]
 
 //![extraAreaPaintEvent_1]
+#if QT_VERSION >= 0x050000
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
     int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
@@ -178,6 +187,8 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
         bottom = top + (int) blockBoundingRect(block).height();
         ++blockNumber;
     }
+#else
+#endif
 }
 //![extraAreaPaintEvent_2]
 

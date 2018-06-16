@@ -7,7 +7,8 @@
 
 HardwareGPIO::HardwareGPIO(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::HardwareGPIO)
+    ui(new Ui::HardwareGPIO),
+    scene(0)
 {
     ui->setupUi(this);
 
@@ -50,7 +51,7 @@ void HardwareGPIO::createDefaultPins(const int pinCount, const int rowCount)
             newlabel->setX(labelX + (r * labelColWidth));
             newlabel->setY(labelY + (c * labelHeight));
 
-            gpioPIN *mypin = new gpioPIN(nullptr,
+            gpioPIN *mypin = new gpioPIN(0,
                                          startX + (r * pinWidth),
                                          startY + (c * pinWidth),
                                          (r*pinsPerRow)+c+1,

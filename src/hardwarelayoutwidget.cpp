@@ -5,9 +5,18 @@
 #include <QMessageBox>
 #include <QTreeWidgetItem>
 #include <QShortcut>
-#include <QtPrintSupport/QPrintDialog>
-#include <QtPrintSupport/QPrinter>
-#include <QtPrintSupport/QPrintPreviewDialog>
+#include <QGraphicsItem>
+
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+    #include <QtPrintSupport/QPrintDialog>
+    #include <QtPrintSupport/QPrinter>
+    #include <QtPrintSupport/QPrintPreviewDialog>
+#else
+    #include <QPrintDialog>
+    #include <QPrinter>
+    #include <QPrintPreviewDialog>
+#endif
 
 #include "hardwarelayoutwidget.h"
 #include "ui_hardwarelayoutwidget.h"
@@ -15,7 +24,7 @@
 
 connectableHardware::connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent)
     : QGraphicsItem(parent), m_id(ID), m_name(name), m_boardfile(boardfile), hardwareType(0),
-      m_pins(pins), m_rows(rows), m_width(width), m_height(height), m_connectionpoint(0)
+      m_pins(pins), m_rows(rows), m_width(width), m_height(height), m_connectionpoint(0), m_image(0)
 {
     if (graphicfile.length())
     {
@@ -104,7 +113,11 @@ QVariant connectableHardware::itemChange(GraphicsItemChange change, const QVaria
 {
     qDebug() << "Change:" << change;
 
+#if QT_VERSION >= 0x050000
     if (change == GraphicsItemChange::ItemPositionChange)
+#else
+    if (change == ItemPositionChange)
+#endif
     {
         foreach (connectableCable *cable, cables)
         {
@@ -139,7 +152,11 @@ QVariant connectableHardware::itemChange(GraphicsItemChange change, const QVaria
 
         }
 
+#if QT_VERSION >= 0x050000
     } else if (change == GraphicsItemChange::ItemSelectedChange)
+#else
+    } else if (change == ItemSelectedChange)
+#endif
     {
         if (value.toBool())
             qDebug() << "Selected:" << this->m_name;
@@ -378,9 +395,13 @@ QVariant connectableCable::itemChange(GraphicsItemChange change, const QVariant 
 {
     qDebug() << "Cable Change:" << change;
 
-    if (change == GraphicsItemChange::ItemPositionChange)
+    if (change == ItemPositionChange)
     {
+#if QT_VERSION >= 0x050000
     } else if (change == GraphicsItemChange::ItemSelectedChange)
+#else
+    } else if (change == ItemSelectedChange)
+#endif
     {
         if (value.toBool())
             qDebug() << "Selected:" << this->m_name;
@@ -839,7 +860,7 @@ void HardwareLayoutWidget::SelectionChanged()
         }
 
         // Read connectable hardware
-        connectableHardware *h = nullptr;
+        connectableHardware *h = 0;
         if (scene->selectedItems().size())
             h = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
         if (h)
@@ -876,7 +897,7 @@ void HardwareLayoutWidget::SelectionChanged()
         }
 
         // Read connectable hardware
-        connectableCable *c = nullptr;
+        connectableCable *c = 0;
         if (scene->selectedItems().size())
             c = qgraphicsitem_cast<connectableCable *>(scene->selectedItems()[0]);
         if (c)
@@ -1061,7 +1082,10 @@ bool HardwareLayoutWidget::SaveComponents(QString filename)
             if (eg)
                 boardfile.setValue("enditem",eg->getID());
 
+#if QT_VERSION >= 0x050000
             boardfile.setValue("color",c->getColor().name(QColor::HexRgb));
+#else
+#endif
             boardfile.setValue("wirecount",c->getWireCount());
             boardfile.setValue("rows",c->getRows());
 
@@ -1146,7 +1170,7 @@ QList <connectableGraphic *> HardwareLayoutWidget::getGraphicComponents()
 
 QGraphicsItem* HardwareLayoutWidget::findGraphicsItemByID(QString componentID)
 {
-    QGraphicsItem* result = nullptr;
+    QGraphicsItem* result = 0;
 
     foreach (QGraphicsItem *item, scene->items())
     {
@@ -1175,7 +1199,7 @@ QGraphicsItem* HardwareLayoutWidget::findGraphicsItemByID(QString componentID)
 
 QGraphicsItem* HardwareLayoutWidget::findByID(QString componentID)
 {
-    QGraphicsItem* result = nullptr;
+    QGraphicsItem* result = 0;
 
     foreach (QGraphicsItem *item, scene->items())
     {
@@ -1204,7 +1228,7 @@ QGraphicsItem* HardwareLayoutWidget::findByID(QString componentID)
 
 connectableHardware* HardwareLayoutWidget::findByName(QString componentName)
 {
-    connectableHardware* result = nullptr;
+    connectableHardware* result = 0;
 
     foreach (QGraphicsItem *item, scene->items())
     {
@@ -1642,7 +1666,8 @@ connectableGraphic::connectableGraphic(QString ID, QString name, qreal width, qr
     : QGraphicsItem(parent),
     m_id(ID), m_name(name),
     m_width(width), m_height(height),
-    m_connectionpoint(0)
+    m_connectionpoint(0),
+    m_image(0)
 {
     if (graphicfile.length())
     {
@@ -1753,7 +1778,11 @@ QVariant connectableGraphic::itemChange(GraphicsItemChange change, const QVarian
 {
     qDebug() << "Change:" << change;
 
+#if QT_VERSION >= 0x050000
     if (change == GraphicsItemChange::ItemPositionChange)
+#else
+    if (change == ItemPositionChange)
+#endif
     {
         foreach (connectableCable *cable, cables)
         {
@@ -1792,7 +1821,11 @@ QVariant connectableGraphic::itemChange(GraphicsItemChange change, const QVarian
 
         }
 
+#if QT_VERSION >= 0x050000
     } else if (change == GraphicsItemChange::ItemSelectedChange)
+#else
+    } else if (change == ItemSelectedChange)
+#endif
     {
         if (value.toBool())
             qDebug() << "Selected:" << this->m_name;

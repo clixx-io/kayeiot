@@ -1,9 +1,19 @@
+#include <QtGlobal>
 #include <QStringList>
-#include <QtSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
+
+#if QT_VERSION >= 0x050000
+    #include <QtSerialPort>
+    #include <QtSerialPort/QSerialPortInfo>
+#else
+    #include <QtSerialPort/qserialport.h>
+    #include <QtSerialPort/qserialportinfo.h>
+#endif
+
 #include <QMessageBox>
 #include <QTreeWidgetItem>
 #include <QDebug>
+#include <QTimer>
+#include <QSettings>
 
 #include "communicatorserialwidget.h"
 #include "ui_communicatorserialwidget.h"
@@ -11,7 +21,9 @@
 
 CommunicatorSerialWidget::CommunicatorSerialWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::CommunicatorSerialWidget)
+    ui(new Ui::CommunicatorSerialWidget),
+    serialPort(0),
+    mainwindow(0)
 {
     ui->setupUi(this);
 
@@ -261,7 +273,7 @@ bool CommunicatorSerialWidget::writewithEcho(const QString linetosend)
     foreach (QChar c, linetosend)
     {
         serialPort->write((const char *) &c,sizeof(c));
-        serialPort->waitForBytesWritten();
+        serialPort->waitForBytesWritten(500);
 
         bool havechar(false);
         do

@@ -1,6 +1,7 @@
 #ifndef COMMUNICATORSERIALWIDGET_H
 #define COMMUNICATORSERIALWIDGET_H
 
+#include <QtGlobal>
 #include <QWidget>
 #include <QStringList>
 
@@ -52,13 +53,13 @@ private slots:
 private:
     Ui::CommunicatorSerialWidget *ui;
 
-    QSerialPort *serialPort = nullptr;
     QList <int> availableBaudRates;
     QString portName, portType;
     QTimer *serialTimer;
     QByteArray serialBuffer;
 
-    MainWindow *mainwindow = nullptr;
+    QSerialPort *serialPort;
+    MainWindow *mainwindow;
 
 };
 

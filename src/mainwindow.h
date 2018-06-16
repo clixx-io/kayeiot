@@ -53,6 +53,14 @@
 
 #include <QMainWindow>
 
+#if QT_VERSION >= 0x050000
+    #include <QtSerialPort>
+    #include <QtSerialPort/QSerialPortInfo>
+#else
+    #include <QtSerialPort/qserialport.h>
+    #include <QtSerialPort/qserialportinfo.h>
+#endif
+
 QT_FORWARD_DECLARE_CLASS(ClixxIoTProject)
 QT_FORWARD_DECLARE_CLASS(ClixxIoTProjects)
 QT_FORWARD_DECLARE_CLASS(ProjectWidget)
@@ -90,15 +98,15 @@ public:
     ClixxIoTProjects *Projects;
     ClixxIoTProject  *currentProject;
 
-    ProjectWidget *projectWindow = nullptr;
-    QDockWidget *projectDock = nullptr;
-    CodeEditor *center = nullptr;
-    HardwareLayoutWidget *systemDesign = nullptr;
-    CommunicatorSerialWidget *commWindow = nullptr;
-    ToolBar *toolBar = nullptr;
-    QSettings *settings = nullptr;
-    HardwareGPIO *gpio = nullptr;
-    QDockWidget *gpioDock = nullptr;
+    ProjectWidget *projectWindow;
+    QDockWidget *projectDock;
+    CodeEditor *center;
+    HardwareLayoutWidget *systemDesign;
+    CommunicatorSerialWidget *commWindow;
+    ToolBar *toolBar;
+    QSettings *settings;
+    HardwareGPIO *gpio;
+    QDockWidget *gpioDock;
 
 public slots:
 
@@ -179,10 +187,10 @@ private:
     QList<QDockWidget *> extraDockWidgets;
     QMenu *destroyDockWidgetMenu;
 
-    QDockWidget *UserMsgDock = nullptr;
-    QListWidget *userMessages = nullptr;
+    QDockWidget *UserMsgDock;
+    QListWidget *userMessages;
 
-    QGraphicsScene *designScene = nullptr;
+    QGraphicsScene *designScene;
 
 };
 

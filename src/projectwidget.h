@@ -38,9 +38,9 @@ private slots:
 private:
     Ui::ProjectWidget *ui;
 
-    MainWindow *mainwindow = nullptr;
+    MainWindow *mainwindow;
 
-    QProcess *builder = nullptr;
+    QProcess *builder;
 
 };
 

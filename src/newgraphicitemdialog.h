@@ -4,7 +4,13 @@
 #include <QDialog>
 #include <QFileDialog>
 #include <QLabel>
-#include <QJsonObject>
+
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+    #include <QJsonObject>
+#else
+    #include <QMap>
+#endif
 
 namespace Ui {
 class NewGraphicItemDialog;
@@ -15,7 +21,12 @@ class NewGraphicItemDialog : public QDialog
     Q_OBJECT
 
 public:
+#if QT_VERSION >= 0x050000
     explicit NewGraphicItemDialog(QWidget *parent = 0, QJsonObject *results = 0);
+#else
+    explicit NewGraphicItemDialog(QWidget *parent = 0, QMap <QString, QVariant> *results = 0);
+#endif
+
     ~NewGraphicItemDialog();
 
 private slots:
@@ -28,7 +39,11 @@ private slots:
 private:
     Ui::NewGraphicItemDialog *ui;
 
+#if QT_VERSION >= 0x050000
     QJsonObject *completed;
+#else
+    QMap <QString, QVariant> *completed;
+#endif
 
     QString m_imagefilename;
 };

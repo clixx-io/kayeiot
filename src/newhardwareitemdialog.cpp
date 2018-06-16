@@ -1,12 +1,17 @@
+#include <QtGlobal>
 #include <QDir>
 #include <QMessageBox>
 #include <QDebug>
 #include <QSettings>
-#include <QJsonObject>
 #include <QFileDialog>
 #include <QClipboard>
 #include <QMimeData>
-#include <QStandardPaths>
+#if QT_VERSION >= 0x050000
+    #include <QStandardPaths>
+    #include <QJsonObject>
+#else
+    #include <QMap>
+#endif
 
 #include "mainwindow.h"
 #include "newhardwareitemdialog.h"
@@ -21,7 +26,12 @@ NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent) :
     ui->setupUi(this);
 }
 
+#if QT_VERSION >= 0x050000
 NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent, QJsonObject *results) :
+#else
+NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent, QMap <QString,QVariant> *results) :
+#endif
+
     QDialog(parent),
     ui(new Ui::NewHardwareItemDialog),
     havepastedimage(false),
@@ -42,7 +52,13 @@ QStringList NewHardwareItemDialog::loadBoardFiles()
 {
     QStringList results;
     QSettings settings;
+
+#if QT_VERSION >= 0x050000
     QString dirname = settings.value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
+#else
+    QString dirname = settings.value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
+#endif
+
     QDir dir(dirname);
 
     QFileInfoList list = dir.entryInfoList();
@@ -90,6 +106,7 @@ bool NewHardwareItemDialog::loadBoardList()
 void NewHardwareItemDialog::on_buttonBox_accepted()
 {
 
+#if QT_VERSION >= 0x050000
     QJsonObject object
     {
         {"name", m_name },
@@ -101,6 +118,16 @@ void NewHardwareItemDialog::on_buttonBox_accepted()
         {"picturefilename", m_imagefilename}
 
     };
+#else
+    QMap <QString, QVariant> object;
+    object["name"] = m_name;
+    object["boardfile"] = m_boardfile;
+    object["width"] = ui->WidthSpinBox->value();
+    object["height"] = ui->HeightSpinBox->value();
+    object["pins"] = ui->pinscomboBox->currentText().toInt();
+    object["rows"] = ui->rowscomboBox->currentText().toInt();
+    object["picturefilename"] = m_imagefilename;
+#endif
 
     if (ui->BoardNameslistWidget->selectedItems().count() > 0)
     {
@@ -160,7 +187,13 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
     }
 
     QSettings settings;
+
+#if QT_VERSION >= 0x050000
     QString dirname = settings.value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
+#else
+    QString dirname = settings.value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
+#endif
+
     QDir imagesDir(dirname);
 
     QListWidgetItem *item = ui->BoardNameslistWidget->selectedItems()[0];
@@ -187,8 +220,13 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
 
     ui->WidthSpinBox->setValue(boardfile.value("overview/width",ui->WidthSpinBox->value()).toDouble());
     ui->HeightSpinBox->setValue(boardfile.value("overview/height",ui->HeightSpinBox->value()).toDouble());
+
+#if QT_VERSION >= 0x050000
     ui->pinscomboBox->setCurrentText(boardfile.value("gpio/pins",ui->pinscomboBox->currentText()).toString());
     ui->rowscomboBox->setCurrentText(boardfile.value("gpio/rows",ui->rowscomboBox->currentText()).toString());
-
+#else
+    ui->pinscomboBox->setEditText(boardfile.value("gpio/pins",ui->pinscomboBox->currentText()).toString());
+    ui->rowscomboBox->setEditText(boardfile.value("gpio/rows",ui->rowscomboBox->currentText()).toString());
+#endif
 }
 

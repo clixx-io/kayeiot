@@ -3,7 +3,8 @@
 
 OutputWidget::OutputWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::OutputWidget)
+    ui(new Ui::OutputWidget),
+    mainwindow(0)
 {
     ui->setupUi(this);
 }

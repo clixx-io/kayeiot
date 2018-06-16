@@ -1,7 +1,10 @@
 #include "clixxiotprojects.h"
 
+#include <QtGlobal>
 #include <QDir>
-#include <QStandardPaths>
+#if QT_VERSION >= 0x050000
+    #include <QStandardPaths>
+#endif
 
 #define projectPathDir "/IoT"
 
@@ -38,10 +41,16 @@ QString ClixxIoTProjects::getProjectsDir()
     settings.beginGroup("projects");
     QString workdir = settings.value("directory").toString();
     if (!workdir.length()) {
+
+#if QT_VERSION >= 0x050000
         workdir = QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0] + projectPathDir;
+#else
+        workdir = QDir::homePath() + projectPathDir;
+#endif
+
         if (!QDir(workdir).exists())
         {
-            workdir = QStandardPaths::HomeLocation;
+            workdir = QDir::homePath();
         }
         settings.setValue("directory", workdir);
     }

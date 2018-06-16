@@ -157,6 +157,7 @@ static ParseCommandLineArgumentsResult
             if (idx == -1)
                 return CommandLineArgumentsError;
             bool ok;
+#if QT_VERSION >= 0x050000
             const int w = sizeStr.leftRef(idx).toInt(&ok);
             if (!ok)
                 return CommandLineArgumentsError;
@@ -164,6 +165,7 @@ static ParseCommandLineArgumentsResult
             if (!ok)
                 return CommandLineArgumentsError;
             result->insert(name, QSize(w, h));
+#endif
         } else if (arg == QLatin1String("-h") || arg == QLatin1String("--help")) {
             return HelpRequested;
         } else {

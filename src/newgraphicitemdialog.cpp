@@ -1,15 +1,27 @@
-#include <QJsonObject>
+#include <QtGlobal>
 #include <QFileDialog>
 #include <QClipboard>
 #include <QMimeData>
 #include <QDebug>
 #include <QGridLayout>
 #include <QLabel>
+#if QT_VERSION >= 0x050000
+    #include <QJsonObject>
+    #include <QApplication>
+#else
+    #include <QMap>
+    #include <QtGui/QApplication>
+#endif
 
 #include "newgraphicitemdialog.h"
 #include "ui_newgraphicitemdialog.h"
 
+#if QT_VERSION >= 0x050000
 NewGraphicItemDialog::NewGraphicItemDialog(QWidget *parent, QJsonObject *results) :
+#else
+NewGraphicItemDialog::NewGraphicItemDialog(QWidget *parent, QMap <QString, QVariant> *results) :
+#endif
+
     QDialog(parent),
     ui(new Ui::NewGraphicItemDialog),
     completed(results)
@@ -24,7 +36,12 @@ NewGraphicItemDialog::~NewGraphicItemDialog()
 
 void NewGraphicItemDialog::on_PastetoolButton_clicked()
 {
+#if QT_VERSION >= 0x050000
     QClipboard *clipboard = QGuiApplication::clipboard();
+#else
+    QClipboard *clipboard = QApplication::clipboard();
+#endif
+
     const QMimeData *mimeData = clipboard->mimeData();
 
     if (mimeData->hasImage()) {
@@ -121,6 +138,7 @@ void NewGraphicItemDialog::on_toolButton_clicked()
 
 void NewGraphicItemDialog::on_buttonBox_accepted()
 {
+#if QT_VERSION >= 0x050000
     QJsonObject object
     {
         {"name", ui->nameLineEdit->text()},
@@ -128,6 +146,13 @@ void NewGraphicItemDialog::on_buttonBox_accepted()
         {"height", ui->HeightSpinBox->value()},
         {"picturefilename", m_imagefilename}
     };
+#else
+    QMap <QString, QVariant> object;
+    object["name"] = ui->nameLineEdit->text();
+    object["width"] = ui->WidthSpinBox->value();
+    object["height"] = ui->HeightSpinBox->value();
+    object["picturefilename"] = m_imagefilename;
+#endif
 
     *completed = object;
 

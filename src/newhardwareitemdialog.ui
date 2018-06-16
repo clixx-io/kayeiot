@@ -362,9 +362,6 @@
      <pointsize>12</pointsize>
     </font>
    </property>
-   <property name="clearButtonEnabled">
-    <bool>false</bool>
-   </property>
   </widget>
   <widget class="QLabel" name="Namelabel">
    <property name="geometry">

@@ -48,8 +48,7 @@
 **
 ****************************************************************************/
 
-#include "toolbar.h"
-
+#include <QtGlobal>
 #include <QMainWindow>
 #include <QMenu>
 #include <QPainter>
@@ -60,6 +59,8 @@
 #include <QMessageBox>
 
 #include <stdlib.h>
+
+#include "toolbar.h"
 #include "mainwindow.h"
 
 static QPixmap genIcon(const QSize &iconSize, const QString &, const QColor &color)
@@ -85,6 +86,17 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
     : QToolBar(parent)
     , spinbox(Q_NULLPTR)
     , spinboxAction(Q_NULLPTR)
+    , buildmenu(Q_NULLPTR)
+    , systemmenu(Q_NULLPTR)
+    , buildAction(Q_NULLPTR)
+    , deployAction(Q_NULLPTR)
+    , checkAction(Q_NULLPTR)
+    , cleanAction(Q_NULLPTR)
+    , runAction(Q_NULLPTR)
+    , systemAction(Q_NULLPTR)
+    , addComponentAction(Q_NULLPTR)
+    , addConnectionAction(Q_NULLPTR)
+    , addEventAnimationAction(Q_NULLPTR)
 {
     setWindowTitle(title);
     setObjectName(title);
@@ -94,6 +106,9 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
     MainWindow *mainwindow = (MainWindow *) parent;
 
     menu = new QMenu(tr("Welcome"), this);
+
+#if QT_VERSION >= 0x050000
+
     const QIcon welcomeIcon(QPixmap(":/res/res/welcome-32.png"));
     menu->setIcon(welcomeIcon);
     connect(menu->menuAction(), &QAction::triggered, mainwindow, &MainWindow::showWelcome);
@@ -248,6 +263,9 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
     menu->addAction(tr("Insert break"), this, &ToolBar::insertToolBarBreak);
 
     connect(menu, &QMenu::aboutToShow, this, &ToolBar::updateMenu);
+
+#else
+#endif
 
 }
 

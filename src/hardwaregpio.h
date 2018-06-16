@@ -49,7 +49,7 @@ public:
 private:
     Ui::HardwareGPIO *ui;
 
-    QGraphicsScene *scene = nullptr;
+    QGraphicsScene *scene;
 
 };
 

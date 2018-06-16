@@ -22,7 +22,7 @@ public:
 private:
     Ui::OutputWidget *ui;
 
-    MainWindow *mainwindow = nullptr;
+    MainWindow *mainwindow;
 
 };
 

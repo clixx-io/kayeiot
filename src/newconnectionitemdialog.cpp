@@ -1,10 +1,20 @@
-#include <QJsonObject>
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+    #include <QJsonObject>
+#else
+    #include <QMap>
+#endif
 #include <QDebug>
 
 #include "newconnectionitemdialog.h"
 #include "ui_newconnectionitemdialog.h"
 
+#if QT_VERSION >= 0x050000
 NewConnectionItemDialog::NewConnectionItemDialog(QWidget *parent, QJsonObject *results) :
+#else
+NewConnectionItemDialog::NewConnectionItemDialog(QWidget *parent, QMap <QString, QVariant> *results) :
+#endif
+
     QDialog(parent),
     ui(new Ui::NewConnectionItemDialog),
     completed(results)
@@ -22,9 +32,19 @@ NewConnectionItemDialog::~NewConnectionItemDialog()
     delete ui;
 }
 
+#if QT_VERSION >= 0x050000
 void NewConnectionItemDialog::loadParameters(QJsonObject &parameters)
+#else
+void NewConnectionItemDialog::loadParameters(QMap <QString, QVariant> &parameters)
+#endif
 {
+
+#if QT_VERSION >= 0x050000
     if (parameters.contains("component_count") && parameters["component_count"].isDouble())
+#else
+    if (parameters.contains("component_count") && parameters["component_count"].isValid())
+#endif
+
     {
         QString ckeyid, ckeyname;
 
@@ -59,9 +79,15 @@ void NewConnectionItemDialog::loadParameters(QJsonObject &parameters)
 
 void NewConnectionItemDialog::on_buttonBox_accepted()
 {
+#if QT_VERSION >= 0x050000
     completed->insert("startitem", ui->fromcomboBox->currentData().toString());
     completed->insert("enditem", ui->tocomboBox->currentData().toString());
     completed->insert("wirecount",ui->wirescomboBox->currentText());
+#else
+    completed->insert("startitem", ui->fromcomboBox->itemData(ui->fromcomboBox->currentIndex()).toString());
+    completed->insert("enditem", ui->tocomboBox->itemData(ui->tocomboBox->currentIndex()).toString());
+    completed->insert("wirecount",ui->wirescomboBox->currentText());
+#endif
 
     if (ui->colorslistWidget->selectedItems().count())
         completed->insert("cablecolor",ui->colorslistWidget->selectedItems()[0]->text());

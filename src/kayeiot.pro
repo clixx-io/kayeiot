@@ -1,5 +1,12 @@
+equals(QT_MAJOR_VERSION, 5){
+    QT += widgets
+}
+equals(QT_MAJOR_VERSION, 4) {
+    CONFIG += serialport
+}
+
 TEMPLATE = app
-QT += widgets serialport printsupport
+QT += serialport printsupport
 
 HEADERS += mainwindow.h toolbar.h \
     codeeditor.h \
