@@ -265,6 +265,169 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
     connect(menu, &QMenu::aboutToShow, this, &ToolBar::updateMenu);
 
 #else
+    const QIcon welcomeIcon(QPixmap(":/res/res/welcome-32.png"));
+    menu->setIcon(welcomeIcon);
+    QAction* welcomeAction = new QAction("&Welcome", this);
+    menu->addAction(welcomeAction);
+    connect(welcomeAction, SIGNAL(triggered()), mainwindow, SLOT(showWelcome()));
+
+    // &QAction::triggered, mainwindow, SLOT(newProject(&MainWindow::showWelcome));
+
+    /*
+    QAction *projectWizard = menu->addAction(genIcon(iconSize(), "A", Qt::blue), tr("Run Project Wizard"));
+    connect(projectWizard, &QAction::triggered, mainwindow, &MainWindow::newProjectWizard);
+
+    QAction *AddComponentWizard = menu->addAction(genIcon(iconSize(), "A", Qt::blue), tr("Add Component Wizard"));
+    connect(AddComponentWizard, &QAction::triggered, mainwindow, &MainWindow::addComponentWizard);
+
+    addAction(menu->menuAction());
+
+    const QIcon saveIcon(QPixmap(":/res/res/save-32.png"));
+    QAction *saveAction = addAction(saveIcon, tr("Save"));
+    connect(saveAction, &QAction::triggered, mainwindow, &MainWindow::saveFile);
+
+    systemmenu = new QMenu(tr("System"), this);
+    const QIcon systemIcon(QPixmap(":/res/res/connectivity-32.png"));
+    systemmenu->setIcon(systemIcon);
+    connect(systemmenu->menuAction(), &QAction::triggered, mainwindow, &MainWindow::architectureSystem);
+
+    addComponentAction = systemmenu->addAction(genIcon(iconSize(), "A", Qt::blue), tr("Add Component"));
+    connect(addComponentAction, &QAction::triggered, mainwindow, &MainWindow::AddHardware);
+
+    addConnectionAction = systemmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Add Connection/Cable"));
+    connect(addConnectionAction, &QAction::triggered, mainwindow, &MainWindow::AddConnection);
+
+    addConnectionAction = systemmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Add Connectable Graphic / Icon"));
+    connect(addConnectionAction, &QAction::triggered, mainwindow, &MainWindow::AddConnectableGraphic);
+
+
+    // addEventAnimationAction = systemmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Add Events / Animation"));
+    // connect(addEventAnimationAction, &QAction::triggered, mainwindow, &MainWindow::AddEventAnimation);
+
+
+    addAction(systemmenu->menuAction());
+
+    const QIcon logicIcon(QPixmap(":/res/res/logic-32.png"));
+    QAction *logicAction = addAction(logicIcon, tr("Logic"));
+    connect(logicAction, &QAction::triggered, mainwindow, &MainWindow::architectureLogic);
+
+    const QIcon devicesIcon(QPixmap(":/res/res/device-32.png"));
+    QAction *connectAction = addAction(devicesIcon, tr("Connectivity"));
+    connect(connectAction, &QAction::triggered, mainwindow, &MainWindow::architectureConnectivity);
+
+    buildmenu = new QMenu(tr("Build"), this);
+    const QIcon buildIcon(QPixmap(":/res/res/build-32.png"));
+    buildmenu->setIcon(buildIcon);
+    buildAction = buildmenu->addAction(genIcon(iconSize(), "A", Qt::blue), tr("Build"));
+    deployAction = buildmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Deploy / Upload"));
+    checkAction = buildmenu->addAction(genIcon(iconSize(), "C", Qt::blue), tr("Run Unit Tests"));
+    cleanAction = buildmenu->addAction(genIcon(iconSize(), "D", Qt::blue), tr("Clean"));
+    addAction(buildmenu->menuAction());
+    buildmenu->setDefaultAction(buildAction);
+    connect(buildAction, &QAction::triggered, mainwindow, &MainWindow::buildProject);
+    connect(deployAction, &QAction::triggered, mainwindow, &MainWindow::deployProject);
+    connect(checkAction, &QAction::triggered, mainwindow, &MainWindow::checkProject);
+    connect(cleanAction, &QAction::triggered, mainwindow, &MainWindow::cleanProject);
+
+    const QIcon runIcon(QPixmap(":/res/res/run-32.png"));
+    QAction *runAction = addAction(runIcon, tr("Run"));
+    connect(runAction, &QAction::triggered, mainwindow, &MainWindow::runProject);
+
+    orderAction = new QAction(this);
+    orderAction->setText(tr("Order Items in Tool Bar"));
+    connect(orderAction, &QAction::triggered, this, &ToolBar::order);
+
+    randomizeAction = new QAction(this);
+    randomizeAction->setText(tr("Randomize Items in Tool Bar"));
+    connect(randomizeAction, &QAction::triggered, this, &ToolBar::randomize);
+
+    addSpinBoxAction = new QAction(this);
+    addSpinBoxAction->setText(tr("Add Spin Box"));
+    connect(addSpinBoxAction, &QAction::triggered, this, &ToolBar::addSpinBox);
+
+    removeSpinBoxAction = new QAction(this);
+    removeSpinBoxAction->setText(tr("Remove Spin Box"));
+    removeSpinBoxAction->setEnabled(false);
+    connect(removeSpinBoxAction, &QAction::triggered, this, &ToolBar::removeSpinBox);
+
+    movableAction = new QAction(tr("Movable"), this);
+    movableAction->setCheckable(true);
+    connect(movableAction, &QAction::triggered, this, &ToolBar::changeMovable);
+
+    allowedAreasActions = new QActionGroup(this);
+    allowedAreasActions->setExclusive(false);
+
+    allowLeftAction = new QAction(tr("Allow on Left"), this);
+    allowLeftAction->setCheckable(true);
+    connect(allowLeftAction, &QAction::triggered, this, &ToolBar::allowLeft);
+
+    allowRightAction = new QAction(tr("Allow on Right"), this);
+    allowRightAction->setCheckable(true);
+    connect(allowRightAction, &QAction::triggered, this, &ToolBar::allowRight);
+
+    allowTopAction = new QAction(tr("Allow on Top"), this);
+    allowTopAction->setCheckable(true);
+    connect(allowTopAction, &QAction::triggered, this, &ToolBar::allowTop);
+
+    allowBottomAction = new QAction(tr("Allow on Bottom"), this);
+    allowBottomAction->setCheckable(true);
+    connect(allowBottomAction, &QAction::triggered, this, &ToolBar::allowBottom);
+
+    allowedAreasActions->addAction(allowLeftAction);
+    allowedAreasActions->addAction(allowRightAction);
+    allowedAreasActions->addAction(allowTopAction);
+    allowedAreasActions->addAction(allowBottomAction);
+
+    areaActions = new QActionGroup(this);
+    areaActions->setExclusive(true);
+
+    leftAction = new QAction(tr("Place on Left") , this);
+    leftAction->setCheckable(true);
+    connect(leftAction, &QAction::triggered, this, &ToolBar::placeLeft);
+
+    rightAction = new QAction(tr("Place on Right") , this);
+    rightAction->setCheckable(true);
+    connect(rightAction, &QAction::triggered, this, &ToolBar::placeRight);
+
+    topAction = new QAction(tr("Place on Top") , this);
+    topAction->setCheckable(true);
+    connect(topAction, &QAction::triggered, this, &ToolBar::placeTop);
+
+    bottomAction = new QAction(tr("Place on Bottom") , this);
+    bottomAction->setCheckable(true);
+    connect(bottomAction, &QAction::triggered, this, &ToolBar::placeBottom);
+
+    areaActions->addAction(leftAction);
+    areaActions->addAction(rightAction);
+    areaActions->addAction(topAction);
+    areaActions->addAction(bottomAction);
+
+    connect(movableAction, &QAction::triggered, areaActions, &QActionGroup::setEnabled);
+
+    connect(movableAction, &QAction::triggered, allowedAreasActions, &QActionGroup::setEnabled);
+
+    */
+    menu = new QMenu(title, this);
+    /*
+    menu->addAction(toggleViewAction());
+    menu->addSeparator();
+    menu->addAction(orderAction);
+    menu->addAction(randomizeAction);
+    menu->addSeparator();
+    menu->addAction(addSpinBoxAction);
+    menu->addAction(removeSpinBoxAction);
+    menu->addSeparator();
+    menu->addAction(movableAction);
+    menu->addSeparator();
+    menu->addActions(allowedAreasActions->actions());
+    menu->addSeparator();
+    menu->addActions(areaActions->actions());
+    menu->addSeparator();
+    menu->addAction(tr("Insert break"), this, &ToolBar::insertToolBarBreak);
+
+    */
+    connect(menu, SIGNAL(aboutToShow()), this, SLOT(updateMenu()));
+
 #endif
 
 }

@@ -217,63 +217,137 @@ void MainWindow::setupMenuBar()
 
 //  toolBarMenu->addAction(tr("Operating System"), this, &MainWindow::architectureOS);
 
-    NetworkMenu = menuBar()->addMenu(tr("&Analyse"));
-    NetworkMenu->addAction(tr("Generate Visualisation"), this, &MainWindow::Visualise);
-    NetworkMenu->addAction(tr("Event Playback"), this, &MainWindow::EventPlayback);
+    AnalyseMenu = menuBar()->addMenu(tr("&Analyse"));
+    AnalyseMenu->addAction(tr("Generate Visualisation"), this, &MainWindow::Visualise);
+    AnalyseMenu->addAction(tr("Event Playback"), this, &MainWindow::EventPlayback);
 
 #else
-    menu->addAction(tr("New Project.."));
-
     QAction* newProjectAction = new QAction("&New Project", this);
     menu->addAction(newProjectAction);
-    connect(newProjectAction, SIGNAL(triggered()), qApp, SLOT(newProject()));
+    connect(newProjectAction, SIGNAL(triggered()), this, SLOT(newProject()));
 
-/*
-    menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
-    menu->addAction(tr("Recent Projects"), this, &MainWindow::saveLayout);
-    menu->addSeparator();
-    menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
+    QAction* loadProjectAction = new QAction("&Load Project..", this);
+    menu->addAction(loadProjectAction);
+    connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
+
+    QAction* recentProjectsAction = new QAction("&Recent Projects", this);
+    menu->addAction(recentProjectsAction);
+    //connect(recentProjectsAction, SIGNAL(triggered()), this, SLOT(newProject()));
+
     menu->addSeparator();
 
-    menu->addAction(tr("Print Pre&view"), this, &MainWindow::printPreview);
-    menu->addAction(tr("&Print"), this, &MainWindow::printFile);
+    QAction* saveProjectAction = new QAction("&Save", this);
+    menu->addAction(saveProjectAction);
+    connect(saveProjectAction, SIGNAL(triggered()), this, SLOT(saveFile()));
+
     menu->addSeparator();
-    menu->addAction(tr("&Quit"), this, &QWidget::close);
+
+    QAction* printPreviewAction = new QAction("Print Pre&view", this);
+    menu->addAction(printPreviewAction);
+    connect(printPreviewAction, SIGNAL(triggered()), this, SLOT(printPreview()));
+
+    QAction* printAction = new QAction("&Print", this);
+    menu->addAction(printAction);
+    connect(printAction, SIGNAL(triggered()), this, SLOT(printFile()));
+
+    menu->addSeparator();
+
+    QAction* quitAction = new QAction("&Quit", this);
+    menu->addAction(quitAction);
+    connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
     EditMenu = menuBar()->addMenu(tr("&Edit"));
-    EditMenu->addAction(tr("Cut"),this, &MainWindow::cutText);
-    EditMenu->addAction(tr("Copy"), this, &MainWindow::copyText);
-    EditMenu->addAction(tr("Paste"), this, &MainWindow::pasteText);
-    menu->addSeparator();
-    EditMenu->addAction(tr("Select All"), this, &MainWindow::selectAllText);
-    menu->addSeparator();
-    EditMenu->addAction(tr("Find/Replace"), this, &MainWindow::FindReplaceText);
-    menu->addSeparator();
-    EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
-    menu->addSeparator();
-    EditMenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
-    menu->addSeparator();
-    EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
+
+    QAction* cutAction = new QAction("&Cut", this);
+    EditMenu->addAction(cutAction);
+    connect(cutAction, SIGNAL(triggered()), this, SLOT(cutText()));
+
+    QAction* copyAction = new QAction("&Copy", this);
+    EditMenu->addAction(copyAction);
+    connect(copyAction, SIGNAL(triggered()), this, SLOT(copyText()));
+
+    QAction* pasteAction = new QAction("&Paste", this);
+    EditMenu->addAction(pasteAction);
+    connect(pasteAction, SIGNAL(triggered()), this, SLOT(pasteText()));
+
+    EditMenu->addSeparator();
+
+    QAction* selectAllAction = new QAction("&Select All", this);
+    EditMenu->addAction(selectAllAction);
+    connect(selectAllAction, SIGNAL(triggered()), this, SLOT(selectAllText()));
+
+    EditMenu->addSeparator();
+
+    QAction* findReplaceAction = new QAction("&Find/Replace", this);
+    EditMenu->addAction(findReplaceAction);
+    connect(findReplaceAction, SIGNAL(triggered()), this, SLOT(FindReplaceText()));
+
+    EditMenu->addSeparator();
+
+    QAction* gotoLineAction = new QAction("&Goto Line", this);
+    EditMenu->addAction(gotoLineAction);
+    connect(gotoLineAction, SIGNAL(triggered()), this, SLOT(GotoLineText()));
+
+    EditMenu->addSeparator();
+
+    QAction* boardLibraryAction = new QAction("Board Library", this);
+    EditMenu->addAction(boardLibraryAction);
+    connect(boardLibraryAction, SIGNAL(triggered()), this, SLOT(showLibrary()));
+
+    EditMenu->addSeparator();
+
+    QAction* settingsAction = new QAction("Settings", this);
+    EditMenu->addAction(settingsAction);
+    connect(settingsAction, SIGNAL(triggered()), this, SLOT(UserSettings()));
 
     buildWindowMenu = menuBar()->addMenu(tr("&Build"));
-    buildAction = buildWindowMenu->addAction(tr("Build.."),this, &MainWindow::buildProject);
-    deployAction = buildWindowMenu->addAction(tr("Deploy.."), this, &MainWindow::deployProject);
-    cleanAction = buildWindowMenu->addAction(tr("Clean"), this, &MainWindow::cleanProject);
-    checkAction = buildWindowMenu->addAction(tr("Unit Test"), this, &MainWindow::checkProject);
-    runAction = buildWindowMenu->addAction(tr("Run"), this, &MainWindow::runProject);
+
+    buildAction = new QAction("&Build", this);
+    buildWindowMenu->addAction(buildAction);
+    connect(buildAction, SIGNAL(triggered()), this, SLOT(buildProject()));
+
+    deployAction = new QAction("&Deploy", this);
+    buildWindowMenu->addAction(deployAction);
+    connect(deployAction, SIGNAL(triggered()), this, SLOT(deployProject()));
+
+    cleanAction = new QAction("&Clean", this);
+    buildWindowMenu->addAction(cleanAction);
+    connect(cleanAction, SIGNAL(triggered()), this, SLOT(cleanProject()));
+
+    checkAction = new QAction("&New Project", this);
+    buildWindowMenu->addAction(checkAction);
+    connect(checkAction, SIGNAL(triggered()), this, SLOT(checkProject()));
+
+    runAction = new QAction("&Run", this);
+    buildWindowMenu->addAction(runAction);
+    connect(runAction, SIGNAL(triggered()), this, SLOT(runProject()));
 
     setBuildButtonToggles();
 
-    QMenu *toolBarMenu = menuBar()->addMenu(tr("&Design"));
-    toolBarMenu->addAction(tr("System"),this, &MainWindow::architectureSystem);
+    QMenu *designMenu = menuBar()->addMenu(tr("&Design"));
+
+    QAction* systemAction = new QAction("System", this);
+    designMenu->addAction(systemAction);
+    connect(systemAction, SIGNAL(triggered()), this, SLOT(architectureSystem()));
+
 //  toolBarMenu->addAction(tr("GPIO Connections"),this, &MainWindow::architectureGpio);
 //  toolBarMenu->addAction(tr("Sensors/Actuators"), this, &MainWindow::architectureSensorsActuators);
-    toolBarMenu->addAction(tr("Logic"), this, &MainWindow::architectureLogic);
-    toolBarMenu->addAction(tr("Connectivity"), this, &MainWindow::architectureConnectivity);
-    toolBarMenu->addAction(tr("Color Theme"), this, &MainWindow::designThemeSelect);
-//  toolBarMenu->addAction(tr("Communication Buses"), this, &MainWindow::architectureBuses);
-//  toolBarMenu->addAction(tr("Software Interrupts"), this, &MainWindow::architectureInterrupts);
-    QMenu* submenuA = toolBarMenu->addMenu(tr("Deployment Architecture"));
+//  toolBarMenu->addAction(tr("Logic"), this, &MainWindow::architectureLogic);
+    QAction* logicAction = new QAction("&Logic", this);
+    designMenu->addAction(logicAction);
+    connect(logicAction, SIGNAL(triggered()), this, SLOT(architectureLogic()));
+
+    QAction* connectAction = new QAction("Connectivity", this);
+    designMenu->addAction(connectAction);
+    connect(connectAction, SIGNAL(triggered()), this, SLOT(architectureConnectivity()));
+
+    QAction* themeAction = new QAction("Color Theme", this);
+    designMenu->addAction(themeAction);
+    connect(themeAction, SIGNAL(triggered()), this, SLOT(designThemeSelect()));
+
+    //  toolBarMenu->addAction(tr("Communication Buses"), this, &MainWindow::architectureBuses);
+    //  toolBarMenu->addAction(tr("Software Interrupts"), this, &MainWindow::architectureInterrupts);
+    QMenu* submenuA = designMenu->addMenu(tr("Deployment Architecture"));
     QAction* actionNodeMcu = submenuA->addAction( "NodeMCU" );
     actionNodeMcu->setCheckable(true);
 
@@ -289,10 +363,15 @@ void MainWindow::setupMenuBar()
 
 //  toolBarMenu->addAction(tr("Operating System"), this, &MainWindow::architectureOS);
 
-    NetworkMenu = menuBar()->addMenu(tr("&Analyse"));
-    NetworkMenu->addAction(tr("Generate Visualisation"), this, &MainWindow::Visualise);
-    NetworkMenu->addAction(tr("Event Playback"), this, &MainWindow::EventPlayback);
-    */
+    AnalyseMenu = menuBar()->addMenu(tr("&Analyse"));
+
+    QAction* visualiseAction = new QAction("&New Project", this);
+    AnalyseMenu->addAction(visualiseAction);
+    connect(visualiseAction, SIGNAL(triggered()), this, SLOT(Visualise()));
+
+    QAction* playbackAction = new QAction("&New Project", this);
+    AnalyseMenu->addAction(playbackAction);
+    connect(playbackAction, SIGNAL(triggered()), this, SLOT(EventPlayback()));
 
 #endif
 

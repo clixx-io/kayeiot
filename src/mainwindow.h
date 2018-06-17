@@ -173,15 +173,9 @@ private:
     QMenu *dockWidgetMenu;
     QMenu *FileMenu;
     QMenu *EditMenu;
-    QMenu *NetworkMenu;
+    QMenu *AnalyseMenu;
     QMenu *HelpMenu;
     QMenu *buildWindowMenu;
-
-    QAction *buildAction;
-    QAction *deployAction;
-    QAction *cleanAction;
-    QAction *checkAction;
-    QAction *runAction;
 
     QMenu *mainWindowMenu;
     QList<QDockWidget *> extraDockWidgets;
@@ -191,6 +185,12 @@ private:
     QListWidget *userMessages;
 
     QGraphicsScene *designScene;
+
+    QAction *buildAction;
+    QAction *deployAction;
+    QAction *cleanAction;
+    QAction *checkAction;
+    QAction *runAction;
 
 };
 
