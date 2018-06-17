@@ -21,6 +21,7 @@
 #include "hardwarelayoutwidget.h"
 #include "ui_hardwarelayoutwidget.h"
 #include "hardwaregpio.h"
+#include "mainwindow.h"
 
 connectableHardware::connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent)
     : QGraphicsItem(parent), m_id(ID), m_name(name), m_boardfile(boardfile), hardwareType(0),
@@ -708,6 +709,18 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     // Shortcuts for seeing Cables
     QShortcut* finalshortcut = new QShortcut(QKeySequence(Qt::Key_F), ui->componentslistWidget);
     connect(finalshortcut, SIGNAL(activated()), this, SLOT(finalMode()));
+
+    // Shortcuts back to mainwindow functions
+    QMainWindow *mainwindow = getMainWindow();
+
+    QShortcut* addhardwareshortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_N), ui->componentslistWidget);
+    connect(addhardwareshortcut, SIGNAL(activated()), mainwindow, SLOT(AddHardware()));
+
+    QShortcut* addconnectionshortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_K), ui->componentslistWidget);
+    connect(addconnectionshortcut, SIGNAL(activated()), mainwindow, SLOT(AddConnection()));
+
+    QShortcut* addgraphicshortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_G), ui->componentslistWidget);
+    connect(addgraphicshortcut, SIGNAL(activated()), mainwindow, SLOT(AddConnectableGraphic()));
 
     // Restore the last theme
     QSettings settings("Clixx.io","IoT Developer");
@@ -2041,3 +2054,4 @@ void HardwareLayoutWidget::finalMode()
 
     scene->update();
 }
+
