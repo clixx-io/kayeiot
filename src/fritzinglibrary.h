@@ -10,7 +10,7 @@ class FritzingLibrary : public QWidget
 {
     Q_OBJECT
 public:
-    explicit FritzingLibrary(QString partsdir="", QWidget *parent = nullptr);
+    explicit FritzingLibrary(QString partsdir="", QWidget *parent = 0);
 
     QMap <QString, QVariant> readPartFile(const QString partsfile);
     QMap <QString, QVariant> readImageFile(const QString imagefile);
