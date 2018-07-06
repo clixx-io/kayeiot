@@ -75,6 +75,7 @@
 #include <QSettings>
 
 #include "codeeditor.h"
+#include "fritzinglibrary.h"
 #include "communicatorserialwidget.h"
 #include "projectwidget.h"
 #include "clixxiotprojects.h"
@@ -85,6 +86,8 @@
 #include "newhardwareitemdialog.h"
 #include "newconnectionitemdialog.h"
 #include "newgraphicitemdialog.h"
+#include "neweventsignaldialog.h"
+#include "settingsdialog.h"
 
 Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
 
@@ -160,6 +163,13 @@ void MainWindow::setupMenuBar()
     menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
     menu->addAction(tr("Recent Projects"), this, &MainWindow::saveLayout);
     menu->addSeparator();
+
+    QMenu* Importsubmenu = menu->addMenu(tr("Import"));
+    QAction* actionFritzingImport = Importsubmenu->addAction("Fritzing Board File" );
+    connect(actionFritzingImport, SIGNAL(triggered()), this, SLOT(importFritzingParts()));
+    QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
+    QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
+
     menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
     menu->addSeparator();
 
@@ -759,8 +769,13 @@ void MainWindow::GotoLineText()
 
 void MainWindow::UserSettings()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    SettingsDialog *dlg = new SettingsDialog(this);
+    if (dlg->exec())
+    {
+
+    }
+
+    delete dlg;
 
     return;
 }
@@ -1070,6 +1085,7 @@ void MainWindow::AddHardware()
                                  userchoices["boardfile"].toString(),
                                  userchoices["picturefilename"].toString(),
                                  userchoices["width"].toDouble(),userchoices["height"].toDouble(),
+                                 userchoices["units"].toString(),
                                  userchoices["pins"].toInt(), userchoices["rows"].toInt());
 
     }
@@ -1170,10 +1186,25 @@ void MainWindow::AddConnectableGraphic()
     delete dlg;
 }
 
-void MainWindow::AddEventAnimation()
+void MainWindow::AddEventSignal()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Add Event Animation is not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    NewEventSignalDialog *dlg = new NewEventSignalDialog(this ); //, &userchoices);
+    if (dlg->exec())
+    {
+
+        /*
+        systemDesign->addGraphicToScene(userchoices["id"].toString(),
+                userchoices["name"].toString(),
+                userchoices["x"].toDouble(),
+                userchoices["y"].toDouble(),
+                userchoices["picturefilename"].toString(),
+                userchoices["width"].toDouble(),userchoices["height"].toDouble()
+                );
+        */
+
+    }
+
+    delete dlg;
 }
 
 void MainWindow::newProjectWizard()
@@ -1206,11 +1237,38 @@ void MainWindow::showLibrary()
 #endif
 }
 
+void MainWindow::importFritzingParts()
+{
+    QString fritzingdir(QDir::homePath()+"/fritzing-0.9.3b.linux.AMD64/fritzing-parts");
+    QString dirName = fritzingdir+"/core";
+
+#if QT_VERSION >= 0x050000
+    QString partsdir = settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
+#else
+    QString partsdir = settings->value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
+#endif
+
+    QString fritzingfile = QFileDialog::getOpenFileName(this,QObject::tr("Import Fritzing Part"),dirName,"*.fzp");
+
+    if (fritzingfile.length())
+    {
+        QStringList inputfiles;
+        inputfiles << fritzingfile;
+
+        FritzingLibrary *fl = new FritzingLibrary(fritzingdir);
+
+        fl->convertFritzingBoards(inputfiles,partsdir);
+
+        showStatusMessage(tr("File %1 converted").arg(fritzingfile));
+     }
+
+}
+
 void MainWindow::aboutDialog()
 {
 
     static const char message[] =
-        "<p><b>Clixx.io Development IDE</b></p>"
+        "<p><b>KayeIoT Development IDE</b></p>"
 
         "<p>This is the Development IDE for Clixx.io Software used "
         "to Design and Document IoT, Microprocessor and Computer"

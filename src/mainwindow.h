@@ -54,7 +54,7 @@
 #include <QMainWindow>
 
 #if QT_VERSION >= 0x050000
-    #include <QtSerialPort>
+    #include <QtSerialPort/QtSerialPort>
     #include <QtSerialPort/QSerialPortInfo>
 #else
     #include <QtSerialPort/qserialport.h>
@@ -113,6 +113,7 @@ public slots:
     void showWelcome();
     void newProject();
     void loadProject();
+    void importFritzingParts();
     void loadDesignDiagram();
     void saveFile();
     void printPreview();
@@ -157,7 +158,7 @@ public slots:
     void AddHardware();
     void AddConnection();
     void AddConnectableGraphic();
-    void AddEventAnimation();
+    void AddEventSignal();
 
     void designThemeSelect();
 
