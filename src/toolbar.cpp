@@ -136,8 +136,11 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
     addConnectionAction = systemmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Add Connection/Cable"));
     connect(addConnectionAction, &QAction::triggered, mainwindow, &MainWindow::AddConnection);
 
-    addConnectionAction = systemmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Add Connectable Graphic / Icon"));
+    addConnectionAction = systemmenu->addAction(genIcon(iconSize(), "C", Qt::blue), tr("Add Connectable Graphic / Icon"));
     connect(addConnectionAction, &QAction::triggered, mainwindow, &MainWindow::AddConnectableGraphic);
+
+    QAction *addEventSignalAction = systemmenu->addAction(genIcon(iconSize(), "D", Qt::blue), tr("Add Event / Signal"));
+    connect(addEventSignalAction, &QAction::triggered, mainwindow, &MainWindow::AddEventSignal);
 
     /*
     addEventAnimationAction = systemmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Add Events / Animation"));

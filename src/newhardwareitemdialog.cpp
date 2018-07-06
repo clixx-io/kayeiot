@@ -113,6 +113,7 @@ void NewHardwareItemDialog::on_buttonBox_accepted()
         {"boardfile", m_boardfile},
         {"width", ui->WidthSpinBox->value()},
         {"height", ui->HeightSpinBox->value()},
+        {"units", ui->mmRadioButton->isChecked() ? "mm" : "in"},
         {"pins", ui->pinscomboBox->currentText().toInt()},
         {"rows", ui->rowscomboBox->currentText().toInt()},
         {"picturefilename", m_imagefilename}
@@ -124,6 +125,7 @@ void NewHardwareItemDialog::on_buttonBox_accepted()
     object["boardfile"] = m_boardfile;
     object["width"] = ui->WidthSpinBox->value();
     object["height"] = ui->HeightSpinBox->value();
+    object["units"] = ui->mmRadioButton->isChecked() ? "mm" : "in";
     object["pins"] = ui->pinscomboBox->currentText().toInt();
     object["rows"] = ui->rowscomboBox->currentText().toInt();
     object["picturefilename"] = m_imagefilename;
@@ -205,21 +207,44 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
 
     QSettings boardfile(fullFilePath, QSettings::IniFormat);
 
-    QString imageFileName = imagesDir.absolutePath() + "/" + boardfile.value("bitmap/file","").toString();
-    QPixmap pixmap(imageFileName);
-    qreal ar = (100 * pixmap.width()) / pixmap.height();
+    QString imageFileName = imagesDir.absolutePath() + "/" + boardfile.value("image/file","").toString();
+    QFileInfo check_file(imageFileName);
 
-    qDebug() << "Activated:" << item->text() << ", " << fullFilePath << " (" << pixmap.width() << ", " << pixmap.height() << ")";
+    // check if file exists and if yes: Is it really a file and no directory?
+    if (check_file.exists() && check_file.isFile()) {
 
-    ui->ComponentPicturelabel->setPixmap(pixmap);
-    ui->ComponentPicturelabel->setScaledContents(true);
-    ui->ComponentPicturelabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored );
-    ui->ComponentPicturelabel->setFixedWidth(ui->ComponentPicturelabel->height() * (ar / 100));
-    ui->ComponentPicturelabel->update();
-    m_imagefilename = imageFileName;
+        QPixmap pixmap(imageFileName);
+        if (pixmap.height())
+        {
+            qreal ar = (100 * pixmap.width()) / pixmap.height();
+
+            ui->ComponentPicturelabel->setPixmap(pixmap);
+            ui->ComponentPicturelabel->setScaledContents(true);
+            ui->ComponentPicturelabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored );
+            ui->ComponentPicturelabel->setFixedWidth(ui->ComponentPicturelabel->height() * (ar / 100));
+            ui->ComponentPicturelabel->update();
+            m_imagefilename = imageFileName;
+
+            qDebug() << "Activated:" << item->text() << ", " << fullFilePath << " (" << pixmap.width() << ", " << pixmap.height() << ")";
+
+        }
+        else
+        {
+            qDebug() << "Image file cannot be loaded:" << imageFileName;
+        }
+
+    } else {
+        ui->ComponentPicturelabel->clear();
+        qDebug() << "Image file doesnt exist:" << imageFileName;
+    }
 
     ui->WidthSpinBox->setValue(boardfile.value("overview/width",ui->WidthSpinBox->value()).toDouble());
     ui->HeightSpinBox->setValue(boardfile.value("overview/height",ui->HeightSpinBox->value()).toDouble());
+    QString units = boardfile.value("overview/units","mm").toString().toLower();
+    if (units == "mm")
+        ui->mmRadioButton->setChecked(true);
+    else if (units == "in")
+        ui->InchesRadioButton->setChecked(true);
 
 #if QT_VERSION >= 0x050000
     ui->pinscomboBox->setCurrentText(boardfile.value("gpio/pins",ui->pinscomboBox->currentText()).toString());
