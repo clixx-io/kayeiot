@@ -167,8 +167,8 @@ void MainWindow::setupMenuBar()
     QMenu* Importsubmenu = menu->addMenu(tr("Import"));
     QAction* actionFritzingImport = Importsubmenu->addAction("Fritzing Board File" );
     connect(actionFritzingImport, SIGNAL(triggered()), this, SLOT(importFritzingParts()));
-    QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
-    QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
+    // QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
+    // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
     menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
     menu->addSeparator();
@@ -251,6 +251,12 @@ void MainWindow::setupMenuBar()
     connect(saveProjectAction, SIGNAL(triggered()), this, SLOT(saveFile()));
 
     menu->addSeparator();
+
+    QMenu* Importsubmenu = menu->addMenu(tr("Import"));
+    QAction* actionFritzingImport = Importsubmenu->addAction("Fritzing Board File" );
+    connect(actionFritzingImport, SIGNAL(triggered()), this, SLOT(importFritzingParts()));
+    // QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
+    // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
     QAction* printPreviewAction = new QAction("Print Pre&view", this);
     menu->addAction(printPreviewAction);
@@ -1239,14 +1245,14 @@ void MainWindow::showLibrary()
 
 void MainWindow::importFritzingParts()
 {
-    QString fritzingdir(QDir::homePath()+"/fritzing-0.9.3b.linux.AMD64/fritzing-parts");
-    QString dirName = fritzingdir+"/core";
-
 #if QT_VERSION >= 0x050000
     QString partsdir = settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
 #else
     QString partsdir = settings->value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
 #endif
+
+    QString fritzingdir(QDir::homePath()+"/fritzing-0.9.3b.linux.AMD64/fritzing-parts");
+    QString dirName = fritzingdir+"/core";
 
     QString fritzingfile = QFileDialog::getOpenFileName(this,QObject::tr("Import Fritzing Part"),dirName,"*.fzp");
 
@@ -1255,7 +1261,28 @@ void MainWindow::importFritzingParts()
         QStringList inputfiles;
         inputfiles << fritzingfile;
 
-        FritzingLibrary *fl = new FritzingLibrary(fritzingdir);
+        QFileInfo fi(fritzingfile);
+        dirName = fi.absolutePath();
+        if (dirName.endsWith("/core"))
+        {
+            dirName = dirName.left(dirName.length()-5);
+        }
+        else if (dirName.endsWith("/contrib"))
+        {
+            dirName = dirName.left(dirName.length()-8);
+        }
+        else if (dirName.endsWith("/obsolete"))
+        {
+            dirName = dirName.left(dirName.length()-9);
+        }
+        else if (dirName.endsWith("/user"))
+        {
+            dirName = dirName.left(dirName.length()-5);
+        }
+
+        FritzingLibrary *fl = new FritzingLibrary(dirName);
+
+        qDebug() << "Working from " << dirName;
 
         fl->convertFritzingBoards(inputfiles,partsdir);
 
