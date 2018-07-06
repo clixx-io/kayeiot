@@ -257,7 +257,7 @@ public:
     bool LoadComponents(const QString filename = "hardware.layout");
     bool SaveComponents(QString filename = "hardware.layout");
 
-    connectableHardware *addToScene(QString componentID, QString componentName, double x, double y, QString componentBoardFile, QString componentImageName, double componentWidth, double componentHeight, int pins, int rows);
+    connectableHardware *addToScene(QString componentID, QString componentName, double x, double y, QString componentBoardFile, QString componentImageName, double componentWidth, double componentHeight, QString units, int pins, int rows);
     connectableCable *addCableToScene(QString componentID, QString componentName, QString startItem, QString endItem, int wires, int rows, QColor cablecolor = QColor(255, 0, 0, 127));
     connectableGraphic * addGraphicToScene(QString componentID, QString componentName, double x, double y, QString componentImageName, double componentWidth, double componentHeight);
 
@@ -269,6 +269,7 @@ public:
     QList <connectableHardware *> getHardwareComponents();
     QList <connectableGraphic *> getGraphicComponents();
     QList <QGraphicsItem *> selectedItems(){ return(scene->selectedItems());}
+    void convertSize(const QString units, double &w, double &h);
 
     QStringList getConnectionPointNames();
 
@@ -306,7 +307,7 @@ private:
     QGraphicsScene *scene;
     QString m_filename;
 
-    int m_unitSystem;     // 0=mm, 1=100mil/0.1"
+    QString m_unitSystem;     // mm, in, mil
 
     bool m_finalmode;
 

@@ -49,54 +49,61 @@ void connectableHardware::paint(QPainter *painter, const QStyleOptionGraphicsIte
 
     if ((hardwareType == 0) && (m_image))
     {
+        QRectF imagebounds = boundingRect();
+        imagebounds.adjust(4,4,-4,-4);
 
-        /*
-        // Create new picture for transparent
-        QPixmap transparent(m_image->size());
-        // Do transparency
-        transparent.fill(Qt::transparent);
-        painter->begin(&transparent);
-        painter->setCompositionMode(QPainter::CompositionMode_Source);
-        painter->drawImage(boundingRect(),m_image->toImage());
-        painter->setCompositionMode(QPainter::CompositionMode_DestinationIn);
-
-        // Set transparency level to 150 (possible values are 0-255)
-        // The alpha channel of a color specifies the transparency effect,
-        // 0 represents a fully transparent color, while 255 represents
-        // a fully opaque color.
-        painter->fillRect(boundingRect(), QColor(0, 0, 0, 150));
-//        painter.end()
-
-        // m_image->fill(Qt::transparent);
-        m_image->setMask(m_image->createHeuristicMask());
-        QPixmap mask = m_image->createHeuristicMask();
-
-        painter->setClipRegion(QRegion(mask));
-                */
-
-        painter->drawImage(boundingRect(),m_image->toImage());
+        painter->drawImage(imagebounds,m_image->toImage());
     }
     else
     {
-        painter->setPen(Qt::yellow);
-        painter->setBrush(Qt::gray);
+        /* All this sorta works
+        painter->setBrush(Qt::white);
         painter->drawRect(boundingRect());
+
+        QPen highlightpen(painter->pen());
+        highlightpen.setWidth(3);
+        highlightpen.setColor("#009FFF");
+        painter->setPen(highlightpen);
+
+        RoundedPolygon poly;
+        poly << QPoint(0,0) << QPoint(boundingRect().width(),0) << QPoint(boundingRect().width(),boundingRect().height()) << QPoint(0,boundingRect().height());
+        painter->drawPath(poly.GetPath());
+
+        QPoint titlepos(10,15);
+        painter->drawText(titlepos, m_name);
+        */
+
+        QRectF imagebounds = boundingRect();
+        imagebounds.adjust(4,4,-4,-4);
+
+        painter->setRenderHint(QPainter::Antialiasing);
+        QPainterPath path;
+        path.addRoundedRect(imagebounds, 10, 10);
+
+        QPen pen(painter->pen());
+        pen.setWidth(3);
+        pen.setColor("#009FFF");
+
+        painter->setPen(pen);
+        painter->fillPath(path, Qt::white);
+        painter->drawPath(path);
 
     }
 
     if (option->state & QStyle::State_Selected)
     {
-        painter->setPen(Qt::red);
+        QPen standardpen(painter->pen()), highlightpen(painter->pen());
 
-        /*
+        highlightpen.setWidth(3);
+        highlightpen.setColor("#009FFF");
+        painter->setPen(highlightpen);
+
         RoundedPolygon poly;
-//      poly << QPoint(0,0) << QPoint(boundingRect().width(),0) << QPoint(boundingRect().width(),boundingRect().height()) << QPoint(0,boundingRect().height());
-        int offset(10);
-        poly << QPoint(-1*offset,-1*offset) << QPoint(boundingRect().width()+offset,-1*offset) << QPoint(boundingRect().width()+offset,boundingRect().height()+offset) << QPoint(-1*offset,boundingRect().height()+offset);
-//      painter->drawPath(poly.GetPath());
-        */
+        poly << QPoint(0,0) << QPoint(boundingRect().width(),0) << QPoint(boundingRect().width(),boundingRect().height()) << QPoint(0,boundingRect().height());
+        painter->drawPath(poly.GetPath());
 
-        painter->drawRect(boundingRect());
+        painter->setPen(standardpen);
+
     }
 }
 
@@ -321,6 +328,7 @@ connectableCable::connectableCable(QString componentID, QString componentName, Q
     // Copy over the cable color
     QPen pen;
     pen.setColor(cablecolor);
+    pen.setWidth(3);
     setPen(pen);
 
     // Adjust the starting position
@@ -359,26 +367,23 @@ connectableCable::connectableCable(QString componentID, QString componentName, Q
 
 void connectableCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    QPen standardpen(painter->pen()), highlightpen(painter->pen());
+
+    highlightpen.setWidth(3);
+    highlightpen.setColor("#009FFF");
+    painter->setPen(highlightpen);
+
+    QGraphicsLineItem::paint(painter,option,widget);
+
     if (option->state & QStyle::State_Selected)
     {
-        painter->setPen(Qt::red);
+        highlightpen.setColor("#009FFF");
+        painter->setPen(highlightpen);
+//      painter->setPen(Qt::red);
         painter->drawRect(boundingRect());
     }
 
-    /*
-    painter->setPen(Qt::blue);
-
-    QPainterPath path;
-    path.moveTo(0, 0);
-    path.lineTo(20, 30);
-    path.cubicTo(80, 0, 50, 50, 80, 80);
-    painter->drawPath(path);
-
-    painter->setBrush(Qt::red);
-    painter->drawRect(45, 45, 10, 10);
-    */
-
-    QGraphicsLineItem::paint(painter,option,widget);
+    painter->setPen(standardpen);
 
 }
 
@@ -726,6 +731,7 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     QSettings settings("Clixx.io","IoT Developer");
     settings.beginGroup("System_Designer");
     setDesignTheme(settings.value("Theme","default").toString());
+    m_unitSystem = settings.value("global/units","mm").toString();
     settings.endGroup();
 
 }
@@ -983,8 +989,9 @@ bool HardwareLayoutWidget::LoadComponents(const QString filename)
             int r = boardfile.value("rows",0).toInt();
             QString b = boardfile.value("board_file","").toString();
             QString i = boardfile.value("image_file","").toString();
+            QString u = boardfile.value("units","").toString();
 
-            connectableHardware *hw = addToScene(compID,compName,x,y,b,i,w,h,p,r);
+            connectableHardware *hw = addToScene(compID,compName,x,y,b,i,w,h,u,p,r);
 
             hw->setPrimaryConnectionIndex(connectindex);
 
@@ -1616,12 +1623,17 @@ QString HardwareLayoutWidget::getNextName(QString prefix)
 
 }
 
-connectableHardware * HardwareLayoutWidget::addToScene(QString componentID, QString componentName, double x, double y, QString componentBoardFile, QString componentImageName, double componentWidth, double componentHeight, int pins, int rows)
+connectableHardware * HardwareLayoutWidget::addToScene(QString componentID, QString componentName, double x, double y, QString componentBoardFile, QString componentImageName, double componentWidth, double componentHeight, QString units, int pins, int rows)
 {
     if (componentID.length() == 0)
         componentID = getNextID();
 
-    connectableHardware *item = new connectableHardware(componentID,componentName,componentBoardFile,pins, rows, componentWidth,componentHeight,componentImageName);
+    double w(componentWidth), h(componentHeight);
+    qDebug() << "Size before conversion " << w << ", "  << h;
+    convertSize(units, w, h);
+    qDebug() << "Size after conversion " << w << ", "  << h;
+
+    connectableHardware *item = new connectableHardware(componentID,componentName,componentBoardFile,pins, rows, w, h, componentImageName);
 
     item->setX(x);
     item->setY(y);
@@ -1909,6 +1921,9 @@ QStringList HardwareLayoutWidget::getAvailableDesignThemes()
     QStringList result;
 
     result << "Orange" << "Red" << "Maroon" << "Fuchsia" << "Purple" << "Black" << "Gray" << "Silver";
+    result << "Grey Shade" << "Piggy Pink" << "Cool Blues" << "Dark Ocean" << "Yoda" << "Amin" << "Harvey";
+    result << "Neuromancer" << "Flare" << "Ultra Violet" << "Burning Orange" << "Sin City Red";
+    result << "Citrus Peel" << "Blue Raspberry" << "Vanusa" << "Shifty" << "Expresso" << "Moon Purple";
 
     return(result);
 }
@@ -1916,23 +1931,88 @@ QStringList HardwareLayoutWidget::getAvailableDesignThemes()
 void HardwareLayoutWidget::setDesignTheme(QString themename)
 {
 
-    if (themename == "Orange")
-        ui->graphicsView->setStyleSheet("background-color: #FF851B;");
-    else if (themename == "Red")
-        ui->graphicsView->setStyleSheet("background-color: #FF4136;");
-    else if (themename == "Maroon")
-        ui->graphicsView->setStyleSheet("background-color: #85144b;");
-    else if (themename == "Fuchsia")
-        ui->graphicsView->setStyleSheet("background-color: #F012BE;");
-    else if (themename == "Purple")
-        ui->graphicsView->setStyleSheet("background-color: #B10DC9;");
-    else if (themename == "Black")
-        ui->graphicsView->setStyleSheet("background-color: #111111;");
-    else if (themename == "Gray")
-        ui->graphicsView->setStyleSheet("background-color: #AAAAAA;");
-    else if (themename == "Silver")
-        ui->graphicsView->setStyleSheet("background-color: #DDDDDD;");
+    QString fadelefttoright("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 %1, stop:1 %2 )"),
+            solidblock("background-color: %1;");
 
+    if (themename == "Orange")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#FF851B"));
+    else if (themename == "Red")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#FF4136;"));
+    else if (themename == "Maroon")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#85144b;"));
+    else if (themename == "Fuchsia")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#F012BE;"));
+    else if (themename == "Purple")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#B10DC9;"));
+    else if (themename == "Black")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#111111;"));
+    else if (themename == "Gray")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#AAAAAA;"));
+    else if (themename == "Silver")
+        ui->graphicsView->setStyleSheet(QObject::tr(solidblock.toLocal8Bit()).arg("#DDDDDD;"));
+
+    else if (themename == "Grey Shade")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#bdc3c7").arg("#2c3e50"));
+    else if (themename == "Piggy Pink")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#ee9ca7").arg("#ffdde1"));
+    else if (themename == "Cool Blues")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#2193b0").arg("#6dd5ed"));
+    else if (themename == "Dark Ocean")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#373b44").arg("#4286f4"));
+    else if (themename == "Yoda")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#ff0099").arg("#493240"));
+    else if (themename == "Amin")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#8e2de2").arg("#4a00e0"));
+    else if (themename == "Harvey")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#1f4037").arg("#99f2c8"));
+
+    else if (themename == "Neuromancer")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#f953c6").arg("#b91d73"));
+    else if (themename == "Flare")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#f12711").arg("#f5af19"));
+    else if (themename == "Ultra Violet")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#654ea3").arg("#eaafc8"));
+    else if (themename == "Burning Orange")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#ff416c").arg("#ff4b2b"));
+    else if (themename == "Sin City Red")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#ed213a").arg("#93291e"));
+    else if (themename == "Citrus Peel")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#fdc830").arg("#f37335"));
+    else if (themename == "Blue Raspberry")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#00b4db").arg("#0083b0"));
+    else if (themename == "Vanusa")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#da4453").arg("#89216b"));
+    else if (themename == "Shifty")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#636363").arg("#a2ab58"));
+    else if (themename == "Expresso")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#ad5389").arg("#3c1053"));
+    else if (themename == "Moon Purple")
+        ui->graphicsView->setStyleSheet(QObject::tr(fadelefttoright.toLocal8Bit()).arg("#4e54c8").arg("#8f94fb"));
+}
+
+void HardwareLayoutWidget::convertSize(const QString units, double &w, double &h)
+{
+    if (units != m_unitSystem)
+    {
+        if (m_unitSystem == "mm")
+        {
+            if (units == "in")
+            {
+                w = w * 2.54;
+                h = h * 2.54;
+            }
+        }
+        else if (m_unitSystem == "in")
+        {
+            if (units == "mm")
+            {
+                w = w / 2.54;
+                h = h / 2.54;
+            }
+        }
+    }
+    else
+        return;
 }
 
 void HardwareLayoutWidget::printPreview()
