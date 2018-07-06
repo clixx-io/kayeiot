@@ -6,7 +6,7 @@ equals(QT_MAJOR_VERSION, 4) {
 }
 
 TEMPLATE = app
-QT += serialport printsupport
+QT += serialport printsupport xml
 
 HEADERS += mainwindow.h toolbar.h \
     codeeditor.h \
@@ -20,7 +20,10 @@ HEADERS += mainwindow.h toolbar.h \
     hardwaregpio.h \
     newhardwareitemdialog.h \
     newconnectionitemdialog.h \
-    newgraphicitemdialog.h
+    newgraphicitemdialog.h \
+    fritzinglibrary.h \
+    neweventsignaldialog.h \
+    settingsdialog.h
 SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     codeeditor.cpp \
     outputwidget.cpp \
@@ -33,7 +36,10 @@ SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     hardwaregpio.cpp \
     newhardwareitemdialog.cpp \
     newconnectionitemdialog.cpp \
-    newgraphicitemdialog.cpp
+    newgraphicitemdialog.cpp \
+    fritzinglibrary.cpp \
+    neweventsignaldialog.cpp \
+    settingsdialog.cpp
 build_all:!build_pass {
     CONFIG -= build_all
     CONFIG += release
@@ -55,4 +61,6 @@ FORMS += \
     hardwaregpio.ui \
     newhardwareitemdialog.ui \
     newconnectionitemdialog.ui \
-    newgraphicitemdialog.ui
+    newgraphicitemdialog.ui \
+    neweventsignaldialog.ui \
+    settingsdialog.ui
