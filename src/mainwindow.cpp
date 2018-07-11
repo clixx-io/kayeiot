@@ -3,8 +3,7 @@
 ** Copyright (C) 2018 Clixx.io Pty Limited
 ** Contact: https://www.clixx.io/licensing/
 **
-** This file is part of the demonstration applications of the Clixx.io
-** Commander Program.
+** This file is part of the KayeIoT Application of the Clixx.io
 **
 ** Commercial License Usage
 ** Licensees holding valid commercial Clixx.io licenses may use this file in
@@ -75,6 +74,7 @@
 #include <QSettings>
 
 #include "codeeditor.h"
+#include "arduinosketch.h"
 #include "fritzinglibrary.h"
 #include "communicatorserialwidget.h"
 #include "projectwidget.h"
@@ -167,10 +167,16 @@ void MainWindow::setupMenuBar()
     QMenu* Importsubmenu = menu->addMenu(tr("Import"));
     QAction* actionFritzingImport = Importsubmenu->addAction("Fritzing Board File" );
     connect(actionFritzingImport, SIGNAL(triggered()), this, SLOT(importFritzingParts()));
+    QAction* actionArduinoSketchImport = Importsubmenu->addAction("Arduino Sketch",this,&MainWindow::importArduinoSketch);
     // QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
     // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
     menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
+    menu->addSeparator();
+
+    QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
+    Librarysubmenu->addAction(tr("Update Part Library"), this, &MainWindow::libraryUpdate);
+    Librarysubmenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
     menu->addSeparator();
 
     menu->addAction(tr("Print Pre&view"), this, &MainWindow::printPreview);
@@ -188,8 +194,6 @@ void MainWindow::setupMenuBar()
     EditMenu->addAction(tr("Find/Replace"), this, &MainWindow::FindReplaceText);
     menu->addSeparator();
     EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
-    menu->addSeparator();
-    EditMenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
     menu->addSeparator();
     EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
 
@@ -243,13 +247,11 @@ void MainWindow::setupMenuBar()
     QAction* recentProjectsAction = new QAction("&Recent Projects", this);
     menu->addAction(recentProjectsAction);
     //connect(recentProjectsAction, SIGNAL(triggered()), this, SLOT(newProject()));
-
     menu->addSeparator();
 
     QAction* saveProjectAction = new QAction("&Save", this);
     menu->addAction(saveProjectAction);
     connect(saveProjectAction, SIGNAL(triggered()), this, SLOT(saveFile()));
-
     menu->addSeparator();
 
     QMenu* Importsubmenu = menu->addMenu(tr("Import"));
@@ -257,6 +259,11 @@ void MainWindow::setupMenuBar()
     connect(actionFritzingImport, SIGNAL(triggered()), this, SLOT(importFritzingParts()));
     // QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
     // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
+
+    QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
+    QAction* actionUpdateLibrary = Librarysubmenu->addAction("Update Part Library" );
+    Librarysubmenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
+    menu->addSeparator();
 
     QAction* printPreviewAction = new QAction("Print Pre&view", this);
     menu->addAction(printPreviewAction);
@@ -1264,6 +1271,9 @@ void MainWindow::importFritzingParts()
 
     if (fritzingfile.length())
     {
+
+        showStatusDock(true);
+
         QStringList inputfiles;
         inputfiles << fritzingfile;
 
@@ -1288,13 +1298,81 @@ void MainWindow::importFritzingParts()
 
         FritzingLibrary *fl = new FritzingLibrary(dirName);
 
-        qDebug() << "Working from " << dirName;
+        showStatusMessage(tr("Working from %1").arg(dirName));
 
         fl->convertFritzingBoards(inputfiles,partsdir);
 
         showStatusMessage(tr("File %1 converted").arg(fritzingfile));
      }
 
+}
+
+void MainWindow::importArduinoSketch()
+{
+    QString dirName(".");
+    QString arduinoSketch = QFileDialog::getOpenFileName(this,QObject::tr("Import Arduino Sketch"),dirName,"*.ino");
+
+    if (arduinoSketch.length())
+    {
+
+        showStatusDock(true);
+
+        QStringList inputfiles;
+        inputfiles << arduinoSketch;
+
+        QFileInfo fi(arduinoSketch);
+        dirName = fi.absolutePath();
+
+        ArduinoSketch *ino = new ArduinoSketch();
+
+        showStatusMessage(tr("Converting sketch %1").arg(arduinoSketch));
+
+        ino->convertSketch(arduinoSketch,".");
+
+        showStatusMessage(tr("File %1 converted").arg(arduinoSketch));
+
+     }
+}
+
+void MainWindow::libraryUpdate()
+{
+    QString gitcmd("git");
+    QStringList updateparams;
+    updateparams << "update";
+
+#if QT_VERSION >= 0x050000
+    QString dirname = settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
+#else
+    QString dirname = settings->value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
+#endif
+
+    showStatusDock(true);
+
+    if (!QDir("Folder").exists())
+    {
+        updateparams.clear();
+        updateparams << "clone" << "https://github.com/clixx-io/kayeiot-parts";
+    }
+
+    showStatusDock(true);
+
+    QProcess *gitupdater = new QProcess(this);
+
+    gitupdater->setProcessChannelMode(QProcess::MergedChannels);
+    gitupdater->setWorkingDirectory(dirname);
+    gitupdater->start(gitcmd, updateparams);
+
+    if (!gitupdater->waitForFinished())
+    {
+        showStatusMessage(tr("Update failed - %1").arg(gitupdater->errorString()));
+    } else
+    {
+        QString processOutput(gitupdater->readAll());
+
+        showStatusMessage(tr("Update succeeded - %1").arg(processOutput));
+    }
+
+    delete gitupdater;
 }
 
 void MainWindow::aboutDialog()
@@ -1319,6 +1397,35 @@ void MainWindow::aboutDialog()
     QMessageBox msgBox(QMessageBox::Information, tr("About"), tr(message),QMessageBox::Ok);
     msgBox.exec();
 
+}
+
+void MainWindow::showStatusDock(bool viewStatus)
+{
+    if (viewStatus)
+    {
+        if (!UserMsgDock)
+        {
+            UserMsgDock = new QDockWidget(tr("Output"), this);
+            UserMsgDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+            addDockWidget(Qt::BottomDockWidgetArea, UserMsgDock);
+        }
+        else
+            UserMsgDock->show();
+
+        if (!userMessages)
+        {
+            userMessages = new QListWidget(UserMsgDock);
+            userMessages->setStyleSheet("background-color: rgb(188, 188, 188);");
+            userMessages->addItems(QStringList() << "Ready.");
+            UserMsgDock->setWidget(userMessages);
+        }
+    }
+    else if (UserMsgDock)
+    {
+        delete UserMsgDock;
+        UserMsgDock = Q_NULLPTR;
+        userMessages = Q_NULLPTR;
+    }
 }
 
 void MainWindow::showStatusMessage(const QString &message)

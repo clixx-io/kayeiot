@@ -23,7 +23,8 @@ HEADERS += mainwindow.h toolbar.h \
     newgraphicitemdialog.h \
     fritzinglibrary.h \
     neweventsignaldialog.h \
-    settingsdialog.h
+    settingsdialog.h \
+    arduinosketch.h
 SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     codeeditor.cpp \
     outputwidget.cpp \
@@ -39,7 +40,8 @@ SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     newgraphicitemdialog.cpp \
     fritzinglibrary.cpp \
     neweventsignaldialog.cpp \
-    settingsdialog.cpp
+    settingsdialog.cpp \
+    arduinosketch.cpp
 build_all:!build_pass {
     CONFIG -= build_all
     CONFIG += release

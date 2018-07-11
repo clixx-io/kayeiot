@@ -89,6 +89,7 @@ public:
 
     void LoadCodeSource(const QString filename);
     void showStatusMessage(const QString &message);
+    void showStatusDock(bool viewStatus);
     void clearStatusMessages();
 
     void setBuildButtonToggles(const bool alloption = false, const bool cleanoption = false,
@@ -114,6 +115,8 @@ public slots:
     void newProject();
     void loadProject();
     void importFritzingParts();
+    void importArduinoSketch();
+    void libraryUpdate();
     void loadDesignDiagram();
     void saveFile();
     void printPreview();
