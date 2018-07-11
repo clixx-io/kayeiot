@@ -808,7 +808,13 @@ void MainWindow::checkProject()
 
 void MainWindow::runProject()
 {
-    projectWindow->buildProject("run");
+    if (systemDesign)
+    {
+        systemDesign->run(!systemDesign->running());
+    }
+    else
+        projectWindow->buildProject("run");
+
 }
 
 void MainWindow::architectureSystem()
@@ -850,7 +856,7 @@ void MainWindow::architectureConnectivity()
     QDockWidget *myframe = new QDockWidget(tr("Communicator"),this);
     commWindow = new CommunicatorSerialWidget(myframe);
     commWindow->setMainWindow(this);
-    addDockWidget(Qt::RightDockWidgetArea, myframe);
+    addDockWidget(Qt::BottomDockWidgetArea, myframe);
     myframe->setMinimumWidth(400);
     myframe->setMinimumHeight(300);
     myframe->show();
