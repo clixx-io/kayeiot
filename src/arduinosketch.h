@@ -9,6 +9,8 @@ class ArduinoSketch : public QWidget
 public:
     explicit ArduinoSketch(QWidget *parent = nullptr);
 
+    QStringList convertSketch(const QString inoFilename, const QString destDir);
+
 signals:
 
 public slots:
