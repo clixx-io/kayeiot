@@ -10,6 +10,7 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QListWidgetItem>
+#include <QTimer>
 
 QT_FORWARD_DECLARE_CLASS(connectableCable)
 
@@ -17,13 +18,18 @@ namespace Ui {
 class HardwareLayoutWidget;
 }
 
+// How is the Item displayed
+enum ciDisplayMode { dmUndefined, dmFinal, dmImage, dmDiagram};
+
 class connectableHardware : public QGraphicsItem
 {
+
 public:
 
     connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = 0);
     ~connectableHardware();
 
+    // This is the Type required for the QT QGraphicsScene tp work properly
     enum { Type = UserType + 1 };
     int type() const
     {
@@ -33,7 +39,7 @@ public:
 
     QString getID() const { return(m_id); }
     QString getName() const { return(m_name); }
-    QString getType() const { return(m_type); }
+    QString getType();
     int getPinCount() const { return(m_pins); }
     int getRowCount() const { return(m_rows); }
     QString getBoardFile() const { return(m_boardfile); }
@@ -59,6 +65,16 @@ public:
     void connectAnalogIO(connectableHardware *target,connectableCable *cable);
     void connectDigitalIO(connectableHardware *target,connectableCable *cable);
 
+    // This is board Type
+    enum HardwareType { htUndefined, htProcessor, htSensor, htDisplay, htActuator, htHid, htPowerSupply, htPart};
+    int hardwareType() const
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return m_type;
+    }
+    QStringList getTypeNames();
+    HardwareType getTypeFromString(QString typeString);
+
 protected:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     virtual QRectF boundingRect() const;
@@ -66,11 +82,13 @@ protected:
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    virtual void advance(int phase);
 
     void copyBoardFileProperties(QString boardfilename);
+    void setHardwareType(HardwareType htype){ m_type = htype; }
 
 private:
-    QString m_id, m_name, m_boardfile, m_type, m_imagefilename;
+    QString m_id, m_name, m_boardfile, m_imagefilename;
     double m_width, m_height;
 
     QList <QPoint> m_connectionpoints;
@@ -82,13 +100,17 @@ private:
     QStringList m_gpiopin_names;
     QList <connectableCable *> cables;
 
-    int hardwareType;
-    bool mainboard;
+    HardwareType m_type;
+    int m_progress;
 
+    ciDisplayMode m_displaymode;
+
+    QTimer *m_timer;
 };
 
 class RoundedPolygon : public QPolygon
 {
+
 public:
     RoundedPolygon()
     {    SetRadius(10); }
@@ -107,6 +129,7 @@ private:
 
 class connectableCable : public QGraphicsLineItem
 {
+
 public:
 
     connectableCable(QString componentID, QString componentName, QGraphicsItem *startItem, QGraphicsItem *endItem, int wires=-1, int rows=-1, QColor cablecolor=QColor(12,56,99), QGraphicsItem *parent = 0);
@@ -139,12 +162,14 @@ protected:
 
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    virtual void advance(int phase);
 
 private:
     QGraphicsItem *m_startItem, *m_endItem;
     QString m_id, m_name, m_type;
     QColor m_cablecolor;
     int m_wires, m_rows;
+    int m_progress;
 
     QMap <int, int> m_startpins;
     QMap <int, int> m_endpins;
@@ -155,6 +180,7 @@ private:
 
 class connectableGraphic : public QGraphicsItem
 {
+
 public:
 
     connectableGraphic(QString ID, QString name, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = 0);
@@ -191,6 +217,8 @@ protected:
 
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    virtual void advance(int phase);
+
     /*
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     */
@@ -210,6 +238,7 @@ private:
 
 class cableDetailGraphic : public QGraphicsItem
 {
+
 public:
 
     cableDetailGraphic(QGraphicsScene *scene, QGraphicsItem *parent = 0);
@@ -280,9 +309,14 @@ public:
 
     void print();
     void printPreview();
+    void run(bool runState);
+    bool running(){ return(m_running); }
 
 public slots:
     void finalMode();
+
+protected slots:
+    void advance() { if (scene) scene->advance(); }
 
 private slots:
     void on_PropertiestreeWidget_itemDoubleClicked(QTreeWidgetItem *item, int column);
@@ -305,12 +339,13 @@ private:
     Ui::HardwareLayoutWidget *ui;
 
     QGraphicsScene *scene;
-    QString m_filename;
+    QTimer *m_timer;
 
     QString m_unitSystem;     // mm, in, mil
+    QString m_filename;
 
     bool m_finalmode;
-
+    bool m_running;
 };
 
 #endif // HARDWARELAYOUTWIDGET_H

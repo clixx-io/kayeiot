@@ -24,8 +24,9 @@
 #include "mainwindow.h"
 
 connectableHardware::connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent)
-    : QGraphicsItem(parent), m_id(ID), m_name(name), m_boardfile(boardfile), hardwareType(0),
-      m_pins(pins), m_rows(rows), m_width(width), m_height(height), m_connectionpoint(0), m_image(0)
+    : QGraphicsItem(parent), m_id(ID), m_name(name), m_boardfile(boardfile), m_type(htUndefined),
+      m_pins(pins), m_rows(rows), m_width(width), m_height(height), m_connectionpoint(0), m_image(0),
+      m_progress(0), m_displaymode(dmImage)
 {
     if (graphicfile.length())
     {
@@ -41,54 +42,73 @@ connectableHardware::~connectableHardware()
 {
     if (m_image)
         delete m_image;
+}
 
+QStringList connectableHardware::getTypeNames()
+{
+    QStringList stringTypeNames;
+    stringTypeNames << "Undefined" << "Processor" << "Sensor" << "Display" <<
+                       "Actuator" << "Hid" << "PowerSupply" << "Part";
+
+    return(stringTypeNames);
+}
+
+connectableHardware::HardwareType connectableHardware::getTypeFromString(QString typeString)
+{
+    QString s = typeString.toLower();
+
+    if (s == "processor")
+        return(htProcessor);
+    else if (s == "sensor")
+        return(htSensor);
+    else if (s == "display")
+        return(htDisplay);
+    else if (s == "actuator")
+        return(htActuator);
+    else if (s == "hid")
+        return(htHid);
+    else if (s == "powersupply")
+        return(htPowerSupply);
+    else if (s == "part")
+        return(htPart);
+    else
+        return(htUndefined);
+
+}
+
+QString connectableHardware::getType()
+{
+    return(getTypeNames()[m_type]);
+}
+
+void connectableHardware::advance(int phase)
+{
+    if (phase==0) return;
+
+    // Each of the different types have different speeds
+    if (m_type == htProcessor)
+    {
+        if (m_progress < 360)
+            m_progress += 60;
+        else
+            m_progress = 0;
+    }
+    else {
+        if (m_progress < 360)
+            m_progress += 5;
+        else
+            m_progress = 0;
+    }
+
+    update();
 }
 
 void connectableHardware::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 
-    if ((hardwareType == 0) && (m_image))
-    {
-        QRectF imagebounds = boundingRect();
-        imagebounds.adjust(4,4,-4,-4);
+    const int selectSize = 10;
 
-        painter->drawImage(imagebounds,m_image->toImage());
-    }
-    else
-    {
-        /* All this sorta works
-        painter->setBrush(Qt::white);
-        painter->drawRect(boundingRect());
-
-        QPen highlightpen(painter->pen());
-        highlightpen.setWidth(3);
-        highlightpen.setColor("#009FFF");
-        painter->setPen(highlightpen);
-
-        RoundedPolygon poly;
-        poly << QPoint(0,0) << QPoint(boundingRect().width(),0) << QPoint(boundingRect().width(),boundingRect().height()) << QPoint(0,boundingRect().height());
-        painter->drawPath(poly.GetPath());
-
-        QPoint titlepos(10,15);
-        painter->drawText(titlepos, m_name);
-        */
-
-        QRectF imagebounds = boundingRect();
-        imagebounds.adjust(4,4,-4,-4);
-
-        painter->setRenderHint(QPainter::Antialiasing);
-        QPainterPath path;
-        path.addRoundedRect(imagebounds, 10, 10);
-
-        QPen pen(painter->pen());
-        pen.setWidth(3);
-        pen.setColor("#009FFF");
-
-        painter->setPen(pen);
-        painter->fillPath(path, Qt::white);
-        painter->drawPath(path);
-
-    }
+    painter->setRenderHint(QPainter::Antialiasing);
 
     if (option->state & QStyle::State_Selected)
     {
@@ -105,14 +125,103 @@ void connectableHardware::paint(QPainter *painter, const QStyleOptionGraphicsIte
         painter->setPen(standardpen);
 
     }
+
+    if (m_displaymode == dmImage)
+    {
+        QRectF imagebounds = boundingRect();
+        imagebounds.adjust(4,4,-4,-4);
+
+        if (m_image)
+            painter->drawImage(imagebounds,m_image->toImage());
+
+        // The top right Indicator
+        painter->setBrush(Qt::gray);
+        painter->drawEllipse(boundingRect().width() - selectSize, 0, selectSize, selectSize);
+
+        /*
+        // Struggle getting The top right Indicator Clock moving
+
+        if (widget)
+        {
+            HardwareLayoutWidget *hlayout = (HardwareLayoutWidget *) widget;
+            if (hlayout->running())
+            {
+                painter->setBrush(Qt::darkGray);
+                int startAngle = (360- m_progress) * 16;
+                int spanAngle = 30 * 16;
+                painter->drawPie(indicatorRect, startAngle, spanAngle);
+            }
+        }
+        */
+
+    }
+    else if (m_displaymode == dmDiagram)
+    {
+
+        QRectF imagebounds = boundingRect();
+        imagebounds.adjust(4,4,-4,-4);
+
+        QPainterPath path;
+        path.addRoundedRect(imagebounds, 10, 10);
+
+        QPen pen(painter->pen());
+        pen.setWidth(3);
+        pen.setColor("#009FFF");
+
+        painter->setPen(pen);
+        painter->fillPath(path, Qt::white);
+        painter->drawPath(path);
+
+        QPoint titlepos(10,15);
+        painter->drawText(titlepos, m_name);
+
+        // The top right Indicator
+        painter->setBrush(Qt::green);
+        painter->drawEllipse(boundingRect().width() - selectSize, 0, selectSize, selectSize);
+
+        QPen highlightpen;
+        highlightpen.setWidth(3);
+        highlightpen.setColor("#009FFF");
+        painter->setPen(highlightpen);
+
+        QRectF innerClock = boundingRect().adjusted(boundingRect().width()/4,
+                                                  boundingRect().height()/4,
+                                                  -1 * boundingRect().width()/4,
+                                                  -1 * boundingRect().height()/4);
+
+        /*
+        painter->setBrush(Qt::white);
+        painter->drawPie(imagebounds, 0, 60 * 16);
+        painter->drawPie(imagebounds, 60 * 16, 120 * 16);
+        painter->drawPie(imagebounds, 120 * 16, 180 * 16);
+        painter->drawPie(imagebounds, 180 * 16, 240 * 16);
+        painter->drawPie(imagebounds, 240 * 16, 300 * 16);
+        */
+
+        painter->setBrush(Qt::gray);
+        int startAngle = (360- m_progress) * 16;
+        int spanAngle = 30 * 16;
+        painter->drawPie(innerClock, startAngle, spanAngle);
+
+    }
+
+    /*
+    QString n = parentWidget()->  ->metaObject()->className();
+    QPoint titlepos(10,15);
+    painter->drawText(titlepos, n);
+    */
+
 }
 
 void connectableHardware::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (hardwareType == 0)
-        hardwareType = 1;
-    else
-        hardwareType = 0;
+    // Cycle through the displaymode on doubleClick
+    if (m_displaymode == dmUndefined)
+        m_displaymode = dmImage;
+    else if (m_displaymode == dmImage)
+        m_displaymode = dmDiagram;
+    else if (m_displaymode = dmDiagram)
+        m_displaymode = dmImage;
 
     update();
 }
@@ -199,18 +308,18 @@ void connectableHardware::copyBoardFileProperties(QString boardfilename)
     connectionpointnames << QObject::tr("Left Centre").toLower() << QObject::tr("Centre").toLower() << QObject::tr("Right Centre").toLower();
     connectionpointnames << QObject::tr("Bottom Left").toLower() << QObject::tr("Bottom Centre").toLower() << QObject::tr("Bottom Right").toLower();
 
-    m_type = boardfile.value("overview/type").toString().toLower();
+    QString htype = boardfile.value("overview/type").toString().toLower();
+    m_type = getTypeFromString(htype);
 
     QString connectionpoint, defaultpoint;
     connectionpoint = boardfile.value("gpio/connection_point").toString().toLower();
     if (!connectionpoint.length())
     {
-        if (m_type.contains("processor"))
+        if (m_type == htProcessor)
             defaultpoint = "top centre";
-        if (m_type.contains("sensor"))
-            defaultpoint = "bottom centre";
         else
-            defaultpoint = "top left";
+            defaultpoint = "bottom centre";
+
     } else
         setPrimaryConnectionIndex(connectionpointnames.indexOf(connectionpoint));
 
@@ -320,7 +429,8 @@ connectableCable::connectableCable(QString componentID, QString componentName, Q
       m_rows(rows),
       m_cablecolor(cablecolor),
       m_id(componentID),
-      m_name(componentName)
+      m_name(componentName),
+      m_progress(0)
 {
     if (m_name.size()==0)
         m_name = QObject::tr("Cable%1").arg(componentID);
@@ -365,6 +475,18 @@ connectableCable::connectableCable(QString componentID, QString componentName, Q
     setLine(startPos.x(),startPos.y(),endPos.x(),endPos.y());
 }
 
+void connectableCable::advance(int phase)
+{
+    if (phase==0) return;
+
+    if (m_progress < 100)
+        m_progress += 1;
+    else
+        m_progress = 0;
+
+    update();
+}
+
 void connectableCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     QPen standardpen(painter->pen()), highlightpen(painter->pen());
@@ -379,11 +501,18 @@ void connectableCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     {
         highlightpen.setColor("#009FFF");
         painter->setPen(highlightpen);
-//      painter->setPen(Qt::red);
         painter->drawRect(boundingRect());
     }
 
-    painter->setPen(standardpen);
+    // Draw the moving box
+    const int boxsize = 10;
+
+    painter->setBrush(Qt::gray);
+    double xo = this->line().x1() + ((100 * m_progress) / this->line().dx());
+    double yo = this->line().y1() + ((100 * m_progress) / this->line().dy());
+    QRectF boxrect(xo, yo, boxsize, boxsize);
+
+    painter->drawRect(boxrect);
 
 }
 
@@ -734,6 +863,35 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     m_unitSystem = settings.value("global/units","mm").toString();
     settings.endGroup();
 
+    // Setup the Timer to control the scene
+    m_timer = new QTimer(this);
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(advance()));
+    m_timer->setInterval(100);
+
+}
+
+HardwareLayoutWidget::~HardwareLayoutWidget()
+{
+    delete m_timer;
+
+    delete ui;
+}
+
+void HardwareLayoutWidget::run(bool runState)
+{
+    if (m_timer)
+    {
+        if (runState)
+        {
+            m_timer->start();
+            m_running = true;
+        }
+        else
+        {
+            m_timer->stop();
+            m_running = false;
+        }
+    }
 }
 
 void HardwareLayoutWidget::loadComponentlist(QListWidget *widget)
@@ -948,11 +1106,6 @@ void HardwareLayoutWidget::SelectionChanged()
 
     }
 
-}
-
-HardwareLayoutWidget::~HardwareLayoutWidget()
-{
-    delete ui;
 }
 
 bool HardwareLayoutWidget::LoadComponents(const QString filename)
@@ -1701,6 +1854,12 @@ connectableGraphic::connectableGraphic(QString ID, QString name, qreal width, qr
     }
 }
 
+void connectableGraphic::advance(int phase)
+{
+    if (phase==0) return;
+
+    update();
+}
 
 void connectableGraphic::setPrimaryConnectionIndex(int index)
 {
