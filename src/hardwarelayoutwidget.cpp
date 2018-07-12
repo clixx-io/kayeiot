@@ -504,15 +504,21 @@ void connectableCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         painter->drawRect(boundingRect());
     }
 
-    // Draw the moving box
-    const int boxsize = 10;
+    HardwareLayoutWidget *hl = (HardwareLayoutWidget *) widget;
+    if (hl->running())
+    {
 
-    painter->setBrush(Qt::gray);
-    double xo = this->line().x1() + ((100 * m_progress) / this->line().dx());
-    double yo = this->line().y1() + ((100 * m_progress) / this->line().dy());
-    QRectF boxrect(xo, yo, boxsize, boxsize);
+        // Draw the moving box
+        const int boxsize = 10;
 
-    painter->drawRect(boxrect);
+        painter->setBrush(Qt::gray);
+        double xo = this->line().x1() + ((100 * m_progress) / this->line().dx());
+        double yo = this->line().y1() + ((100 * m_progress) / this->line().dy());
+        QRectF boxrect(xo, yo, boxsize, boxsize);
+        painter->drawRect(boxrect);
+
+    }
+
 
 }
 
