@@ -1316,6 +1316,7 @@ void MainWindow::importArduinoSketch()
     {
 
         showStatusDock(true);
+        clearStatusMessages();
 
         QStringList inputfiles;
         inputfiles << arduinoSketch;
@@ -1327,9 +1328,12 @@ void MainWindow::importArduinoSketch()
 
         showStatusMessage(tr("Converting sketch %1").arg(arduinoSketch));
 
-        ino->convertSketch(arduinoSketch,".");
+        QStringList results = ino->convertSketch(arduinoSketch,systemDesign);
 
-        showStatusMessage(tr("File %1 converted").arg(arduinoSketch));
+        foreach (QString msg, results)
+        {
+            showStatusMessage(msg);
+        }
 
      }
 }

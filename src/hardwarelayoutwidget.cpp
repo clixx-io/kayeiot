@@ -6,6 +6,8 @@
 #include <QTreeWidgetItem>
 #include <QShortcut>
 #include <QGraphicsItem>
+#include <QDir>
+#include <QFileInfo>
 
 #include <QtGlobal>
 #if QT_VERSION >= 0x050000
@@ -33,8 +35,82 @@ connectableHardware::connectableHardware(QString ID, QString name, QString board
         m_image = new QPixmap(graphicfile);
         m_imagefilename = graphicfile;
     }
+    else
+    {
+        if (width < 1)
+            width *= 25.4;
+        if (height < 1)
+            height *= 25.4;
+
+        m_width = width;
+        m_height = height;
+
+        m_image = new QPixmap(width,height);
+        m_image->fill(Qt::darkGreen);
+    }
 
     copyBoardFileProperties(boardfile);
+
+}
+
+connectableHardware::connectableHardware(QString ID, QString name, QString boardfilename, QGraphicsItem *parent)
+    : QGraphicsItem(parent), m_id(ID), m_name(name), m_boardfile(boardfilename), m_type(htUndefined),
+      m_pins(-1), m_rows(-1), m_width(-1), m_height(-1), m_connectionpoint(0), m_image(0),
+      m_progress(0), m_displaymode(dmImage)
+{
+    copyBoardFileProperties(boardfilename);
+
+    // Attempt to load up the image
+    QFileInfo fi(boardfilename);
+    QSettings boardfile(boardfilename, QSettings::IniFormat);
+
+    QString boardimagename = boardfile.value("image/file").toString();
+    QString imagedir = fi.dir().absolutePath();
+
+    if (imagedir.endsWith("/parts"))
+    {
+        imagedir = imagedir.left(imagedir.length()-6) + "/images";
+    }
+
+    QString fullimagename =  imagedir + "/" + boardimagename;
+
+    // qDebug() << "full directory for" << boardfilename << " is " << imagedir;
+    // qDebug() << "full image location for" << boardfilename << " is " << fullimagename;
+
+    if (boardimagename.length())
+    {
+        m_image = new QPixmap(fullimagename);
+        m_imagefilename = fullimagename;
+    }
+    else
+    {
+        double width, height;
+        QString units;
+
+        width = boardfile.value("overview/width",50).toDouble();
+        height = boardfile.value("overview/height",50).toDouble();
+        units = boardfile.value("overview/units","mm").toString();
+
+        if (width < 1)
+            width *= 25.4;
+        if (height < 1)
+            height *= 25.4;
+
+        m_width = width;
+        m_height = height;
+
+        /*
+        if (units.toLower() == "in")
+        {
+            width *= 2.54;
+            height *= 2.54;
+        }
+        */
+
+        // Make up a blank image
+        m_image = new QPixmap(width,height);
+        m_image->fill(Qt::darkGreen);
+    }
 
 }
 
@@ -53,7 +129,7 @@ QStringList connectableHardware::getTypeNames()
     return(stringTypeNames);
 }
 
-connectableHardware::HardwareType connectableHardware::getTypeFromString(QString typeString)
+HardwareType connectableHardware::getTypeFromString(QString typeString)
 {
     QString s = typeString.toLower();
 
@@ -311,6 +387,26 @@ void connectableHardware::copyBoardFileProperties(QString boardfilename)
     QString htype = boardfile.value("overview/type").toString().toLower();
     m_type = getTypeFromString(htype);
 
+    if (m_pins == -1)
+        m_pins = boardfile.value("gpio/pins",8).toInt();
+
+    if (m_rows == -1)
+        m_rows = boardfile.value("gpio/rows",1).toInt();
+
+    if (m_width == -1)
+        m_width = boardfile.value("overview/width",5).toDouble();
+    if (m_height == -1)
+        m_height = boardfile.value("overview/height",5).toDouble();
+
+    if (m_units.length()==0)
+        m_units = boardfile.value("overview/units").toString().toLower();
+
+    if (m_imagefilename.length()==0)
+    {
+        m_imagefilename = boardfile.value("image/file").toString();
+        // m_image = new QPixmap(graphicfile);
+    }
+
     QString connectionpoint, defaultpoint;
     connectionpoint = boardfile.value("gpio/connection_point").toString().toLower();
     if (!connectionpoint.length())
@@ -504,21 +600,35 @@ void connectableCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         painter->drawRect(boundingRect());
     }
 
-    HardwareLayoutWidget *hl = (HardwareLayoutWidget *) widget;
-    if (hl->running())
+    HardwareLayoutWidget *hl = dynamic_cast <HardwareLayoutWidget *> (widget);
+    if (hl)
     {
+        if (hl->running())
+        {
 
-        // Draw the moving box
-        const int boxsize = 10;
+            // Draw the moving box
+            const int boxsize = 10;
 
-        painter->setBrush(Qt::gray);
-        double xo = this->line().x1() + ((100 * m_progress) / this->line().dx());
-        double yo = this->line().y1() + ((100 * m_progress) / this->line().dy());
-        QRectF boxrect(xo, yo, boxsize, boxsize);
-        painter->drawRect(boxrect);
+            painter->setBrush(Qt::gray);
+            double xo = this->line().x1() + ((100 * m_progress) / this->line().dx());
+            double yo = this->line().y1() + ((100 * m_progress) / this->line().dy());
+            QRectF boxrect(xo, yo, boxsize, boxsize);
+            painter->drawRect(boxrect);
 
+        }
+        else
+        {
+            // Draw the moving box
+            const int boxsize = 10;
+
+            painter->setBrush(Qt::blue);
+            double xo = this->line().x1() + ((100 * m_progress) / this->line().dx());
+            double yo = this->line().y1() + ((100 * m_progress) / this->line().dy());
+            QRectF boxrect(xo, yo, boxsize, boxsize);
+            painter->drawRect(boxrect);
+
+        }
     }
-
 
 }
 
@@ -960,6 +1070,9 @@ void HardwareLayoutWidget::SelectionChanged()
             ItemColumns =  tr("%1").arg(h->getRowCount());
             itemPinAssignments = h->getPinAssignments();
             itemConnectionPoint = getConnectionPointNames()[h->getPrimaryConnectionIndex()];
+
+            qDebug() << tr("h size = (%1,%2)").arg(itemWidth).arg(itemHeight);
+
         }
 
         connectableCable *cbl = qgraphicsitem_cast<connectableCable *>(scene->selectedItems()[0]);
@@ -1782,6 +1895,60 @@ QString HardwareLayoutWidget::getNextName(QString prefix)
 
 }
 
+int HardwareLayoutWidget::getBestX(HardwareType hwt)
+{
+    return(0);
+}
+
+int HardwareLayoutWidget::getBestY(HardwareType hwt)
+{
+    int y(0);
+
+    switch (hwt)
+    {
+        case htProcessor:   y = -100;
+                            break;
+
+        case htSensor:
+        case htDisplay:
+        case htActuator:
+        case htHid:         y = -200;
+                            break;
+
+        case htPart:
+        case htPowerSupply: y = -200;
+                            break;
+    }
+    return(y);
+}
+
+connectableHardware * HardwareLayoutWidget::addToScene(QString componentName, QString componentBoardFile)
+{
+
+    QString nextid = getNextID();
+
+    connectableHardware *item = new connectableHardware(nextid, componentName, componentBoardFile);
+
+    if (item)
+    {
+        item->setX(getBestX(htPart));
+        item->setY(getBestY(htPart));
+
+        item->setFlag(QGraphicsItem::ItemIsSelectable);
+        item->setFlag(QGraphicsItem::ItemIsMovable);
+        item->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+        scene->addItem(item);
+
+        QListWidgetItem *newItem = new QListWidgetItem;
+        newItem->setText(item->getName());
+        QVariant id(item->getID());
+        newItem->setData(Qt::UserRole, id);
+        ui->componentslistWidget->insertItem(ui->componentslistWidget->count(), newItem);
+    }
+
+    return(item);
+}
+
 connectableHardware * HardwareLayoutWidget::addToScene(QString componentID, QString componentName, double x, double y, QString componentBoardFile, QString componentImageName, double componentWidth, double componentHeight, QString units, int pins, int rows)
 {
     if (componentID.length() == 0)
@@ -1794,19 +1961,22 @@ connectableHardware * HardwareLayoutWidget::addToScene(QString componentID, QStr
 
     connectableHardware *item = new connectableHardware(componentID,componentName,componentBoardFile,pins, rows, w, h, componentImageName);
 
-    item->setX(x);
-    item->setY(y);
+    if (item)
+    {
+        item->setX(x);
+        item->setY(y);
 
-    item->setFlag(QGraphicsItem::ItemIsSelectable);
-    item->setFlag(QGraphicsItem::ItemIsMovable);
-    item->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
-    scene->addItem(item);
+        item->setFlag(QGraphicsItem::ItemIsSelectable);
+        item->setFlag(QGraphicsItem::ItemIsMovable);
+        item->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+        scene->addItem(item);
 
-    QListWidgetItem *newItem = new QListWidgetItem;
-    newItem->setText(item->getName());
-    QVariant id(item->getID());
-    newItem->setData(Qt::UserRole, id);
-    ui->componentslistWidget->insertItem(ui->componentslistWidget->count(), newItem);
+        QListWidgetItem *newItem = new QListWidgetItem;
+        newItem->setText(item->getName());
+        QVariant id(item->getID());
+        newItem->setData(Qt::UserRole, id);
+        ui->componentslistWidget->insertItem(ui->componentslistWidget->count(), newItem);
+    }
 
     return(item);
 }
@@ -1817,31 +1987,37 @@ connectableCable * HardwareLayoutWidget::addCableToScene(QString componentID, QS
     if (componentID.length() == 0)
         componentID = getNextID();
 
+    if (componentName.length() == 0)
+        componentName = getNextName("Cable");
+
     QGraphicsItem *c1 = findByID(startItem);
     QGraphicsItem *c2 = findByID(endItem);
 
     connectableCable *cable = new connectableCable(componentID, componentName, c1, c2, wires, rows, cablecolor);
 
-    // If these can support wires, then auto-wire them
-    connectableHardware *h1 = qgraphicsitem_cast<connectableHardware *>(c1);
-    connectableHardware *h2 = qgraphicsitem_cast<connectableHardware *>(c2);
-    if (h1 && h2)
+    if (cable)
     {
-        h1->connectCommon(h2,cable);
-        h1->connectDigitalIO(h2,cable);
+        // If these can support wires, then auto-wire them
+        connectableHardware *h1 = qgraphicsitem_cast<connectableHardware *>(c1);
+        connectableHardware *h2 = qgraphicsitem_cast<connectableHardware *>(c2);
+        if (h1 && h2)
+        {
+            h1->connectCommon(h2,cable);
+            h1->connectDigitalIO(h2,cable);
+        }
+
+        cable->setFlag(QGraphicsItem::ItemIsSelectable);
+        cable->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+        scene->addItem(cable);
+
+        QListWidgetItem *newItem = new QListWidgetItem;
+        newItem->setText(cable->getName());
+        QVariant id(cable->getID());
+        newItem->setData(Qt::UserRole, id);
+        ui->componentslistWidget->insertItem(ui->componentslistWidget->count(), newItem);
+
+        qDebug() << "Add of Cable to Scene Complete";
     }
-
-    cable->setFlag(QGraphicsItem::ItemIsSelectable);
-    cable->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
-    scene->addItem(cable);
-
-    QListWidgetItem *newItem = new QListWidgetItem;
-    newItem->setText(cable->getName());
-    QVariant id(cable->getID());
-    newItem->setData(Qt::UserRole, id);
-    ui->componentslistWidget->insertItem(ui->componentslistWidget->count(), newItem);
-
-    qDebug() << "Add to Scene Complete";
 
     return(cable);
 }

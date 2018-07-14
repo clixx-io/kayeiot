@@ -20,6 +20,7 @@ class HardwareLayoutWidget;
 
 // How is the Item displayed
 enum ciDisplayMode { dmUndefined, dmFinal, dmImage, dmDiagram};
+enum HardwareType { htUndefined, htProcessor, htSensor, htDisplay, htActuator, htHid, htPowerSupply, htPart};
 
 class connectableHardware : public QGraphicsItem
 {
@@ -27,6 +28,7 @@ class connectableHardware : public QGraphicsItem
 public:
 
     connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = 0);
+    connectableHardware(QString ID, QString name, QString boardfile, QGraphicsItem *parent = 0);
     ~connectableHardware();
 
     // This is the Type required for the QT QGraphicsScene tp work properly
@@ -66,7 +68,6 @@ public:
     void connectDigitalIO(connectableHardware *target,connectableCable *cable);
 
     // This is board Type
-    enum HardwareType { htUndefined, htProcessor, htSensor, htDisplay, htActuator, htHid, htPowerSupply, htPart};
     int hardwareType() const
     {
         // Enable the use of qgraphicsitem_cast with this item.
@@ -88,7 +89,7 @@ protected:
     void setHardwareType(HardwareType htype){ m_type = htype; }
 
 private:
-    QString m_id, m_name, m_boardfile, m_imagefilename;
+    QString m_id, m_name, m_boardfile, m_imagefilename, m_units;
     double m_width, m_height;
 
     QList <QPoint> m_connectionpoints;
@@ -286,6 +287,7 @@ public:
     bool LoadComponents(const QString filename = "hardware.layout");
     bool SaveComponents(QString filename = "hardware.layout");
 
+    connectableHardware *addToScene(QString componentName, QString componentBoardFile);
     connectableHardware *addToScene(QString componentID, QString componentName, double x, double y, QString componentBoardFile, QString componentImageName, double componentWidth, double componentHeight, QString units, int pins, int rows);
     connectableCable *addCableToScene(QString componentID, QString componentName, QString startItem, QString endItem, int wires, int rows, QColor cablecolor = QColor(255, 0, 0, 127));
     connectableGraphic * addGraphicToScene(QString componentID, QString componentName, double x, double y, QString componentImageName, double componentWidth, double componentHeight);
@@ -295,10 +297,14 @@ public:
     QGraphicsItem* findGraphicsItemByID(QString componentID);
     QString getNextID(){ return(QString::number(scene->items().count()+1));}
     QString getNextName(QString prefix);
+    QGraphicsScene *getScene(){ return(scene); }
     QList <connectableHardware *> getHardwareComponents();
     QList <connectableGraphic *> getGraphicComponents();
     QList <QGraphicsItem *> selectedItems(){ return(scene->selectedItems());}
     void convertSize(const QString units, double &w, double &h);
+
+    int getBestX(HardwareType hwt);
+    int getBestY(HardwareType hwt);
 
     QStringList getConnectionPointNames();
 
