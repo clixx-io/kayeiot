@@ -10,7 +10,61 @@
 
 ClixxIoTProjects::ClixxIoTProjects()
 {
+}
 
+QString ClixxIoTProjects::getPartsLibraryDir() // ~/Kayeiot/parts-libraries
+{
+    QString libraryDir("/KayeIoT/parts-libraries");
+
+    libraryDir = libraryDir.insert(0,QDir::homePath());
+
+    return(libraryDir);
+}
+
+QString ClixxIoTProjects::getKayeIoTLibraryDir() // ~/Kayeiot/parts-libraries/kayeiot-parts
+{
+    return(getPartsLibraryDir() + "/kayeiot-parts");
+}
+
+QString ClixxIoTProjects::getUserLibraryDir(QString libraryName) // ~/Kayeiot/parts-libraries/my-parts
+{
+    return(getPartsLibraryDir() + "/" + libraryName);
+}
+
+QStringList ClixxIoTProjects::getPartsLibraryDirs() // ~/Kayeiot/parts-libraries/*
+{
+    QStringList libraryDirs;
+
+    libraryDirs << getKayeIoTLibraryDir() <<
+                   getUserLibraryDir();
+
+    return(libraryDirs);
+}
+
+QStringList ClixxIoTProjects::getPartsLibraryBoardDirs()
+{
+    QStringList libraryDirs = getPartsLibraryDirs();
+
+    for (int i = 0; i < libraryDirs.length(); i++)
+    {
+        libraryDirs[i] = libraryDirs[i] + "/parts";
+    }
+
+    return(libraryDirs);
+
+}
+
+QString ClixxIoTProjects::getImagePathofBoardfile(QString boardfilename)
+{
+    QFileInfo bfi(boardfilename);
+    QString result = bfi.absolutePath();
+
+    if (result.endsWith("/parts"))
+    {
+        result = result.left(result.length() - 6) + "/images";
+    }
+
+    return(result);
 }
 
 QStringList ClixxIoTProjects::list()
@@ -30,7 +84,6 @@ QStringList ClixxIoTProjects::list()
     }
 
     return(results);
-
 }
 
 QString ClixxIoTProjects::getProjectsDir()
@@ -113,4 +166,3 @@ int ClixxIoTProject::Close()
 {
     return(0);
 }
-

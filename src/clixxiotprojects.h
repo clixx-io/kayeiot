@@ -13,6 +13,15 @@ public:
     QString getProjectsDir();
     QStringList list();
 
+    QStringList getPartsLibraryDirs(); // ~/Kayeiot/parts-libraries/*
+    QStringList getPartsLibraryBoardDirs();
+
+    QString getPartsLibraryDir(); // ~/Kayeiot/parts-libraries
+    QString getKayeIoTLibraryDir(); // ~/Kayeiot/parts-libraries/kayeiot-parts
+    QString getUserLibraryDir(QString libraryName="my-parts"); // ~/Kayeiot/parts-libraries/my-parts
+
+    QString getImagePathofBoardfile(QString boardfilename);
+
 };
 
 class ClixxIoTProject
@@ -32,11 +41,10 @@ public:
 
     QStringList listfiles();
 
-    QStringList iodevices;
-    QStringList connections;
-
     int Open(QString projectname = "");
     int Close();
+
+private:
 
 };
 
