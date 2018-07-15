@@ -14,6 +14,8 @@
 #endif
 
 #include "mainwindow.h"
+#include "clixxiotprojects.h"
+
 #include "newhardwareitemdialog.h"
 #include "ui_newhardwareitemdialog.h"
 
@@ -53,28 +55,28 @@ QStringList NewHardwareItemDialog::loadBoardFiles()
     QStringList results;
     QSettings settings;
 
-#if QT_VERSION >= 0x050000
-    QString dirname = settings.value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
-#else
-    QString dirname = settings.value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
-#endif
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
 
-    QDir dir(dirname);
+    QStringList librarydirs = mainwindow->Projects->getPartsLibraryBoardDirs();
 
-    QFileInfoList list = dir.entryInfoList();
-    if (list.count()==0)
+    foreach (QString librarydir, librarydirs)
     {
-        MainWindow *mw = (MainWindow*) getMainWindow();
-        if (mw)
-            mw->showStatusMessage(tr("Warning: No boards found in directory \"%1\"").arg(dir.absolutePath()));
-    }
+        QDir dir(librarydir);
 
-    for (int i = 0; i < list.size(); ++i) {
-        QFileInfo fileInfo = list.at(i);
+        QFileInfoList list = dir.entryInfoList();
+        if (list.count()==0)
+        {
+            if (mainwindow)
+                mainwindow->showStatusMessage(tr("Warning: No boards found in directory \"%1\"").arg(dir.absolutePath()));
+        }
 
-        if (fileInfo.fileName().endsWith(".board") && (!fileInfo.fileName().startsWith(".")))
-            results += dir.absoluteFilePath(fileInfo.fileName());
+        for (int i = 0; i < list.size(); ++i) {
+            QFileInfo fileInfo = list.at(i);
 
+            if (fileInfo.fileName().endsWith(".board") && (!fileInfo.fileName().startsWith(".")))
+                results += dir.absoluteFilePath(fileInfo.fileName());
+
+        }
     }
 
     return(results);
@@ -90,7 +92,7 @@ bool NewHardwareItemDialog::loadBoardList()
 
         QString name = boardfile.value("overview/name","").toString();
 
-        qDebug() << "Name" << boardfile.value("overview/name","").toString() << filename;
+        // qDebug() << "Name" << boardfile.value("overview/name","").toString() << filename;
 
         QListWidgetItem *newItem = new QListWidgetItem;
         QString fullFilePath(filename);
@@ -161,11 +163,8 @@ void NewHardwareItemDialog::searchLibrary(QString searchString)
             newItem->setText(name);
 
             ui->BoardNameslistWidget->addItem(newItem);
-
         }
-
     }
-
 }
 
 void NewHardwareItemDialog::on_searchlineEdit_textChanged(const QString &arg1)
@@ -188,15 +187,7 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
         return;
     }
 
-    QSettings settings;
-
-#if QT_VERSION >= 0x050000
-    QString dirname = settings.value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
-#else
-    QString dirname = settings.value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
-#endif
-
-    QDir imagesDir(dirname);
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
 
     QListWidgetItem *item = ui->BoardNameslistWidget->selectedItems()[0];
     QVariant data = item->data(Qt::UserRole);
@@ -207,7 +198,9 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
 
     QSettings boardfile(fullFilePath, QSettings::IniFormat);
 
-    QString imageFileName = imagesDir.absolutePath() + "/" + boardfile.value("image/file","").toString();
+    QString imageFileName = mainwindow->Projects->getImagePathofBoardfile(fullFilePath) + "/" +
+                            boardfile.value("image/file","").toString();
+
     QFileInfo check_file(imageFileName);
 
     // check if file exists and if yes: Is it really a file and no directory?
