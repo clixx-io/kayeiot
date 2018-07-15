@@ -11,7 +11,7 @@ class ArduinoSketch : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ArduinoSketch(QWidget *parent = nullptr);
+    explicit ArduinoSketch(QWidget *parent = 0);
 
     void loadSketch(QStringList &ino){ m_ino = ino; }
 
