@@ -110,7 +110,7 @@ MainWindow::MainWindow(const CustomSizeHintMap &customSizeHints,
 
     QCoreApplication::setOrganizationName("clixx.io");
     QCoreApplication::setOrganizationDomain("clixx.io");
-    QCoreApplication::setApplicationName("IoT-Designer");
+    QCoreApplication::setApplicationName("Kayeiot");
 
     const char *platformname;
     #ifdef Q_OS_MAC
@@ -175,8 +175,8 @@ void MainWindow::setupMenuBar()
     menu->addSeparator();
 
     QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
-    Librarysubmenu->addAction(tr("Update Part Library"), this, &MainWindow::libraryUpdate);
     Librarysubmenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
+    Librarysubmenu->addAction(tr("Update Part Library"), this, &MainWindow::libraryUpdate);
     menu->addSeparator();
 
     menu->addAction(tr("Print Pre&view"), this, &MainWindow::printPreview);
@@ -261,8 +261,8 @@ void MainWindow::setupMenuBar()
     // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
     QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
-    QAction* actionUpdateLibrary = Librarysubmenu->addAction("Update Part Library" );
     Librarysubmenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
+    QAction* actionUpdateLibrary = Librarysubmenu->addAction("Update Part Library" );
     menu->addSeparator();
 
     QAction* printPreviewAction = new QAction("Print Pre&view", this);
@@ -407,6 +407,7 @@ void MainWindow::setupMenuBar()
     connect(action, &QAction::toggled, this, &QMainWindow::setUnifiedTitleAndToolBarOnMac);
 #endif
 
+    /*
     mainWindowMenu = menuBar()->addMenu(tr("&Window"));
     QAction *action = mainWindowMenu->addAction(tr("Animated docks"));
     action->setCheckable(true);
@@ -449,6 +450,7 @@ void MainWindow::setupMenuBar()
     action->setChecked(dockOptions() & GroupedDragging);
     connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
 #endif
+    */
 
     dockWidgetMenu = menuBar()->addMenu(tr("&Help"));
 #if QT_VERSION >= 0x050000
@@ -1240,8 +1242,7 @@ void MainWindow::addComponentWizard()
 
 void MainWindow::showLibrary()
 {
-#if QT_VERSION >= 0x050000
-    QString dirname = QDir::toNativeSeparators(settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString());
+    QString dirname = Projects->getUserLibraryDir();
 
     if (!QDir(dirname).exists())
     {
@@ -1253,16 +1254,10 @@ void MainWindow::showLibrary()
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(dirname));
 
-#endif
 }
 
 void MainWindow::importFritzingParts()
 {
-#if QT_VERSION >= 0x050000
-    QString partsdir = settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
-#else
-    QString partsdir = settings->value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
-#endif
 
     QString fritzingdir(QDir::homePath()+"/fritzing-0.9.3b.linux.AMD64/fritzing-parts");
     QString dirName = fritzingdir+"/core";
@@ -1273,9 +1268,6 @@ void MainWindow::importFritzingParts()
     {
 
         showStatusDock(true);
-
-        QStringList inputfiles;
-        inputfiles << fritzingfile;
 
         QFileInfo fi(fritzingfile);
         dirName = fi.absolutePath();
@@ -1300,11 +1292,29 @@ void MainWindow::importFritzingParts()
 
         showStatusMessage(tr("Working from %1").arg(dirName));
 
-        fl->convertFritzingBoards(inputfiles,partsdir);
+        QString boardfile;
+        QStringList fm = fl->convertfpzToBoard(fritzingfile, boardfile, Projects->getUserLibraryDir());
+        foreach (QString fl, fm)
+        {
+            showStatusMessage(fl);
+        }
 
-        showStatusMessage(tr("File %1 converted").arg(fritzingfile));
+        if (systemDesign)
+        {
+            QFileInfo check_file(boardfile);
+
+            // check if file exists and if yes: Is it really a file and no directory?
+            if (check_file.exists() && check_file.isFile()) {
+                QMessageBox::StandardButton reply;
+
+                reply = QMessageBox::question(this, "Import Complete", tr("Do you wish to add this to the Diagram?"),
+                                                QMessageBox::Yes|QMessageBox::No);
+                if (reply == QMessageBox::Yes) {
+                    systemDesign->addToScene("",boardfile);
+                }
+            }
+        }
      }
-
 }
 
 void MainWindow::importArduinoSketch()
@@ -1315,6 +1325,7 @@ void MainWindow::importArduinoSketch()
     if (arduinoSketch.length())
     {
 
+        architectureSystem();
         showStatusDock(true);
         clearStatusMessages();
 
@@ -1335,45 +1346,61 @@ void MainWindow::importArduinoSketch()
             showStatusMessage(msg);
         }
 
+        // Change to that directory
+        currentProject->setProjectDir(dirName);
+        // LoadCodeSource(arduinoSketch);
+
      }
 }
 
 void MainWindow::libraryUpdate()
 {
     QString gitcmd("git");
-    QStringList updateparams;
-    updateparams << "update";
-
-#if QT_VERSION >= 0x050000
-    QString dirname = settings->value("directories/board_library",QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/boardlibrary").toString();
-#else
-    QString dirname = settings->value("directories/board_library",QDir::homePath() + "/boardlibrary").toString();
-#endif
+    QStringList gitparams;
 
     showStatusDock(true);
 
-    if (!QDir("Folder").exists())
+    QString dirname = Projects->getPartsLibraryDir();
+
+    if (!QDir(dirname).exists())
     {
-        updateparams.clear();
-        updateparams << "clone" << "https://github.com/clixx-io/kayeiot-parts";
-    }
+        if (QDir().mkpath(dirname))
+        {
+            showStatusMessage(tr("Created Parts Library Directory %1").arg(dirname));
+        }
+        else
+        {
+            showStatusMessage(tr("Unable to Parts Library Directory %1").arg(dirname));
+            return;
+        }
 
-    showStatusDock(true);
+        gitparams << "clone" << "https://github.com/clixx-io/kayeiot-parts";
+
+        showStatusMessage(tr("Cloning to %1").arg(dirname));
+
+    }
+    else
+    {
+        gitparams << "pull";
+        dirname = Projects->getKayeIoTLibraryDir();
+
+        showStatusMessage(tr("Updating %1").arg(dirname));
+    }
 
     QProcess *gitupdater = new QProcess(this);
 
     gitupdater->setProcessChannelMode(QProcess::MergedChannels);
     gitupdater->setWorkingDirectory(dirname);
-    gitupdater->start(gitcmd, updateparams);
+    gitupdater->start(gitcmd, gitparams);
 
     if (!gitupdater->waitForFinished())
     {
-        showStatusMessage(tr("Update failed - %1").arg(gitupdater->errorString()));
+        showStatusMessage(tr("git %1 failed - %2").arg(gitparams[0]).arg(gitupdater->errorString()));
     } else
     {
         QString processOutput(gitupdater->readAll());
 
-        showStatusMessage(tr("Update succeeded - %1").arg(processOutput));
+        showStatusMessage(tr("git %1 succeeded - %2").arg(gitparams[0]).arg(processOutput));
     }
 
     delete gitupdater;
