@@ -257,12 +257,18 @@ void MainWindow::setupMenuBar()
     QMenu* Importsubmenu = menu->addMenu(tr("Import"));
     QAction* actionFritzingImport = Importsubmenu->addAction("Fritzing Board File" );
     connect(actionFritzingImport, SIGNAL(triggered()), this, SLOT(importFritzingParts()));
+    QAction* actionArduinoSketchImport = Importsubmenu->addAction("Arduino Sketch");
+    connect(actionArduinoSketchImport, SIGNAL(triggered()), this, SLOT(importArduinoSketch()));
     // QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
     // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
     QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
-    Librarysubmenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
-    QAction* actionUpdateLibrary = Librarysubmenu->addAction("Update Part Library" );
+    QAction* boardLibraryAction = Librarysubmenu->addAction("&Board Library");
+    connect(boardLibraryAction, SIGNAL(triggered()), this, SLOT(showLibrary()));
+
+    QAction* updateLibraryAction = Librarysubmenu->addAction("&Update Part Library");
+    connect(updateLibraryAction, SIGNAL(triggered()), this, SLOT(libraryUpdate()));
+
     menu->addSeparator();
 
     QAction* printPreviewAction = new QAction("Print Pre&view", this);
@@ -310,12 +316,6 @@ void MainWindow::setupMenuBar()
     QAction* gotoLineAction = new QAction("&Goto Line", this);
     EditMenu->addAction(gotoLineAction);
     connect(gotoLineAction, SIGNAL(triggered()), this, SLOT(GotoLineText()));
-
-    EditMenu->addSeparator();
-
-    QAction* boardLibraryAction = new QAction("Board Library", this);
-    EditMenu->addAction(boardLibraryAction);
-    connect(boardLibraryAction, SIGNAL(triggered()), this, SLOT(showLibrary()));
 
     EditMenu->addSeparator();
 

@@ -12,10 +12,12 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+#if QT_VERSION >= 0x050000
     MainWindow *mainwindow = (MainWindow *) getMainWindow();
 
     ui->UserPartsDirlineEdit->setText(mainwindow->Projects->getUserLibraryDir());
     ui->kayeiotPartsDirlineEdit->setText(mainwindow->Projects->getKayeIoTLibraryDir());
+#endif
 
 }
 
