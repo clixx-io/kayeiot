@@ -178,11 +178,9 @@ QMap <QString, QVariant> FritzingLibrary::readPartFile(const QString partsfile)
                                 if (Rxml.attributes().hasAttribute("image")){
 
                                     QString imgf = Rxml.attributes().value("image").toString();
-                                    if (imgf.startsWith("icon/"))
-                                    {
-                                        imgf = imgf.right(imgf.length()-5);
-                                    }
                                     results["image"] = imgf;
+
+                                    qDebug() << "XML Element Image Name:" << imgf;
 
                                     QMap <QString, QVariant> imageproperties;
 
@@ -268,14 +266,24 @@ QMap <QString, QVariant> FritzingLibrary::readPartFile(const QString partsfile)
 QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
 {
     QMap <QString, QVariant> results;
+    QString fullimagepath;
 
-    QString fullimagepath = m_dir + "/svg/core/icon/" + imagefile;
+    if (imagefile.startsWith("breadboard/") || imagefile.startsWith("icon/") || imagefile.startsWith("pcb/"))
+        fullimagepath = m_dir + "/svg/core/" + imagefile;
+    else
+        fullimagepath = m_dir + "/svg/core/icon" + imagefile;
+
     QFile file(fullimagepath);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
         qDebug() << "Error: Cannot read file " << qPrintable(fullimagepath)
          << ": " << qPrintable(file.errorString());
         return(results);
+    }
+    else
+    {
+        qDebug() << "readImageFile(): Reading file " << qPrintable(fullimagepath);
+        results["fullimagepath"] = fullimagepath;
     }
 
     bool fritzingmodule(true);
@@ -284,7 +292,7 @@ QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
     Rxml.setDevice(&file);
     Rxml.readNext();
 
-    QString units("mm");
+    QString units;
     double width, height;
 
     while(!Rxml.atEnd())
@@ -307,6 +315,11 @@ QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
                         units = "mm";
                         wstr = wstr.left(wstr.length()-2);
                     }
+                    else if (wstr.toLower().endsWith("px"))
+                    {
+                        units = "px";
+                        wstr = wstr.left(wstr.length()-2);
+                    }
 
                     width = wstr.toDouble();
                 }
@@ -323,15 +336,25 @@ QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
                         units = "mm";
                         wstr = wstr.left(wstr.length()-2);
                     }
+                    else if (wstr.toLower().endsWith("px"))
+                    {
+                        units = "px";
+                        wstr = wstr.left(wstr.length()-2);
+                    }
 
                     height = wstr.toDouble();
                 }
 
-                qDebug() << "Width:" << width << " Height " << height;
+                qDebug() << "Width:" << width << " Height " << height << " " << units;
 
-                results[QObject::tr("board-width")] = width;
-                results[QObject::tr("board-height")] = height;
-                results[QObject::tr("board-units")] = units;
+                if (width != 0)
+                    results[QObject::tr("board-width")] = width;
+
+                if (height != 0)
+                    results[QObject::tr("board-height")] = height;
+
+                if (units.length())
+                    results[QObject::tr("board-units")] = units;
 
                 Rxml.readNext();
 
@@ -401,10 +424,15 @@ int FritzingLibrary::writeBoardFile(QString dest, QMap <QString, QVariant> dataV
     QSettings boardfile(dest, QSettings::IniFormat);
 
     boardfile.beginGroup("overview");
-    boardfile.setValue("name",dataValues["title"]);
-    boardfile.setValue("units", "mm");
-    boardfile.setValue("width",dataValues["board-width"].toDouble());
-    boardfile.setValue("height",dataValues["board-height"].toDouble());
+    boardfile.setValue("name", dataValues["title"]);
+    boardfile.setValue("units", dataValues["board-units"]);
+    boardfile.setValue("width", dataValues["board-width"].toDouble());
+    boardfile.setValue("height", dataValues["board-height"].toDouble());
+    boardfile.endGroup();
+
+    boardfile.beginGroup("gpio");
+    boardfile.setValue("rows",1);
+    boardfile.setValue("connection_point","Bottom Centre");
     boardfile.endGroup();
 
     int pincount(0);
@@ -413,53 +441,54 @@ int FritzingLibrary::writeBoardFile(QString dest, QMap <QString, QVariant> dataV
     {
         if (keyname.startsWith("connector-name-"))
         {
-            connectorNames.append(keyname.right(keyname.length()-15));
+            connectorNames.append(keyname);
             pincount++;
         }
     }
-
-    boardfile.beginGroup("gpio");
-    boardfile.setValue("pins",pincount);
-    boardfile.setValue("rows",1);
-    boardfile.setValue("connection_point","Bottom Centre");
-    boardfile.endGroup();
+    boardfile.setValue("gpio/pins",pincount);
 
     boardfile.beginGroup("gpio_assignments");
-    QString keyname;
-    for (int i; i < pincount; i++)
+    QString pinname;
+    for (int i=0; i < connectorNames.length(); i++)
     {
-        keyname = QObject::tr("pin%1_name").arg(i+1);
-        boardfile.setValue(keyname,dataValues[QObject::tr("connector-name-%1").arg(connectorNames[i])]);
-
+        pinname = QObject::tr("pin%1_name").arg(i+1);
+        boardfile.setValue(pinname, dataValues[connectorNames[i]]);
     }
     boardfile.endGroup();
 
-    QString imagefilename = dataValues["image"].toString();
-    if (imagefilename.startsWith("icon/"))
-        imagefilename = imagefilename.right(imagefilename.length()-5);
-    boardfile.setValue("image/file",imagefilename);
+    QString imagefilename = dataValues["fullimagepath"].toString();
+    QFileInfo imagefileinfo(imagefilename);
+    boardfile.setValue("image/file",imagefileinfo.fileName());
     qDebug() << "Board File written to " << dest.toLocal8Bit();
 
+    qDebug() << "fullimagepath: " << imagefilename;
+
     // Copy the .svg to into the library directory
-    QString sourceimagename = m_dir + "/svg/core/icon/" + imagefilename;
-    QString finalimagename;
-    if (destDir.endsWith("/parts"))
-        finalimagename = destDir.left(destDir.length()-6) + "/images/" + imagefilename;
+    if (!QFile::exists(imagefilename))
+    {
+        qDebug() << "Source image " << imagefilename.toLocal8Bit() << " doesnt exist";
+    }
     else
-        finalimagename = destDir + "/" + imagefilename;
-
-    if (!QFile::exists(sourceimagename))
     {
-        qDebug() << "Source image " << sourceimagename.toLocal8Bit() << " doesnt exist";
-    }
+        QString finalimagename = destDir;
 
-    if (QFile::exists(finalimagename))
-    {
-        QFile::remove(finalimagename);
-    }
+        if (finalimagename.endsWith("/parts"))
+        {
+            finalimagename = finalimagename.left(destDir.length() - 6) + "/images/";
+            finalimagename += imagefileinfo.fileName();
+        }
 
-    QFile::copy(sourceimagename, finalimagename);
-    qDebug() << "Image written to " << finalimagename;
+        if (QFile::exists(finalimagename))
+        {
+            QFile::remove(finalimagename);
+        }
+
+        if (QFile::copy(imagefilename, finalimagename))
+            qDebug() << "Image written to " << finalimagename;
+        else
+            qDebug() << "Image not written to " << finalimagename;
+
+    }
 
     return(0);
 }

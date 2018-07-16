@@ -1267,6 +1267,8 @@ void MainWindow::importFritzingParts()
     if (fritzingfile.length())
     {
 
+        qDebug() << "Fritzing Import started for file " << fritzingfile;
+
         showStatusDock(true);
 
         QFileInfo fi(fritzingfile);
