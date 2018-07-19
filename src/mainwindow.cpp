@@ -1000,6 +1000,9 @@ void MainWindow::architectureLogic()
         projectWindow->setMainWindow(this);
         projectDock->setWidget(projectWindow);
         projectDock->show();
+
+        projectWindow->loadProject(currentProject->getProjectDir());
+
     //    projectWindow->resize(myproject->width(),myproject->height());
     //    projectWindow->resize(150,200);
     }
@@ -1408,8 +1411,43 @@ void MainWindow::importArduinoSketch()
             showStatusMessage(msg);
         }
 
+        QString projectname = fi.baseName();
+        QString projectdir = Projects->getProjectsDir() + "/" + projectname;
+
+        if (!QDir(projectdir).exists())
+        {
+
+            int reply = QMessageBox::question(this, "Create Project", tr("Do you wish to create a Project Directory %1 for this Sketch ?").arg(projectdir),
+                                            QMessageBox::Yes|QMessageBox::No);
+            if (reply == QMessageBox::Yes) {
+
+                // Create the board directory
+                if (QDir().mkdir(projectdir))
+                {
+                    showStatusMessage(tr("Created %1 Project directory.").arg(projectdir));
+                }
+                else
+                {
+                    showStatusMessage(tr("Couldn't created Project directory %1.").arg(projectdir));
+                    return;
+                }
+
+                QString sketchinprojectdir = projectdir + "/" + fi.fileName();
+
+                if (!QDir(sketchinprojectdir).exists())
+                {
+                    if (QFile::copy(arduinoSketch, sketchinprojectdir))
+                        qDebug() << "Sketch written to " << sketchinprojectdir;
+                    else
+                        qDebug() << "Image not written to " << sketchinprojectdir;
+                }
+            }
+        }
+
         // Change to that directory
         currentProject->setProjectDir(dirName);
+
+        // arduinoSketch
         // LoadCodeSource(arduinoSketch);
 
      }
