@@ -89,27 +89,12 @@ QStringList ClixxIoTProjects::list()
 QString ClixxIoTProjects::getProjectsDir()
 {
 
-    QSettings settings("clixx.io", "IoT Framework");
+    QString projectDir("/KayeIoT/projects");
 
-    settings.beginGroup("projects");
-    QString workdir = settings.value("directory").toString();
-    if (!workdir.length()) {
+    projectDir = projectDir.insert(0,QDir::homePath());
 
-#if QT_VERSION >= 0x050000
-        workdir = QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0] + projectPathDir;
-#else
-        workdir = QDir::homePath() + projectPathDir;
-#endif
+    return(projectDir);
 
-        if (!QDir(workdir).exists())
-        {
-            workdir = QDir::homePath();
-        }
-        settings.setValue("directory", workdir);
-    }
-    settings.endGroup();
-
-    return workdir;
 }
 
 ClixxIoTProject::ClixxIoTProject(QString project)

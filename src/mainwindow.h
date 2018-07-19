@@ -87,6 +87,7 @@ public:
                         QWidget *parent = Q_NULLPTR,
                         Qt::WindowFlags flags = 0);
 
+    void setProjectDir(QString dirname);
     void LoadCodeSource(const QString filename);
     void showStatusMessage(const QString &message);
     void showStatusDock(bool viewStatus);

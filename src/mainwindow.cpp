@@ -159,7 +159,7 @@ void MainWindow::setupMenuBar()
     QMenu *menu = menuBar()->addMenu(tr("&File"));
 
 #if QT_VERSION >= 0x050000
-    menu->addAction(tr("New Project.."),this, &MainWindow::switchLayoutDirection);
+    menu->addAction(tr("New Project.."),this, &MainWindow::newProject);
     menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
     menu->addAction(tr("Recent Projects"), this, &MainWindow::saveLayout);
     menu->addSeparator();
@@ -577,8 +577,6 @@ void MainWindow::setupDockWidgets(const CustomSizeHintMap &customSizeHints)
 
 void MainWindow::switchLayoutDirection()
 {
-    projectWindow->buildProject("");
-
     if (layoutDirection() == Qt::LeftToRight)
         QApplication::setLayoutDirection(Qt::RightToLeft);
     else
@@ -686,6 +684,18 @@ void MainWindow::destroyDockWidget(QAction *action)
         destroyDockWidgetMenu->setEnabled(false);
 }
 
+void MainWindow::setProjectDir(QString dirname)
+{
+    currentProject->setProjectDir(dirname);
+
+    if (projectWindow)
+        projectWindow->loadProject(dirname);
+
+    if (systemDesign)
+        systemDesign->LoadComponents();
+
+}
+
 void MainWindow::LoadCodeSource(const QString filename)
 {
     QFile file(filename);
@@ -709,8 +719,57 @@ void MainWindow::setBuildButtonToggles(const bool alloption, const bool cleanopt
 
 void MainWindow::newProject()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Error"), tr("Not implemented"),QMessageBox::Ok);
-    msgBox.exec();
+
+    QString dirname = Projects->getProjectsDir();
+
+    if (!QDir(dirname).exists())
+    {
+
+        QMessageBox::StandardButton reply;
+
+        reply = QMessageBox::question(this, tr("Create Project Directory?"), tr("The project directory %1 does not exist.\n\n Can we create it?").arg(dirname),
+                                        QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+
+            if (!QDir().mkpath(dirname))
+            {
+                showStatusMessage(tr("Unable to Parts Library Directory %1").arg(dirname));
+                return;
+            }
+        }
+        else
+            return;
+    }
+
+    bool projectnameok = false;
+    while (!projectnameok)
+    {
+        bool ok;
+        QString projectname = QInputDialog::getText(this, tr("Enter Project Name"),
+                                             tr("Project Name :"), QLineEdit::Normal,
+                                             QDir::home().dirName(), &ok);
+
+        if (!ok)
+            break;
+
+        if (ok && !projectname.isEmpty())
+        {
+
+            QString fullprojectdir = Projects->getProjectsDir() + "/" + projectname;
+
+            if (!QDir().mkpath(fullprojectdir))
+            {
+                showStatusMessage(tr("Unable to create Project Library Directory %1").arg(fullprojectdir));
+            }
+            else
+            {
+                projectnameok = true;
+                dirname = fullprojectdir;
+
+                setProjectDir(dirname);
+            }
+        }
+    }
 }
 
 void MainWindow::loadProject()
@@ -723,11 +782,7 @@ void MainWindow::loadProject()
 
     if (dir.length())
     {
-        if (projectWindow)
-            projectWindow->loadProject(dir);
-
-        if (systemDesign)
-            systemDesign->LoadComponents();
+        setProjectDir(dir);
     }
 
     return;
@@ -1312,7 +1367,12 @@ void MainWindow::importFritzingParts()
                 reply = QMessageBox::question(this, "Import Complete", tr("Do you wish to add this to the Diagram?"),
                                                 QMessageBox::Yes|QMessageBox::No);
                 if (reply == QMessageBox::Yes) {
-                    systemDesign->addToScene("",boardfile);
+
+                    QSettings board(boardfile, QSettings::IniFormat);
+
+                    QString partname = board.value("overview/name","part").toString();
+
+                    systemDesign->addToScene(partname,boardfile);
                 }
             }
         }
@@ -1389,11 +1449,15 @@ void MainWindow::libraryUpdate()
         showStatusMessage(tr("Updating %1").arg(dirname));
     }
 
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
     QProcess *gitupdater = new QProcess(this);
 
     gitupdater->setProcessChannelMode(QProcess::MergedChannels);
     gitupdater->setWorkingDirectory(dirname);
     gitupdater->start(gitcmd, gitparams);
+
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     if (!gitupdater->waitForFinished())
     {
@@ -1404,6 +1468,8 @@ void MainWindow::libraryUpdate()
 
         showStatusMessage(tr("git %1 succeeded - %2").arg(gitparams[0]).arg(processOutput));
     }
+
+    QApplication::restoreOverrideCursor();
 
     delete gitupdater;
 }
