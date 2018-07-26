@@ -19,10 +19,9 @@ QStringList FritzingLibrary::convertfpzToBoard(QString fritzingfile, QString &ou
     QMap <QString, QVariant> dataValues;
 
     messages << tr("Converting %1").arg(fritzingfile);
+    qDebug() << "Converting " << fritzingfile << " to " << outputDir;
 
     dataValues = readPartFile(fi.fileName());
-
-    qDebug() << "OutputDir=" << outputDir;
 
     if (outputDir.length() == 0)
     {
@@ -37,7 +36,6 @@ QStringList FritzingLibrary::convertfpzToBoard(QString fritzingfile, QString &ou
         // check if file exists and if yes: Is it really a file and no directory?
         if (check_parts.exists() && check_parts.isDir())
         {
-            qDebug() << "OutputDir now =" << outputDir;
             outputDir += "/parts";
         }
         else

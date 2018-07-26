@@ -53,6 +53,7 @@ public:
     void setName(QString name){ m_name = name; }
     void setWidth(double w){m_width = w; update(); }
     void setHeight(double h){m_width = h; update(); }
+    inline void setDisplayMode(ciDisplayMode mode){ m_displaymode = mode; update(); }
 
     void addCableConnection(connectableCable *cable);
 
@@ -151,6 +152,7 @@ public:
     QString getOtherEndConnection(QGraphicsItem *point, int pinnumber);
 
     void setName(QString name){ m_name = name; }
+    inline void setDisplayMode(ciDisplayMode mode){ m_displaymode = mode; update(); }
 
     bool connectNextAvailableWire(int sourcePin, int destPin, QString wireColor="Gray");
 
@@ -176,6 +178,8 @@ private:
     QMap <int, int> m_endpins;
 
     QMap <int, QString> m_wirecolors;
+
+    ciDisplayMode m_displaymode;
 
 };
 
@@ -203,6 +207,7 @@ public:
     void setName(QString name){ m_name = name; }
     void setWidth(double w){m_width = w; update(); }
     void setHeight(double h){m_width = h; update(); }
+    inline void setDisplayMode(ciDisplayMode mode){ m_displaymode = mode; update(); }
 
     void addCableConnection(connectableCable *cable);
 
@@ -234,6 +239,8 @@ private:
     QPixmap *m_image;
 
     QList <connectableCable *> cables;
+
+    ciDisplayMode m_displaymode;
 
 };
 

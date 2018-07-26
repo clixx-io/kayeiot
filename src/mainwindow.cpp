@@ -72,6 +72,8 @@
 #include <QTreeWidget>
 #include <QInputDialog>
 #include <QSettings>
+#include <QTemporaryDir>
+#include <QUrl>
 
 #include "codeeditor.h"
 #include "arduinosketch.h"
@@ -167,7 +169,8 @@ void MainWindow::setupMenuBar()
     QMenu* Importsubmenu = menu->addMenu(tr("Import"));
     QAction* actionFritzingImport = Importsubmenu->addAction("Fritzing Board File" );
     connect(actionFritzingImport, SIGNAL(triggered()), this, SLOT(importFritzingParts()));
-    QAction* actionArduinoSketchImport = Importsubmenu->addAction("Arduino Sketch",this,&MainWindow::importArduinoSketch);
+    QAction* actionArduinoSketchImport = Importsubmenu->addAction("Arduino Sketch from File",this,&MainWindow::importArduinoSketch);
+    QAction* actionArduinoGithubImport = Importsubmenu->addAction("Arduino Sketch from Github",this,&MainWindow::importArduinoGithub);
     // QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
     // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
@@ -692,7 +695,7 @@ void MainWindow::setProjectDir(QString dirname)
         projectWindow->loadProject(dirname);
 
     if (systemDesign)
-        systemDesign->LoadComponents();
+        systemDesign->LoadComponents(dirname + "/hardware.layout");
 
 }
 
@@ -782,6 +785,7 @@ void MainWindow::loadProject()
 
     if (dir.length())
     {
+        qDebug() << "Loading Project " << dir;
         setProjectDir(dir);
     }
 
@@ -893,6 +897,7 @@ void MainWindow::architectureSystem()
     {
         delete projectDock;
         projectDock = Q_NULLPTR;
+        projectWindow = Q_NULLPTR;
     }
 
     if (UserMsgDock)
@@ -1103,9 +1108,11 @@ void MainWindow::showWelcome()
 void MainWindow::saveFile()
 {
     if (systemDesign)
-        systemDesign->SaveComponents();
+    {
+        systemDesign->SaveComponents(currentProject->getProjectDir() + "/hardware.layout");
 
-    showStatusMessage(tr("Saved"));
+        showStatusMessage(tr("Saved"));
+    }
 }
 
 void MainWindow::printPreview()
@@ -1447,10 +1454,222 @@ void MainWindow::importArduinoSketch()
         // Change to that directory
         currentProject->setProjectDir(dirName);
 
-        // arduinoSketch
         // LoadCodeSource(arduinoSketch);
 
      }
+}
+
+void MainWindow::importArduinoGithub()
+{
+    bool ok;
+    QString dirname;
+    QString projectname = QInputDialog::getText(this, tr("Import Sketch on Github"),
+                                         tr("Enter Github Sketch URL :"), QLineEdit::Normal,
+                                         "https://github.com/", &ok);
+
+
+    // Convert a Github Sketch
+    // eg: https://github.com/kjellcompany/Arduino_701/blob/master/DrawPixels/DrawPixels.ino
+    // to: https://raw.githubusercontent.com/kjellcompany/Arduino_701/master/DrawPixels/DrawPixels.ino
+
+    // or : https://github.com/jarzebski/Arduino-HMC5883L/blob/master/HMC5883L_compass/HMC5883L_compass.ino
+
+    //
+    // or a .git extension
+    // https://github.com/kjellcompany/Arduino_701.git
+    // https://raw.githubusercontent.com/jarzebski/Arduino-HMC5883L/master/HMC5883L_compass/HMC5883L_compass.ino
+    // https://raw.githubusercontent.comm/jarzebski/Arduino-HMC5883Lb/master/HMC5883L_compass/HMC5883L_compass.ino
+
+    if (!ok)
+        return;
+
+    architectureSystem();
+
+    showStatusDock(true);
+
+    if (!projectname.endsWith(".ino") && !projectname.endsWith(".git"))
+    {
+        showStatusMessage(tr("Error: The URL needs to end with .ino or .git"));
+        return;
+    }
+
+    if (projectname.endsWith(".ino"))
+    {
+        QString rawurl = projectname;
+        QFileInfo projdir;
+
+        if (rawurl.startsWith("https://github.com/"))
+        {
+            // Work out the Raw URL
+            rawurl = rawurl.right(rawurl.length()-18);
+            rawurl.insert(0,"https://raw.githubusercontent.com");
+            int blobidx = rawurl.indexOf("/blob/");
+            rawurl = rawurl.left(blobidx) + rawurl.right(rawurl.length() - blobidx - 5);
+            qDebug() << "The URL is" << rawurl;
+        }
+
+        if (rawurl.startsWith("https://raw.githubusercontent.com/"))
+        {
+            QString wgetcmd("wget");
+            QStringList wgetparams;
+
+            wgetparams << rawurl;
+
+            // Setup for the wget process
+            QProcess *wget = new QProcess(this);
+
+            // Determine the projectname and directory
+            projectname = rawurl.left(rawurl.lastIndexOf("/"));
+            showStatusMessage(tr(" 1- Downloading to %1").arg(projectname));
+            projectname = projectname.right(projectname.length()-projectname.lastIndexOf("/")-1);
+            showStatusMessage(tr(" 2- Downloading to %1").arg(projectname));
+
+            dirname = Projects->getProjectsDir() + "/" + projectname;
+            wget->setWorkingDirectory(dirname);
+            showStatusMessage(tr(" - Downloading to %1").arg(dirname));
+
+            qDebug() << "projectname: " << projectname << ", downloading to " << dirname;
+
+            if (!QDir(dirname).exists())
+            {
+                if (QDir().mkpath(dirname))
+                {
+                    showStatusMessage(tr("Created Project Directory %1").arg(dirname));
+                }
+                else
+                {
+                    showStatusMessage(tr("Unable to create Project Directory %1").arg(dirname));
+                    return;
+                }
+                showStatusMessage(tr("Retrieving %1").arg(dirname));
+            }
+            else
+            {
+                showStatusMessage(tr("Updating %1").arg(dirname));
+            }
+
+            QDir::setCurrent(dirname);
+
+            QApplication::setOverrideCursor(Qt::WaitCursor);
+
+            wget->setProcessChannelMode(QProcess::MergedChannels);
+            wget->start(wgetcmd, wgetparams);
+
+            QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+            if (!wget->waitForFinished())
+            {
+                showStatusMessage(tr("wget %1 failed - %2").arg(wgetparams[0]).arg(wget->errorString()));
+                delete wget;
+                QApplication::restoreOverrideCursor();
+                return;
+
+            } else
+            {
+                QString processOutput(wget->readAll());
+
+                showStatusMessage(tr("wget %1 succeeded - %2").arg(wgetparams[0]).arg(processOutput));
+            }
+
+            QApplication::restoreOverrideCursor();
+
+            delete wget;
+
+        }
+        else {
+            showStatusMessage(tr("Error: The URL needs to end with .ino or .git"));
+            return;
+        }
+    }
+    else if (projectname.endsWith(".git"))
+    {
+        // Download a project from a URL
+        // Eg: https://github.com/kjellcompany/Arduino_701.git
+        QString gitcmd("git");
+        QStringList gitparams;
+        QUrl gitprojecturl(projectname);
+        QProcess *gitupdater = new QProcess(this);
+
+        projectname = projectname.left(projectname.length()-4); // remove the .git from the end
+        projectname = projectname.right(projectname.lastIndexOf("/") + 1); // remove everything from the left
+
+        dirname = Projects->getProjectsDir() + "/" + projectname;
+
+        qDebug() << "projectname: " << projectname << ", downloading to " << dirname;
+
+        if (!QDir(dirname).exists())
+        {
+            if (QDir().mkpath(dirname))
+            {
+                showStatusMessage(tr("Created Project Directory %1").arg(dirname));
+            }
+            else
+            {
+                showStatusMessage(tr("Unable to create Project Directory %1").arg(dirname));
+                return;
+            }
+
+            gitparams << "clone" << gitprojecturl.url();
+            gitupdater->setWorkingDirectory(Projects->getProjectsDir());
+            showStatusMessage(tr("Cloning to %1").arg(dirname));
+
+        }
+        else
+        {
+            gitparams << "pull";
+            gitupdater->setWorkingDirectory(dirname);
+            showStatusMessage(tr("Updating %1").arg(dirname));
+        }
+
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+
+        gitupdater->setProcessChannelMode(QProcess::MergedChannels);
+        gitupdater->start(gitcmd, gitparams);
+
+        QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+        if (!gitupdater->waitForFinished())
+        {
+            showStatusMessage(tr("git %1 failed - %2").arg(gitparams[0]).arg(gitupdater->errorString()));
+            delete gitupdater;
+            QApplication::restoreOverrideCursor();
+            return;
+
+        } else
+        {
+            QString processOutput(gitupdater->readAll());
+
+            showStatusMessage(tr("git %1 succeeded - %2").arg(gitparams[0]).arg(processOutput));
+        }
+
+        QApplication::restoreOverrideCursor();
+
+        delete gitupdater;
+
+        QDir::setCurrent(dirname);
+
+    }
+
+    QString arduinoSketch(dirname + "/" + projectname + ".ino");
+    QFileInfo fi(arduinoSketch);
+    dirname = fi.absolutePath();
+
+    if (!fi.exists())
+    {
+        showStatusMessage(tr("The sketch %1 doesnt exist.").arg(arduinoSketch));
+        return;
+    }
+
+    ArduinoSketch *ino = new ArduinoSketch();
+
+    showStatusMessage(tr("Converting sketch %1").arg(arduinoSketch));
+
+    QStringList results = ino->convertSketch(arduinoSketch,systemDesign);
+    foreach (QString msg, results)
+    {
+        showStatusMessage(msg);
+    }
+
 }
 
 void MainWindow::libraryUpdate()

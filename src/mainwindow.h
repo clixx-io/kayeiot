@@ -101,9 +101,9 @@ public:
     ClixxIoTProject  *currentProject;
 
     ProjectWidget *projectWindow;
+    HardwareLayoutWidget *systemDesign;
     QDockWidget *projectDock;
     CodeEditor *center;
-    HardwareLayoutWidget *systemDesign;
     CommunicatorSerialWidget *commWindow;
     ToolBar *toolBar;
     QSettings *settings;
@@ -117,6 +117,7 @@ public slots:
     void loadProject();
     void importFritzingParts();
     void importArduinoSketch();
+    void importArduinoGithub();
     void libraryUpdate();
     void loadDesignDiagram();
     void saveFile();

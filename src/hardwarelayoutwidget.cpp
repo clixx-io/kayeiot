@@ -182,7 +182,7 @@ void connectableHardware::advance(int phase)
 void connectableHardware::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 
-    const int selectSize = 10;
+    const int selectSize = 8;
 
     painter->setRenderHint(QPainter::Antialiasing);
 
@@ -995,17 +995,45 @@ HardwareLayoutWidget::~HardwareLayoutWidget()
 
 void HardwareLayoutWidget::run(bool runState)
 {
+
+    ciDisplayMode newMode;
+
     if (m_timer)
     {
         if (runState)
         {
+            newMode = dmDiagram;
+
             m_timer->start();
             m_running = true;
         }
         else
         {
+            newMode = dmImage;
+
             m_timer->stop();
             m_running = false;
+        }
+
+        foreach (QGraphicsItem *item,scene->items())
+        {
+            connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(item);
+            if (h)
+            {
+                h->setDisplayMode(newMode);
+            }
+
+            connectableCable *c = qgraphicsitem_cast<connectableCable *>(item);
+            if (c)
+            {
+                c->setDisplayMode(newMode);
+            }
+
+            connectableGraphic *g = qgraphicsitem_cast<connectableGraphic *>(item);
+            if (g)
+            {
+                g->setDisplayMode(newMode);
+            }
         }
     }
 }
@@ -1315,6 +1343,8 @@ bool HardwareLayoutWidget::LoadComponents(const QString filename)
 bool HardwareLayoutWidget::SaveComponents(QString filename)
 {
 
+    qDebug() << "Saving to " << filename;
+
     QSettings boardfile(filename, QSettings::IniFormat);
     QStringList cpnames = getConnectionPointNames();
 
@@ -1406,7 +1436,7 @@ bool HardwareLayoutWidget::SaveComponents(QString filename)
 
     }
 
-    qDebug() << "Saved";
+    qDebug() << "Save operation completed";
 
     return(false);
 }
@@ -2339,16 +2369,16 @@ void HardwareLayoutWidget::convertSize(const QString units, double &w, double &h
         {
             if (units == "in")
             {
-                w = w * 2.54;
-                h = h * 2.54;
+                w = w * 25.4;
+                h = h * 25.4;
             }
         }
         else if (m_unitSystem == "in")
         {
             if (units == "mm")
             {
-                w = w / 2.54;
-                h = h / 2.54;
+                w = w / 25.4;
+                h = h / 25.4;
             }
         }
     }

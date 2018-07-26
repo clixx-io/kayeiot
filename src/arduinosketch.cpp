@@ -41,6 +41,8 @@ QStringList ArduinoSketch::convertSketch(const QString inoFilename, HardwareLayo
 
     identifyDevices();
 
+    hwl->repaint();
+
     return(m_log);
 }
 
