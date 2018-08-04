@@ -78,7 +78,6 @@ private slots:
     void randomize();
     void addSpinBox();
     void removeSpinBox();
-    void addComponent();
 
     void changeMovable(bool movable);
 

@@ -62,6 +62,7 @@
 
 #include "toolbar.h"
 #include "mainwindow.h"
+#include "clixxiotprojects.h"
 
 static QPixmap genIcon(const QSize &iconSize, const QString &, const QColor &color)
 {
@@ -113,11 +114,74 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
     menu->setIcon(welcomeIcon);
     connect(menu->menuAction(), &QAction::triggered, mainwindow, &MainWindow::showWelcome);
 
-    QAction *projectWizard = menu->addAction(genIcon(iconSize(), "A", Qt::blue), tr("Run Project Wizard"));
-    connect(projectWizard, &QAction::triggered, mainwindow, &MainWindow::newProjectWizard);
+    // QSignalMapper *signalMapper = new QSignalMapper( this );
 
-    QAction *AddComponentWizard = menu->addAction(genIcon(iconSize(), "A", Qt::blue), tr("Add Component Wizard"));
-    connect(AddComponentWizard, &QAction::triggered, mainwindow, &MainWindow::addComponentWizard);
+    QMenu* submenuExamples = menu->addMenu(tr("Examples"));
+
+    QMap <QString, QString> localexamples = mainwindow->Projects->getExamples();
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = localexamples.begin(); i != localexamples.end(); ++i)
+    {
+        QAction* actionExample = submenuExamples->addAction(i.key());
+
+        switch (c)
+        {
+            case 1 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::loadExampleProject1);
+                     break;
+            case 2 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::loadExampleProject2);
+                     break;
+            case 3 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::loadExampleProject3);
+                     break;
+            case 4 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::loadExampleProject4);
+                     break;
+            case 5 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::loadExampleProject5);
+                     break;
+
+            default: break;
+
+        }
+
+        c++;
+    }
+
+    QMenu* submenuArduinoGithubExamples = menu->addMenu(tr("Example Arduino Sketches on Github"));
+
+    QMap <QString, QString> inoexamples = mainwindow->Projects->getArduinoOnGithubExamples();
+
+    c = 1;
+    for (i = inoexamples.begin(); i != inoexamples.end(); ++i)
+    {
+        QAction* actionExample = submenuArduinoGithubExamples->addAction(i.key());
+
+        switch (c)
+        {
+            case 1 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::sampleArduinoOnGithub1);
+                     break;
+            case 2 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::sampleArduinoOnGithub2);
+                     break;
+            case 3 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::sampleArduinoOnGithub3);
+                     break;
+            case 4 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::sampleArduinoOnGithub4);
+                     break;
+            case 5 : connect(actionExample, &QAction::triggered, mainwindow, &MainWindow::sampleArduinoOnGithub5);
+                     break;
+
+            default: break;
+        }
+        c++;
+    }
+
+    /* Try to use a SignalMapper
+    QAction	*project1 = new QAction( tr( "Project 1" ), this );
+    signalMapper->setMapping( project1, "http://example.com" );
+    connect( project1, SIGNAL(triggered()), signalMapper, SLOT(map()) );
+//    connect(project1, &QAction::triggered, mainwindow, &QSignalMapper::map);
+    menu->addAction(project1);
+    //connect( signalMapper, &QSignalMapper::mapped, mainwindow, &MainWindow::sampleArduinoOnGithub );
+    */
 
     addAction(menu->menuAction());
 
@@ -600,10 +664,4 @@ void ToolBar::setBuildButtonToggles(const bool alloption, const bool cleanoption
     checkAction->setEnabled(checkoption);
     runAction->setEnabled(runoption);
     */
-}
-
-void ToolBar::addComponent()
-{
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
 }

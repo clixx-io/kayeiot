@@ -92,6 +92,7 @@ public:
     void showStatusMessage(const QString &message);
     void showStatusDock(bool viewStatus);
     void clearStatusMessages();
+    void importGithubSketch(QString sketchname);
 
     void setBuildButtonToggles(const bool alloption = false, const bool cleanoption = false,
                                const bool transferoption = false, const bool checkoption = false,
@@ -118,11 +119,31 @@ public slots:
     void importFritzingParts();
     void importArduinoSketch();
     void importArduinoGithub();
+    void sampleArduinoOnGithub();
+    void sampleArduinoOnGithub(const QString &inURL );
     void libraryUpdate();
     void loadDesignDiagram();
     void saveFile();
     void printPreview();
     void printFile();
+
+    void loadRecentProject1();
+    void loadRecentProject2();
+    void loadRecentProject3();
+    void loadRecentProject4();
+    void loadRecentProject5();
+
+    void loadExampleProject1();
+    void loadExampleProject2();
+    void loadExampleProject3();
+    void loadExampleProject4();
+    void loadExampleProject5();
+
+    void sampleArduinoOnGithub1();
+    void sampleArduinoOnGithub2();
+    void sampleArduinoOnGithub3();
+    void sampleArduinoOnGithub4();
+    void sampleArduinoOnGithub5();
 
     void actionTriggered(QAction *action);
     void saveLayout();

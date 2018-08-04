@@ -130,7 +130,7 @@ MainWindow::MainWindow(const CustomSizeHintMap &customSizeHints,
 
     Projects = new ClixxIoTProjects();
     currentProject = new ClixxIoTProject();
-    settings = new QSettings("Clixx.io","IoT Developer");
+    settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
 
     setupToolBar();
     setupMenuBar();
@@ -163,7 +163,8 @@ void MainWindow::setupMenuBar()
 #if QT_VERSION >= 0x050000
     menu->addAction(tr("New Project.."),this, &MainWindow::newProject);
     menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
-    menu->addAction(tr("Recent Projects"), this, &MainWindow::saveLayout);
+    QMenu* recentProjectsmenu = menu->addMenu(tr("Recent Projects"));
+
     menu->addSeparator();
 
     QMenu* Importsubmenu = menu->addMenu(tr("Import"));
@@ -247,9 +248,7 @@ void MainWindow::setupMenuBar()
     menu->addAction(loadProjectAction);
     connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
 
-    QAction* recentProjectsAction = new QAction("&Recent Projects", this);
-    menu->addAction(recentProjectsAction);
-    //connect(recentProjectsAction, SIGNAL(triggered()), this, SLOT(newProject()));
+    QMenu* recentProjectsmenu = menu->addMenu(tr("Recent Projects"));
     menu->addSeparator();
 
     QAction* saveProjectAction = new QAction("&Save", this);
@@ -409,6 +408,33 @@ void MainWindow::setupMenuBar()
     action->setChecked(unifiedTitleAndToolBarOnMac());
     connect(action, &QAction::toggled, this, &QMainWindow::setUnifiedTitleAndToolBarOnMac);
 #endif
+
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = recentprojects.begin(); i != recentprojects.end(); ++i)
+    {
+        QAction* actionExample = recentProjectsmenu->addAction(i.value());
+
+        switch (c)
+        {
+            case 1 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject1);
+                     break;
+            case 2 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject2);
+                     break;
+            case 3 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject3);
+                     break;
+            case 4 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject4);
+                     break;
+            case 5 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject5);
+                     break;
+
+            default: break;
+        }
+        c++;
+    }
 
     /*
     mainWindowMenu = menuBar()->addMenu(tr("&Window"));
@@ -689,13 +715,43 @@ void MainWindow::destroyDockWidget(QAction *action)
 
 void MainWindow::setProjectDir(QString dirname)
 {
-    currentProject->setProjectDir(dirname);
-
     if (projectWindow)
         projectWindow->loadProject(dirname);
 
     if (systemDesign)
         systemDesign->LoadComponents(dirname + "/hardware.layout");
+
+    QString projectdir(dirname), lastproject;
+
+    // Read the last five projects
+    QStringList recentProjects;
+    for (int i=0; i < 5; i++)
+    {
+        lastproject = settings->value(QObject::tr("recent-projects/project-%1").arg(i + 1)).toString();
+
+        if (lastproject != projectdir)
+        {
+            if (lastproject.length())
+                recentProjects.append(lastproject);
+            else
+                break;
+        }
+    }
+    recentProjects.insert(0,projectdir);
+
+    // rewrite the last five projects
+    for (int i=0; i < 5; i++)
+    {
+        if (recentProjects.length() >= (i + 1))
+        {
+            lastproject = recentProjects[i];
+        }
+        else
+            lastproject = "";
+
+        settings->setValue(QObject::tr("recent-projects/project-%1").arg(i + 1),lastproject);
+
+    }
 
 }
 
@@ -787,6 +843,7 @@ void MainWindow::loadProject()
     {
         qDebug() << "Loading Project " << dir;
         setProjectDir(dir);
+
     }
 
     return;
@@ -1462,7 +1519,6 @@ void MainWindow::importArduinoSketch()
 void MainWindow::importArduinoGithub()
 {
     bool ok;
-    QString dirname;
     QString projectname = QInputDialog::getText(this, tr("Import Sketch on Github"),
                                          tr("Enter Github Sketch URL :"), QLineEdit::Normal,
                                          "https://github.com/", &ok);
@@ -1482,6 +1538,15 @@ void MainWindow::importArduinoGithub()
 
     if (!ok)
         return;
+
+    importGithubSketch(projectname);
+
+}
+
+void MainWindow::importGithubSketch(QString sketchname)
+{
+    QString projectname(sketchname),
+            dirname;
 
     architectureSystem();
 
@@ -1670,6 +1735,228 @@ void MainWindow::importArduinoGithub()
         showStatusMessage(msg);
     }
 
+}
+
+void MainWindow::loadRecentProject1()
+{
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    if (recentprojects.contains("1"))
+        setProjectDir(recentprojects["1"]);
+
+}
+
+void MainWindow::loadRecentProject2()
+{
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    if (recentprojects.contains("2"))
+        setProjectDir(recentprojects["2"]);
+
+}
+
+void MainWindow::loadRecentProject3()
+{
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    if (recentprojects.contains("3"))
+        setProjectDir(recentprojects["3"]);
+
+}
+
+void MainWindow::loadRecentProject4()
+{
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    if (recentprojects.contains("4"))
+        setProjectDir(recentprojects["4"]);
+
+}
+
+void MainWindow::loadRecentProject5()
+{
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    if (recentprojects.contains("5"))
+        setProjectDir(recentprojects["5"]);
+
+}
+
+void MainWindow::loadExampleProject1()
+{
+    QMap <QString, QString> localexamples = Projects->getExamples();
+
+    QMessageBox::information(this, tr("Example Project 1"), "Example 1");
+}
+
+void MainWindow::loadExampleProject2()
+{
+    QMessageBox::information(this, tr("Example Project 2"), "Example 2");
+}
+
+void MainWindow::loadExampleProject3()
+{
+    QMessageBox::information(this, tr("Example Project 3"), "Example 3");
+}
+
+void MainWindow::loadExampleProject4()
+{
+    QMessageBox::information(this, tr("Example Project 4"), "Example 4");
+}
+
+void MainWindow::loadExampleProject5()
+{
+    QMessageBox::information(this, tr("Example Project 5"), "Example 5");
+}
+
+void MainWindow::sampleArduinoOnGithub1()
+{
+    QMap <QString, QString> inoexamples = Projects->getArduinoOnGithubExamples();
+    QString gitURL;
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = inoexamples.begin(); i != inoexamples.end(); ++i)
+    {
+        if (c == 1)
+        {
+            gitURL = i.value();
+            break;
+        }
+        c++;
+    }
+
+    if (gitURL.length())
+    {
+        int ret = QMessageBox::information(this, tr("Arduino Sample OnGithub1"), tr("Loading Example Project %1").arg(gitURL));
+        if (ret == QMessageBox::Ok)
+        {
+            importGithubSketch(gitURL);
+        }
+    }
+}
+
+void MainWindow::sampleArduinoOnGithub2()
+{
+    QMap <QString, QString> inoexamples = Projects->getArduinoOnGithubExamples();
+    QString gitURL;
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = inoexamples.begin(); i != inoexamples.end(); ++i)
+    {
+        if (c == 2)
+        {
+            gitURL = i.value();
+            break;
+        }
+        c++;
+    }
+
+    if (gitURL.length())
+    {
+        int ret = QMessageBox::information(this, tr("Arduino Sample OnGithub1"), tr("Loading Example Project %1").arg(gitURL));
+        if (ret == QMessageBox::Ok)
+        {
+            importGithubSketch(gitURL);
+        }
+    }
+}
+
+void MainWindow::sampleArduinoOnGithub3()
+{
+    QMap <QString, QString> inoexamples = Projects->getArduinoOnGithubExamples();
+    QString gitURL;
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = inoexamples.begin(); i != inoexamples.end(); ++i)
+    {
+        if (c == 3)
+        {
+            gitURL = i.value();
+            break;
+        }
+        c++;
+    }
+
+    if (gitURL.length())
+    {
+        int ret = QMessageBox::information(this, tr("Arduino Sample OnGithub1"), tr("Loading Example Project %1").arg(gitURL));
+        if (ret == QMessageBox::Ok)
+        {
+            importGithubSketch(gitURL);
+        }
+    }
+}
+
+void MainWindow::sampleArduinoOnGithub4()
+{
+    QMap <QString, QString> inoexamples = Projects->getArduinoOnGithubExamples();
+    QString gitURL;
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = inoexamples.begin(); i != inoexamples.end(); ++i)
+    {
+        if (c == 4)
+        {
+            gitURL = i.value();
+            break;
+        }
+        c++;
+    }
+
+    if (gitURL.length())
+    {
+        int ret = QMessageBox::information(this, tr("Arduino Sample OnGithub1"), tr("Loading Example Project %1").arg(gitURL));
+        if (ret == QMessageBox::Ok)
+        {
+            importGithubSketch(gitURL);
+        }
+    }
+}
+
+void MainWindow::sampleArduinoOnGithub5()
+{
+    QMap <QString, QString> inoexamples = Projects->getArduinoOnGithubExamples();
+    QString gitURL;
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = inoexamples.begin(); i != inoexamples.end(); ++i)
+    {
+        if (c == 5)
+        {
+            gitURL = i.value();
+            break;
+        }
+        c++;
+    }
+
+    if (gitURL.length())
+    {
+        int ret = QMessageBox::information(this, tr("Arduino Sample OnGithub1"), tr("Loading Example Project %1").arg(gitURL));
+        if (ret == QMessageBox::Ok)
+        {
+            importGithubSketch(gitURL);
+        }
+    }
+}
+
+void MainWindow::sampleArduinoOnGithub()
+{
+    QMessageBox::information(this, tr("Arduino Sample with no parameter"), "Nothing");
+}
+
+void MainWindow::sampleArduinoOnGithub(const QString &inURL)
+{
+    QMessageBox::information(this, tr("Arduino Sample with parameter"), inURL);
 }
 
 void MainWindow::libraryUpdate()

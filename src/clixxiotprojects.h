@@ -19,8 +19,13 @@ public:
     QString getPartsLibraryDir(); // ~/Kayeiot/parts-libraries
     QString getKayeIoTLibraryDir(); // ~/Kayeiot/parts-libraries/kayeiot-parts
     QString getUserLibraryDir(QString libraryName="my-parts"); // ~/Kayeiot/parts-libraries/my-parts
+    QString getExampleProjectsDir();
 
     QString getImagePathofBoardfile(QString boardfilename);
+
+    QMap <QString, QString> getRecentProjects();
+    QMap <QString, QString> getArduinoOnGithubExamples();
+    QMap <QString, QString> getExamples();
 
 };
 

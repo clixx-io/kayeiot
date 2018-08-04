@@ -5,8 +5,12 @@
 #if QT_VERSION >= 0x050000
     #include <QStandardPaths>
 #endif
+#include <QSettings>
+#include <QDebug>
 
 #define projectPathDir "/IoT"
+
+#include "mainwindow.h"
 
 ClixxIoTProjects::ClixxIoTProjects()
 {
@@ -86,6 +90,75 @@ QStringList ClixxIoTProjects::list()
     return(results);
 }
 
+QMap <QString, QString> ClixxIoTProjects::getArduinoOnGithubExamples()
+{
+    QMap <QString, QString> results;
+
+    QString configfilename = getKayeIoTLibraryDir() + "/" + "examples.conf",
+            exampleindex,examplename,projectname;
+
+    QSettings exampleconf(configfilename, QSettings::IniFormat);
+
+    for (int i=0; i < 5; i++)
+    {
+        exampleindex = QObject::tr("github-ino-examples/example-%1").arg(i+1);
+        examplename  = exampleconf.value(exampleindex).toString();
+
+        if (examplename.length())
+        {
+            projectname = examplename.right(examplename.length() - examplename.lastIndexOf("/") - 1); // remove everything from the left
+
+            results[projectname] = examplename;
+        }
+
+    }
+
+    return(results);
+}
+
+QMap <QString, QString> ClixxIoTProjects::getExamples()
+{
+    QMap <QString, QString> results;
+
+    QDir dir(getExampleProjectsDir());
+    dir.setFilter(QDir::Dirs);
+
+    QFileInfoList list = dir.entryInfoList();
+    for (int i = 0; i < list.size(); ++i) {
+        QFileInfo fileInfo = list.at(i);
+
+        if (!fileInfo.fileName().endsWith(".ini") && (!fileInfo.fileName().startsWith(".")))
+            results[QObject::tr("%1").arg(i)] = fileInfo.fileName();
+
+    }
+
+    return(results);
+}
+
+QMap <QString, QString> ClixxIoTProjects::getRecentProjects()
+{
+    QMap <QString, QString> results;
+
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
+    QSettings *settings = mainwindow->settings;
+
+    // Read the last five projects
+    for (int i=0; i < 5; i++)
+    {
+        QString lastproject = settings->value(QObject::tr("recent-projects/project-%1").arg(i + 1)).toString();
+
+        // qDebug() << "lastproject" << lastproject;
+
+        if (lastproject.length())
+            results[QObject::tr("%1").arg(i+1)] = lastproject;
+        else
+            break;
+
+    }
+
+    return(results);
+}
+
 QString ClixxIoTProjects::getProjectsDir()
 {
 
@@ -94,6 +167,17 @@ QString ClixxIoTProjects::getProjectsDir()
     projectDir = projectDir.insert(0,QDir::homePath());
 
     return(projectDir);
+
+}
+
+QString ClixxIoTProjects::getExampleProjectsDir()
+{
+
+    QString exampleDir("/KayeIoT/projects/examples");
+
+    exampleDir = exampleDir.insert(0,QDir::homePath());
+
+    return(exampleDir);
 
 }
 
@@ -113,6 +197,14 @@ QString ClixxIoTProject::getProjectDir()
 
 void ClixxIoTProject::setProjectDir(QString dirname)
 {
+
+    if (QDir().setCurrent(dirname))
+    {
+        qDebug() << "Working directory changed to " << dirname;
+    }
+    else
+        qDebug() << "Unable to change working directory to " << dirname;
+
     projectpath = dirname;
 }
 
@@ -151,3 +243,4 @@ int ClixxIoTProject::Close()
 {
     return(0);
 }
+
