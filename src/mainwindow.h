@@ -195,6 +195,7 @@ private:
     void setupToolBar();
     void setupMenuBar();
     void setupDockWidgets(const CustomSizeHintMap &customSizeHints);
+    void reloadRecentProjects();
 
     QList<ToolBar*> toolBars;
     QMenu *dockWidgetMenu;
@@ -207,6 +208,7 @@ private:
     QMenu *mainWindowMenu;
     QList<QDockWidget *> extraDockWidgets;
     QMenu *destroyDockWidgetMenu;
+    QMenu *recentProjectsmenu;
 
     QDockWidget *UserMsgDock;
     QListWidget *userMessages;

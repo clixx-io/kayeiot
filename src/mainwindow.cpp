@@ -163,7 +163,7 @@ void MainWindow::setupMenuBar()
 #if QT_VERSION >= 0x050000
     menu->addAction(tr("New Project.."),this, &MainWindow::newProject);
     menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
-    QMenu* recentProjectsmenu = menu->addMenu(tr("Recent Projects"));
+    recentProjectsmenu = menu->addMenu(tr("Recent Projects"));
 
     menu->addSeparator();
 
@@ -409,33 +409,6 @@ void MainWindow::setupMenuBar()
     connect(action, &QAction::toggled, this, &QMainWindow::setUnifiedTitleAndToolBarOnMac);
 #endif
 
-    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
-
-    int c(1);
-    QMap<QString, QString>::iterator i;
-
-    for (i = recentprojects.begin(); i != recentprojects.end(); ++i)
-    {
-        QAction* actionExample = recentProjectsmenu->addAction(i.value());
-
-        switch (c)
-        {
-            case 1 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject1);
-                     break;
-            case 2 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject2);
-                     break;
-            case 3 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject3);
-                     break;
-            case 4 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject4);
-                     break;
-            case 5 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject5);
-                     break;
-
-            default: break;
-        }
-        c++;
-    }
-
     /*
     mainWindowMenu = menuBar()->addMenu(tr("&Window"));
     QAction *action = mainWindowMenu->addAction(tr("Animated docks"));
@@ -486,6 +459,40 @@ void MainWindow::setupMenuBar()
     dockWidgetMenu->addAction(tr("About.."), this, &MainWindow::aboutDialog);
 #endif
 
+    reloadRecentProjects();
+
+}
+
+void MainWindow::reloadRecentProjects()
+{
+
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    recentProjectsmenu->clear();
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+    for (i = recentprojects.begin(); i != recentprojects.end(); ++i)
+    {
+        QAction* actionExample = recentProjectsmenu->addAction(i.value());
+
+        switch (c)
+        {
+            case 1 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject1);
+                     break;
+            case 2 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject2);
+                     break;
+            case 3 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject3);
+                     break;
+            case 4 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject4);
+                     break;
+            case 5 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject5);
+                     break;
+
+            default: break;
+        }
+        c++;
+    }
 }
 
 void MainWindow::setDockOptions()
@@ -752,6 +759,8 @@ void MainWindow::setProjectDir(QString dirname)
         settings->setValue(QObject::tr("recent-projects/project-%1").arg(i + 1),lastproject);
 
     }
+
+    reloadRecentProjects();
 
 }
 
