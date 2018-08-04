@@ -72,7 +72,6 @@
 #include <QTreeWidget>
 #include <QInputDialog>
 #include <QSettings>
-#include <QTemporaryDir>
 #include <QUrl>
 
 #include "codeeditor.h"
@@ -248,7 +247,7 @@ void MainWindow::setupMenuBar()
     menu->addAction(loadProjectAction);
     connect(loadProjectAction, SIGNAL(triggered()), this, SLOT(loadProject()));
 
-    QMenu* recentProjectsmenu = menu->addMenu(tr("Recent Projects"));
+    recentProjectsmenu = menu->addMenu(tr("Recent Projects"));
     menu->addSeparator();
 
     QAction* saveProjectAction = new QAction("&Save", this);
@@ -409,50 +408,51 @@ void MainWindow::setupMenuBar()
     connect(action, &QAction::toggled, this, &QMainWindow::setUnifiedTitleAndToolBarOnMac);
 #endif
 
-    /*
-    mainWindowMenu = menuBar()->addMenu(tr("&Window"));
-    QAction *action = mainWindowMenu->addAction(tr("Animated docks"));
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & AnimatedDocks);
+    QMap <QString, QString> recentprojects = Projects->getRecentProjects();
+
+    int c(1);
+    QMap<QString, QString>::iterator i;
+
+    for (i = recentprojects.begin(); i != recentprojects.end(); ++i)
+    {
+        QAction* actionExample = recentProjectsmenu->addAction(i.value());
+
 #if QT_VERSION >= 0x050000
-    connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+        switch (c)
+        {
+            case 1 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject1);
+                     break;
+            case 2 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject2);
+                     break;
+            case 3 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject3);
+                     break;
+            case 4 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject4);
+                     break;
+            case 5 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject5);
+                     break;
+
+            default: break;
+        }
+#else
+        switch (c)
+        {
+            case 1 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject1()));
+                     break;
+            case 2 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject2()));
+                     break;
+            case 3 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject3()));
+                     break;
+            case 4 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject4()));
+                     break;
+            case 5 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject5()));
+                     break;
+
+            default: break;
+        }
 #endif
 
-    action = mainWindowMenu->addAction(tr("Allow nested docks"));
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & AllowNestedDocks);
-#if QT_VERSION >= 0x050000
-    connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
-#endif
-
-    action = mainWindowMenu->addAction(tr("Allow tabbed docks"));
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & AllowTabbedDocks);
-#if QT_VERSION >= 0x050000
-    connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
-#endif
-
-    action = mainWindowMenu->addAction(tr("Force tabbed docks"));
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & ForceTabbedDocks);
-#if QT_VERSION >= 0x050000
-    connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
-#endif
-
-    action = mainWindowMenu->addAction(tr("Vertical tabs"));
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & VerticalTabs);
-#if QT_VERSION >= 0x050000
-    connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
-#endif
-
-    action = mainWindowMenu->addAction(tr("Grouped dragging"));
-    action->setCheckable(true);
-#if QT_VERSION >= 0x050000
-    action->setChecked(dockOptions() & GroupedDragging);
-    connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
-#endif
-    */
+        c++;
+    }
 
     dockWidgetMenu = menuBar()->addMenu(tr("&Help"));
 #if QT_VERSION >= 0x050000
@@ -476,6 +476,7 @@ void MainWindow::reloadRecentProjects()
     {
         QAction* actionExample = recentProjectsmenu->addAction(i.value());
 
+#if QT_VERSION >= 0x050000
         switch (c)
         {
             case 1 : connect(actionExample, &QAction::triggered, this, &MainWindow::loadRecentProject1);
@@ -491,6 +492,25 @@ void MainWindow::reloadRecentProjects()
 
             default: break;
         }
+#else
+        /*
+        switch (c)
+        {
+            case 1 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject1()));
+                     break;
+            case 2 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject2()));
+                     break;
+            case 3 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject3()));
+                     break;
+            case 4 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject4()));
+                     break;
+            case 5 : connect(actionExample, SIGNAL(triggered()), this, SLOT(loadRecentProject5()));
+                     break;
+
+            default: break;
+        }
+        */
+#endif
         c++;
     }
 }
@@ -1683,7 +1703,11 @@ void MainWindow::importGithubSketch(QString sketchname)
                 return;
             }
 
+#if QT_VERSION >= 0x050000
             gitparams << "clone" << gitprojecturl.url();
+#else
+            gitparams << "clone" << gitprojecturl.toEncoded();
+#endif
             gitupdater->setWorkingDirectory(Projects->getProjectsDir());
             showStatusMessage(tr("Cloning to %1").arg(dirname));
 
