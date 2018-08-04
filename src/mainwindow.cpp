@@ -1247,6 +1247,32 @@ void MainWindow::AddHardware()
 
     architectureSystem();
 
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    // Check that the Parts library exists first and prompt if they want to install it
+    QString partslibrarydir = Projects->getPartsLibraryDir();
+
+    if (!QDir(partslibrarydir).exists())
+    {
+
+        QMessageBox::StandardButton reply;
+
+        reply = QMessageBox::question(this, tr("Create Parts Library Directory?"), tr("The project directory %1 does not exist.\n\n Can we create it and download the Standard Parts Library?").arg(partslibrarydir),
+                                        QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+
+            if (!QDir().mkpath(partslibrarydir))
+            {
+                showStatusMessage(tr("Unable to create the Parts Library Directory %1").arg(partslibrarydir));
+                return;
+            }
+
+            libraryUpdate();
+        }
+        else
+            return;
+    }
+
     NewHardwareItemDialog *dlg = new NewHardwareItemDialog(this, &userchoices);
     if (dlg->exec())
     {
@@ -1999,21 +2025,24 @@ void MainWindow::libraryUpdate()
 
     showStatusDock(true);
 
-    QString dirname = Projects->getPartsLibraryDir();
+    QString dirname = Projects->getPartsLibraryDir() + "/kayeiot-parts";
 
     if (!QDir(dirname).exists())
     {
-        if (QDir().mkpath(dirname))
+        if (!QDir(Projects->getPartsLibraryDir()).exists())
         {
-            showStatusMessage(tr("Created Parts Library Directory %1").arg(dirname));
-        }
-        else
-        {
-            showStatusMessage(tr("Unable to Parts Library Directory %1").arg(dirname));
-            return;
+            if (QDir().mkpath(Projects->getPartsLibraryDir()))
+            {
+                showStatusMessage(tr("Created Parts Library Directory %1").arg(Projects->getPartsLibraryDir()));
+            }
+            else
+            {
+                showStatusMessage(tr("Unable to Parts Library Directory %1").arg(Projects->getPartsLibraryDir()));
+                return;
+            }
         }
 
-        gitparams << "clone" << "https://github.com/clixx-io/kayeiot-parts";
+        gitparams << "clone" << "https://github.com/clixx-io/kayeiot-parts.git";
 
         showStatusMessage(tr("Cloning to %1").arg(dirname));
 
@@ -2031,7 +2060,7 @@ void MainWindow::libraryUpdate()
     QProcess *gitupdater = new QProcess(this);
 
     gitupdater->setProcessChannelMode(QProcess::MergedChannels);
-    gitupdater->setWorkingDirectory(dirname);
+    gitupdater->setWorkingDirectory(Projects->getPartsLibraryDir());
     gitupdater->start(gitcmd, gitparams);
 
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
@@ -2102,6 +2131,9 @@ void MainWindow::showStatusDock(bool viewStatus)
         UserMsgDock = Q_NULLPTR;
         userMessages = Q_NULLPTR;
     }
+
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
 }
 
 void MainWindow::showStatusMessage(const QString &message)
