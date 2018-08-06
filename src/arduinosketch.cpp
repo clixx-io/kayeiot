@@ -187,6 +187,11 @@ void ArduinoSketch::identifyDevices()
         {
             if (line.contains(knownclass))
             {
+
+                // Ignore when a method is defined, ie when the class is passed as a parameter
+                if (line.contains("void") || line.contains("int") || line.contains("char") || line.contains("{"))
+                    continue;
+
                 m_log << tr("   - found device definition for %1 in line '%2'").arg(knownclass).arg(line.trimmed());
 
                 QString templine(line.trimmed());
