@@ -742,16 +742,54 @@ void MainWindow::destroyDockWidget(QAction *action)
 
 void MainWindow::setProjectDir(QString dirname)
 {
+
+    currentProject->setProjectDir(dirname);
+
     if (projectWindow)
         projectWindow->loadProject(dirname);
 
     if (systemDesign)
-        systemDesign->LoadComponents(dirname + "/hardware.layout");
+    {
+        QString designfilename = dirname + "/hardware.layout";
 
-    QString projectdir(dirname), lastproject;
+        // If there is no design file, we check if there is an arduino sketch
+        if (!QDir().exists(designfilename))
+        {
+            QStringList projectfiles = currentProject->listfiles();
+
+            QString arduinosketch;
+            foreach (QString filename, projectfiles)
+            {
+                if (filename.endsWith(".ino"))
+                {
+                    arduinosketch = filename;
+                    break;
+                }
+            }
+
+            if (arduinosketch.length())
+            {
+                // Offer to convert it
+                ArduinoSketch *ino = new ArduinoSketch();
+
+                showStatusMessage(tr("Converting sketch %1").arg(arduinosketch));
+
+                QStringList results = ino->convertSketch(arduinosketch,systemDesign);
+                foreach (QString msg, results)
+                {
+                    showStatusMessage(msg);
+                }
+
+            }
+
+        } else
+            systemDesign->LoadComponents(designfilename);
+
+    }
 
     // Read the last five projects
     QStringList recentProjects;
+    QString projectdir(dirname), lastproject;
     for (int i=0; i < 5; i++)
     {
         lastproject = settings->value(QObject::tr("recent-projects/project-%1").arg(i + 1)).toString();
@@ -779,7 +817,6 @@ void MainWindow::setProjectDir(QString dirname)
         settings->setValue(QObject::tr("recent-projects/project-%1").arg(i + 1),lastproject);
 
     }
-
     reloadRecentProjects();
 
 }
@@ -1001,6 +1038,7 @@ void MainWindow::architectureSystem()
 
         systemDesign = new HardwareLayoutWidget(designScene, this);
     }
+
     setCentralWidget(systemDesign);
 
 }

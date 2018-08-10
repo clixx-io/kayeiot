@@ -20,10 +20,12 @@
     #include <QPrintPreviewDialog>
 #endif
 
+#include "clixxiotprojects.h"
 #include "hardwarelayoutwidget.h"
 #include "ui_hardwarelayoutwidget.h"
 #include "hardwaregpio.h"
 #include "mainwindow.h"
+#include "arduinosketch.h"
 
 connectableHardware::connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent)
     : QGraphicsItem(parent), m_id(ID), m_name(name), m_boardfile(boardfile), m_type(htUndefined),
@@ -740,8 +742,40 @@ cableDetailGraphic::cableDetailGraphic(QGraphicsScene *scene, QGraphicsItem *par
   QGraphicsItem(parent),
   m_scene(scene)
 {
+
+    // Work out where to put the overlay
+    QPointF topLeft(10000,10000),bottomRight(0,0);
+    foreach (QGraphicsItem *i, scene->items())
+    {
+        if (i->x() < topLeft.x())
+        {
+            topLeft.setX(i->x());
+        }
+        if (i->y() < topLeft.y())
+        {
+            topLeft.setY(i->y());
+        }
+        if (i->x()+i->boundingRect().width() > bottomRight.x())
+        {
+            bottomRight.setX(i->x()+i->boundingRect().width());
+        }
+        if (i->y() > bottomRight.y())
+        {
+            bottomRight.setY(i->y());
+        }
+    }
+
+    setX(topLeft.x() - 40);
+    setY(topLeft.y() - 40);
+
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
+    mainwindow->showStatusMessage(QObject::tr("Diagram limits %1,%2 - %3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(bottomRight.x()).arg(bottomRight.y()));
+
+    m_diagram_height = bottomRight.y() - topLeft.y();
+    qDebug() << "diagram height is " << m_diagram_height;
+
     setWidth(200);
-    setHeight(40);
+    setHeight(200);
 
 }
 
@@ -758,19 +792,18 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
     int cableheight(2), cablespacing(3), cablepos;
     float ypos(0);
 
-    ypos = -220;
     painter->setFont(titlefont);
-    QPoint titlepos(-50,ypos);
+    QPoint titlepos(0,ypos);
     painter->drawText(titlepos, "Diagram");
-    ypos += 200;
+    ypos = m_diagram_height;
 
     // set the modified font to the painter
-    QPoint bomtitlepos(-50, ypos);
+    QPoint bomtitlepos(0, ypos);
     painter->setFont(titlefont);
     painter->drawText(bomtitlepos, "BOM");
     ypos += 30;
 
-    QPoint bomitempos(-40,ypos);
+    QPoint bomitempos(0,ypos);
     QString bomitemtext;
     painter->setFont(normalfont);
     foreach (QGraphicsItem *item, m_scene->items())
@@ -806,7 +839,7 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
     ypos += 20;
 
     // -- Cable Section
-    QPoint cabletitlepos(-50,ypos);
+    QPoint cabletitlepos(0,ypos);
     painter->setFont(titlefont);
     painter->drawText(cabletitlepos, "Cables");
     painter->setFont(normalfont);
@@ -824,7 +857,7 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
             int wiresused(c->getWireCount());
 
             // Cablename
-            QPoint cablenamepos(-40, cablepos - 10);
+            QPoint cablenamepos(0, cablepos - 10);
             painter->setFont(headingfont);
             painter->drawText(cablenamepos, cableName);
             cablepos += 5;
@@ -873,15 +906,13 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
                 {
                     wirecolor = Qt::black;
                 }
-                else
-                    qDebug() << wirecolors[wire] << " is not a valid wire color";
 
                 painter->setBrush(wirecolor);
                 painter->drawRect(0, cablepos, 200, cableheight);
 
                 painter->setFont(smallfont);
 
-                QPoint pin1titlepos(-35, cablepos + (wire * cablespacing));
+                QPoint pin1titlepos(0, cablepos + (wire * cablespacing));
 
                 painter->drawText(pin1titlepos, QObject::tr("Pin %1").arg(startPins[wire]));
                 pin1titlepos.setX(210);
@@ -899,16 +930,17 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
     }
 
     /*
-    QPoint gpiotitlepos(-50,ypos);
-    painter->drawText(gpiotitlepos, "GPIO Usage");
-    ypos + 10;
-
     QPoint logictitlepos(-50,ypos);
     painter->drawText(logictitlepos, "Logic");
     ypos + 10;
     */
 
     painter->setFont(normalfont);
+
+    if (ypos != this->getHeight())
+    {
+        setHeight(ypos);
+    }
 
 }
 
@@ -973,16 +1005,18 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     connect(addgraphicshortcut, SIGNAL(activated()), mainwindow, SLOT(AddConnectableGraphic()));
 
     // Restore the last theme
-    QSettings settings("Clixx.io","IoT Developer");
-    settings.beginGroup("System_Designer");
-    setDesignTheme(settings.value("Theme","default").toString());
-    m_unitSystem = settings.value("global/units","mm").toString();
-    settings.endGroup();
+    MainWindow *mw = (MainWindow * ) getMainWindow();
+    setDesignTheme(mw->settings->value("System_Designer/Theme","default").toString());
+    m_unitSystem = mw->settings->value("global/units","mm").toString();
 
     // Setup the Timer to control the scene
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(advance()));
     m_timer->setInterval(100);
+
+    // Hide for now until we add some functions
+    ui->toolButton_2->setVisible(false);
+    ui->toolButton_3->setVisible(false);
 
 }
 
@@ -1925,31 +1959,44 @@ QString HardwareLayoutWidget::getNextName(QString prefix)
 
 }
 
-int HardwareLayoutWidget::getBestX(HardwareType hwt)
+QPointF HardwareLayoutWidget::getBestPos(HardwareType hwt)
 {
-    return(0);
-}
-
-int HardwareLayoutWidget::getBestY(HardwareType hwt)
-{
-    int y(0);
+    QPointF result(0,0);
 
     switch (hwt)
     {
-        case htProcessor:   y = -100;
+        case htProcessor:   result.setY(-100);
                             break;
 
         case htSensor:
         case htDisplay:
         case htActuator:
-        case htHid:         y = -200;
+        case htHid:
+        case htPart:        result.setY(-200);
                             break;
 
-        case htPart:
-        case htPowerSupply: y = -200;
+        case htPowerSupply: result.setY(200);
                             break;
+
+        default:            result.setY(-200);
+                            break;
+
     }
-    return(y);
+
+    // Avoid a collision so don't place it on an existing object
+    bool foundspace(false);
+    while (!foundspace)
+    {
+        QTransform t;
+
+        if (scene->itemAt(result,t))
+            result.setX(result.x()+50);
+        else
+            foundspace = true;
+    }
+
+    return(result);
+
 }
 
 connectableHardware * HardwareLayoutWidget::addToScene(QString componentName, QString componentBoardFile)
@@ -1961,8 +2008,7 @@ connectableHardware * HardwareLayoutWidget::addToScene(QString componentName, QS
 
     if (item)
     {
-        item->setX(getBestX(htPart));
-        item->setY(getBestY(htPart));
+        item->setPos(getBestPos(item->hardwareType()));
 
         item->setFlag(QGraphicsItem::ItemIsSelectable);
         item->setFlag(QGraphicsItem::ItemIsMovable);
@@ -2480,16 +2526,21 @@ void HardwareLayoutWidget::finalMode()
         // Turn on final mode by creating the overlay
         cableDetailGraphic *item = new cableDetailGraphic(scene);
 
-        item->setX(50);
-        item->setY(50);
-
         item->setFlag(QGraphicsItem::ItemSendsGeometryChanges);
         scene->addItem(item);
 
         m_finalmode = true;
 
+        // Remove the Colour theme
+        ui->graphicsView->setStyleSheet("");
+
+        ui->graphicsView->fitInView(item->x(),item->y(),300,500,Qt::KeepAspectRatio);
+
     } else
     {
+        // Work out where to put the overlay
+        QPointF topLeft(10000,10000),bottomRight(0,0);
+
         // Remove all cableDetailGraphic Items
         foreach (QGraphicsItem *item, scene->items())
         {
@@ -2498,11 +2549,123 @@ void HardwareLayoutWidget::finalMode()
             {
                 scene->removeItem(item);
             }
+
+            foreach (QGraphicsItem *i, scene->items())
+            {
+                if (i->x() < topLeft.x())
+                {
+                    topLeft.setX(i->x());
+                }
+                if (i->y() < topLeft.y())
+                {
+                    topLeft.setY(i->y());
+                }
+                if (i->x() > bottomRight.x())
+                {
+                    bottomRight.setX(i->x());
+                }
+                if (i->y() > bottomRight.y())
+                {
+                    bottomRight.setY(i->y());
+                }
+            }
+
         }
 
+        ui->graphicsView->fitInView(topLeft.x(),topLeft.y() - 100,bottomRight.x(),bottomRight.y(),Qt::KeepAspectRatio);
+
         m_finalmode = false;
+
+        // Add the Color theme back
+        MainWindow *mw = (MainWindow * ) getMainWindow();
+        setDesignTheme(mw->settings->value("System_Designer/Theme","default").toString());
+
     }
 
     scene->update();
 }
 
+
+void HardwareLayoutWidget::on_toolButton_AddHardware_clicked()
+{
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
+
+    mainwindow->AddHardware();
+}
+
+void HardwareLayoutWidget::on_toolButton_AddCable_clicked()
+{
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
+
+    mainwindow->AddConnection();
+}
+
+void HardwareLayoutWidget::on_toolButton_AddGraphic_clicked()
+{
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
+
+    mainwindow->AddConnectableGraphic();
+}
+
+
+void HardwareLayoutWidget::on_toolButton_Report_clicked()
+{
+    finalMode();
+}
+
+void HardwareLayoutWidget::on_toolButton_ImportSketch_clicked()
+{
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
+    if (!mainwindow)
+        return;
+
+    mainwindow->showStatusDock(true);
+    mainwindow->clearStatusMessages();
+
+    QString sketchname;
+    QStringList sketchnames;
+    foreach (QString filename, mainwindow->currentProject->listfiles())
+    {
+        if (filename.endsWith(".ino"))
+        {
+            sketchnames << filename;
+            break;
+        }
+    }
+
+    if (sketchnames.length() == 1)
+    {
+        sketchname = sketchnames[0];
+
+        int ret = QMessageBox::information(this, tr("Confirm Conversion"),
+                                       tr("The Arduino Sketch %1 will be imported.\n"
+                                          "Confirm?").arg(sketchname),
+                                       QMessageBox::Ok | QMessageBox::Cancel,
+                                       QMessageBox::Ok);
+
+        if (ret == QMessageBox::Cancel)
+            return;
+
+    }
+    else if (sketchnames.length() > 1)
+    {
+        bool ok;
+        sketchname = QInputDialog::getItem(this, tr("Please select a Sketch to Import"),
+                                             tr("Sketches Available :"), sketchnames, 0, false, &ok);
+        if (!ok || !sketchname.isEmpty())
+        {
+            return;
+        }
+    }
+
+   ArduinoSketch *ino = new ArduinoSketch();
+
+   mainwindow->showStatusMessage(tr("Converting sketch %1").arg(sketchname));
+
+   QStringList results = ino->convertSketch(sketchname,this);
+   foreach (QString msg, results)
+   {
+       mainwindow->showStatusMessage(msg);
+   }
+
+}

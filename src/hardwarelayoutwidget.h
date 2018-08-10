@@ -11,6 +11,7 @@
 #include <QTreeWidgetItem>
 #include <QListWidgetItem>
 #include <QTimer>
+#include <QPointF>
 
 QT_FORWARD_DECLARE_CLASS(connectableCable)
 
@@ -69,7 +70,7 @@ public:
     void connectDigitalIO(connectableHardware *target,connectableCable *cable);
 
     // This is board Type
-    int hardwareType() const
+    HardwareType hardwareType() const
     {
         // Enable the use of qgraphicsitem_cast with this item.
         return m_type;
@@ -278,7 +279,8 @@ protected:
 
 private:
     QString m_id, m_fromid;
-    double m_width, m_height;
+    double m_width, m_height,
+           m_diagram_height;
 
     QGraphicsScene *m_scene;
 };
@@ -310,8 +312,7 @@ public:
     QList <QGraphicsItem *> selectedItems(){ return(scene->selectedItems());}
     void convertSize(const QString units, double &w, double &h);
 
-    int getBestX(HardwareType hwt);
-    int getBestY(HardwareType hwt);
+    QPointF getBestPos(HardwareType hwt);
 
     QStringList getConnectionPointNames();
 
@@ -344,6 +345,13 @@ private slots:
     void panright();
     void panup();
     void pandown();
+
+    void on_toolButton_AddHardware_clicked();
+    void on_toolButton_AddCable_clicked();
+    void on_toolButton_AddGraphic_clicked();
+    void on_toolButton_Report_clicked();
+
+    void on_toolButton_ImportSketch_clicked();
 
 private:
 
