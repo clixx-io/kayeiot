@@ -235,7 +235,18 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
     ui->HeightSpinBox->setValue(boardfile.value("overview/height",ui->HeightSpinBox->value()).toDouble());
     QString units = boardfile.value("overview/units","mm").toString().toLower();
     if (units == "mm")
-        ui->mmRadioButton->setChecked(true);
+    {
+        // Cater for parts that actually should be in inches
+        if ((ui->WidthSpinBox->text().toDouble() < 1) &&
+            (ui->WidthSpinBox->text().toDouble() > 0.0) &&
+            (ui->HeightSpinBox->text().toDouble() < 1) &&
+            (ui->HeightSpinBox->text().toDouble() > 0.0))
+        {
+            // We will swap to inches
+            ui->InchesRadioButton->setChecked(true);
+        } else
+            ui->mmRadioButton->setChecked(true);
+    }
     else if (units == "in")
         ui->InchesRadioButton->setChecked(true);
 
