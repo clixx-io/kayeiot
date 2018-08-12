@@ -43,6 +43,12 @@ private slots:
     void on_searchlineEdit_textChanged(const QString &arg1);
 
 
+    void on_newItemcheckBox_toggled(bool checked);
+
+    void on_PastetoolButton_clicked();
+
+    void on_LoadGraphicFileButton_clicked();
+
 private:
     Ui::NewHardwareItemDialog *ui;
 

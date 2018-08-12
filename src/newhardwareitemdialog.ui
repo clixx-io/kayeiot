@@ -56,7 +56,7 @@
    <property name="title">
     <string>Type</string>
    </property>
-   <widget class="QToolButton" name="toolButton">
+   <widget class="QToolButton" name="LoadGraphicFileButton">
     <property name="geometry">
      <rect>
       <x>140</x>
@@ -361,7 +361,7 @@
    <zorder>pinscomboBox</zorder>
    <zorder>rowscomboBox</zorder>
    <zorder>BoardNameslistWidget</zorder>
-   <zorder>toolButton</zorder>
+   <zorder>LoadGraphicFileButton</zorder>
    <zorder>PastetoolButton</zorder>
    <zorder>newItemcheckBox</zorder>
   </widget>

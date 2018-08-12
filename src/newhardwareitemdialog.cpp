@@ -13,8 +13,10 @@
     #include <QMap>
 #endif
 
-#include "mainwindow.h"
 #include "clixxiotprojects.h"
+#include "mainwindow.h"
+
+#include "newgraphicitemdialog.h"
 
 #include "newhardwareitemdialog.h"
 #include "ui_newhardwareitemdialog.h"
@@ -174,6 +176,9 @@ void NewHardwareItemDialog::on_searchlineEdit_textChanged(const QString &arg1)
 
 void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
 {
+    if (ui->newItemcheckBox->isChecked())
+        return;
+
     if (ui->BoardNameslistWidget->selectedItems().size()==0)
     {
         ui->ComponentPicturelabel->clear();
@@ -259,3 +264,57 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
 #endif
 }
 
+
+void NewHardwareItemDialog::on_newItemcheckBox_toggled(bool checked)
+{
+    if (checked)
+    {
+        ui->Namelabel->setText("Name");
+    }
+    else
+    {
+        ui->Namelabel->setText("Search");
+    }
+}
+
+void NewHardwareItemDialog::on_PastetoolButton_clicked()
+{
+#if QT_VERSION >= 0x050000
+    QClipboard *clipboard = QGuiApplication::clipboard();
+#else
+    QClipboard *clipboard = QApplication::clipboard();
+#endif
+
+    const QMimeData *mimeData = clipboard->mimeData();
+
+    if (mimeData->hasImage()) {
+        ui->ComponentPicturelabel->setPixmap(qvariant_cast<QPixmap>(mimeData->imageData()));
+    }
+    else
+    {
+        qDebug() << tr("Cannot display data");
+    }
+}
+
+void NewHardwareItemDialog::on_LoadGraphicFileButton_clicked()
+{
+    QFileDialog* mpOpenDialog = new PreviewFileDialog(this, tr("Open Graphic"), "", tr("Image Files (*.png *.jpg *.bmp *.tif);;"));
+    mpOpenDialog->setAcceptMode(QFileDialog::AcceptOpen);
+    if (mpOpenDialog->exec())
+    {
+        QStringList files = mpOpenDialog->selectedFiles();
+
+        QPixmap pixmap(files[0]);
+
+        qreal ar = (100 * pixmap.width()) / pixmap.height();
+
+        ui->ComponentPicturelabel->setPixmap(pixmap);
+        ui->ComponentPicturelabel->setScaledContents(true);
+        ui->ComponentPicturelabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored );
+        ui->ComponentPicturelabel->setFixedWidth(ui->ComponentPicturelabel->height() * (ar / 100));
+        ui->ComponentPicturelabel->update();
+
+        m_imagefilename = files[0];
+    }
+
+}
