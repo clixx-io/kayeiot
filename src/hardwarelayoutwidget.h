@@ -68,6 +68,7 @@ public:
     void connectCommon(connectableHardware *target,connectableCable *cable);
     void connectAnalogIO(connectableHardware *target,connectableCable *cable);
     void connectDigitalIO(connectableHardware *target,connectableCable *cable);
+    void connectSerialIO(connectableHardware *target,connectableCable *cable);
 
     // This is board Type
     HardwareType hardwareType() const

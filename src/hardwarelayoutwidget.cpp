@@ -857,14 +857,14 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
             int wiresused(c->getWireCount());
 
             // Cablename
-            QPoint cablenamepos(0, cablepos - 10);
+            QPoint cablenamepos(8, cablepos - 10);
             painter->setFont(headingfont);
             painter->drawText(cablenamepos, cableName);
             cablepos += 5;
 
             // Left End connector
             painter->setBrush(Qt::gray);
-            painter->drawRect(-6, cablepos - 6, 6, 12 + ((cableheight + cablespacing) * wiresused));
+            painter->drawRect(14, cablepos - 6, 6, 12 + ((cableheight + cablespacing) * wiresused));
 
             // Left End connection name
             QGraphicsItem *startitem = c->getStartItem();
@@ -908,7 +908,7 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
                 }
 
                 painter->setBrush(wirecolor);
-                painter->drawRect(0, cablepos, 200, cableheight);
+                painter->drawRect(20, cablepos, 180, cableheight);
 
                 painter->setFont(smallfont);
 
@@ -922,7 +922,7 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
 
             }
 
-            cablepos += 30;
+            cablepos += 45;
             ypos += cablepos;
 
         }
@@ -939,7 +939,7 @@ void cableDetailGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem
 
     if (ypos != this->getHeight())
     {
-        setHeight(ypos);
+        // setHeight(ypos);
     }
 
 }
@@ -1736,6 +1736,87 @@ void connectableHardware::connectAnalogIO(connectableHardware *target,connectabl
 
 }
 
+void connectableHardware::connectSerialIO(connectableHardware *target,connectableCable *cable)
+{
+    QStringList targetsplitoncommas,localsplitoncommas;
+    QStringList targetpins;
+    QStringList knowndatapins;
+
+    QStringList txpins;
+    QStringList rxpins;
+
+    txpins << "TXD" << "TX" << "DOUT";
+    rxpins << "RXD" << "RX" << "DIN";
+    knowndatapins << txpins < rxpins;
+
+    qDebug() << "Checking Serial Data pins";
+
+    // Expand each of the pin names that have comma's
+    bool isdatapin;
+    foreach (QString targetpinname, target->getPinAssignments())
+    {
+        targetpins.clear();
+        targetsplitoncommas = targetpinname.split(',');
+        targetpins.append(targetsplitoncommas);
+
+        // check that this pin is a data pin
+        isdatapin = false;
+        foreach (QString t, targetsplitoncommas)
+        {
+            if (knowndatapins.indexOf(t)!=-1)
+            {
+                isdatapin = true;
+                break;
+            }
+        }
+        if (!isdatapin)
+            continue;
+
+        qDebug() << "Pin is digital " << targetpinname.toStdString().c_str();
+
+        // work through and find commonly named pins
+        int pinmatch(-1);
+        bool matched(false);
+        foreach (QString pinname, m_gpiopin_names)
+        {
+
+            localsplitoncommas = pinname.split(",");
+            foreach (QString searchpin,localsplitoncommas)
+            {
+                pinmatch = txpins.indexOf(searchpin);
+                if (pinmatch != -1)
+                {
+                    qDebug() << "Serial pin match " << pinname.toStdString().c_str() << "found";
+                    cable->connectNextAvailableWire(m_gpiopin_names.indexOf(pinname),
+                                                    target->getPinAssignments().indexOf(targetpinname),
+                                                    "blue");
+                    matched = true;
+                    break;
+                } else
+                    qDebug() << "Pin is not serial so no match " << searchpin.toStdString().c_str();
+
+                pinmatch = rxpins.indexOf(searchpin);
+                if (pinmatch != -1)
+                {
+                    qDebug() << "Serial pin match " << pinname.toStdString().c_str() << "found";
+                    cable->connectNextAvailableWire(m_gpiopin_names.indexOf(pinname),
+                                                    target->getPinAssignments().indexOf(targetpinname),
+                                                    "blue");
+                    matched = true;
+                    break;
+                } else
+                    qDebug() << "Pin is not serial so no match " << searchpin.toStdString().c_str();
+
+            }
+            if (matched)
+                break;
+        }
+
+        if (matched)
+            continue;
+    }
+}
+
 void connectableHardware::connectDigitalIO(connectableHardware *target,connectableCable *cable)
 {
     QStringList targetsplitoncommas,localsplitoncommas;
@@ -1743,8 +1824,8 @@ void connectableHardware::connectDigitalIO(connectableHardware *target,connectab
     QStringList knowndatapins;
 
     knowndatapins << "D0" << "D1" << "D2" << "D3" << "D4" << "D5" << "D6" << "D7" << "D8" <<
-                     "D9" << "D10" << "D11" << "D12" << "D13" <<
-                     "DOUT" << "OUT";
+                     "D9" << "D10" << "D11" << "D12" << "D13";
+
 
     qDebug() << "Checking digital pins";
 
@@ -2079,6 +2160,7 @@ connectableCable * HardwareLayoutWidget::addCableToScene(QString componentID, QS
         if (h1 && h2)
         {
             h1->connectCommon(h2,cable);
+            h1->connectSerialIO(h2,cable);
             h1->connectDigitalIO(h2,cable);
         }
 
