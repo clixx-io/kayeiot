@@ -1015,8 +1015,10 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     m_timer->setInterval(100);
 
     // Hide for now until we add some functions
+#if QT_VERSION >= 0x050000
     ui->toolButton_2->setVisible(false);
     ui->toolButton_3->setVisible(false);
+#endif
 
 }
 
@@ -1747,7 +1749,7 @@ void connectableHardware::connectSerialIO(connectableHardware *target,connectabl
 
     txpins << "TXD" << "TX" << "DOUT";
     rxpins << "RXD" << "RX" << "DIN";
-    knowndatapins << txpins < rxpins;
+    knowndatapins << txpins << rxpins;
 
     qDebug() << "Checking Serial Data pins";
 
