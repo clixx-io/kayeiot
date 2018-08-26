@@ -523,7 +523,6 @@ connectableCable::connectableCable(QString componentID, QString componentName, Q
     : QGraphicsLineItem(startItem->x(),startItem->y(),endItem->x(),endItem->y(),parent),
       m_startItem(startItem),
       m_endItem(endItem),
-      m_wires(wires),
       m_rows(rows),
       m_cablecolor(cablecolor),
       m_id(componentID),
@@ -532,6 +531,8 @@ connectableCable::connectableCable(QString componentID, QString componentName, Q
 {
     if (m_name.size()==0)
         m_name = QObject::tr("Cable%1").arg(componentID);
+
+    setWireCount(wires);
 
     // Copy over the cable color
     QPen pen;
@@ -571,6 +572,44 @@ connectableCable::connectableCable(QString componentID, QString componentName, Q
 
     // Now use this line
     setLine(startPos.x(),startPos.y(),endPos.x(),endPos.y());
+}
+
+void connectableCable::setWireCount(int wires)
+{
+
+    if (wires > m_startpins.size())
+    {
+        // We need to add all missing wires
+        for (int w=0; w < wires; w++)
+        {
+            if (!m_startpins.keys().contains(w+1))
+            {
+                m_startpins[w] = -1;
+            }
+        }
+    }
+    else if (wires < m_startpins.size())
+    {
+        // We need to delete all missing wires, or perhaps not
+    }
+
+    if (wires > m_endpins.size())
+    {
+        // We need to add all missing wires
+        for (int w=0; w < wires; w++)
+        {
+            if (!m_endpins.keys().contains(w+1))
+            {
+                m_endpins[w] = -1;
+            }
+        }
+    }
+    else if (wires < m_endpins.size())
+    {
+        // We need to delete all missing wires, or perhaps not
+    }
+
+    m_wires = wires;
 }
 
 void connectableCable::advance(int phase)
@@ -667,26 +706,35 @@ QVariant connectableCable::itemChange(GraphicsItemChange change, const QVariant 
 
 bool connectableCable::connectNextAvailableWire(int sourcePin, int destPin, QString wireColor)
 {
-    int wire_index = m_startpins.size();
+    bool result;
 
-    if (!m_startpins.values().contains(sourcePin) && !m_endpins.values().contains(destPin))
+    for (int i=0; i < m_startpins.size(); i++ )
     {
-        // Add the connection
-        m_startpins[wire_index] = sourcePin;
-        m_endpins[wire_index] = destPin;
-        m_wirecolors[wire_index] = wireColor;
+        if ((m_startpins[i] == -1) && (m_endpins[i] == -1))
+        {
+            qDebug() << " - Connecting " << sourcePin << " to " << destPin << " in " << wireColor;
 
-        // Increment the number of wires in the cable
-        m_wires++;
+            // Add the connection
+            m_startpins[i] = sourcePin;
+            m_endpins[i] = destPin;
+            m_wirecolors[i] = wireColor;
 
-        qDebug() << " - Connecting " << sourcePin << " to " << destPin << " in " << wireColor;
-
+            result = true;
+            break;
+        }
     }
+    return(result);
+}
 
-    if (wire_index > m_wires)
-        return(false);
-    else
-        return(true);
+bool connectableCable::connectWire(int wire_index, int sourcePin, int destPin, QString wireColor)
+{
+    bool result(true);
+
+    m_startpins[wire_index] = sourcePin;
+    m_endpins[wire_index] = destPin;
+    m_wirecolors[wire_index] = wireColor;
+
+    return(result);
 }
 
 QString connectableCable::getOtherEndConnection(QGraphicsItem *point, int pinnumber)
@@ -1145,7 +1193,6 @@ void HardwareLayoutWidget::SelectionChanged()
             itemName = cbl->getName();
             itemPinCount = tr("%1").arg(cbl->getWireCount());
             ItemColumns =  tr("%1").arg(cbl->getRows());
-            // itemPinAssignments = cbl->getPinAssignments();
         }
 
         connectableGraphic *gfx = qgraphicsitem_cast<connectableGraphic *>(scene->selectedItems()[0]);
@@ -1256,7 +1303,7 @@ void HardwareLayoutWidget::SelectionChanged()
             }
         }
 
-        // Read connectable hardware
+        // Read connectable Cable
         connectableCable *c = 0;
         if (scene->selectedItems().size())
             c = qgraphicsitem_cast<connectableCable *>(scene->selectedItems()[0]);
@@ -1266,6 +1313,17 @@ void HardwareLayoutWidget::SelectionChanged()
             QMap <int, int> startPins = c->getStartPins();
             QMap <int, int> endPins = c->getEndPins();
             QMap <int, QString> wireColors = c->getWireColors();
+            QStringList startpinnames;
+            QStringList endpinnames;
+
+            connectableHardware *start_h = qgraphicsitem_cast<connectableHardware *>(c->getStartItem());
+
+            connectableHardware *end_h = qgraphicsitem_cast<connectableHardware *>(c->getEndItem());
+
+            if (start_h)
+                startpinnames = start_h->getPinAssignments();
+            if (end_h)
+                endpinnames = end_h->getPinAssignments();
 
             QString pinvalue;
             int usedWires = c->getWireCount();
@@ -1274,8 +1332,21 @@ void HardwareLayoutWidget::SelectionChanged()
             {
                 QTreeWidgetItem *item = new QTreeWidgetItem();
 
-                pinlabel = wireColors[wire];
-                pinvalue = tr("%1 -> %2").arg(startPins[wire]).arg(endPins[wire]);
+                // pinlabel = wireColors[wire];
+                // pinvalue = tr("%1 -> %2").arg(startPins[wire]).arg(endPins[wire]);
+
+                if (startPins[wire] == -1)
+                    pinlabel = tr("nc");
+                else if (startpinnames.contains(tr("%1").arg(startPins[wire])))
+                    pinlabel = tr("%1").arg(startpinnames[wire]);
+                else
+                    pinlabel = tr("%1").arg(startPins[wire]);
+
+                if (endPins[wire] == -1)
+                    pinvalue = tr("nc");
+                else
+                    pinlabel = tr("%1").arg(endPins[wire]);
+                    // pinvalue = tr("%1").arg(endpinnames[wire]); //  arg(endPins[wire]);
 
                 item->setText(0,pinlabel);
                 item->setText(1,pinvalue);
@@ -1898,19 +1969,17 @@ void HardwareLayoutWidget::on_PropertiestreeWidget_itemDoubleClicked(QTreeWidget
     bool ok;
 
     QString propertyname(item->text(0)),text;
+    QStringList items;
+    int selectedindex;
 
     if (propertyname == tr("Connects"))
     {
 
-        int selectedindex;
-        bool ok;
-        QStringList items = getConnectionPointNames();
-
+        /*
         connectableHardware *hw = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
-        if (hw)
-            selectedindex = hw->getPrimaryConnectionIndex();
 
-        QString itemselected = QInputDialog::getItem(this, tr("Cable Connects to.."),
+
+        QString itemselected = QInputDialog::getItem(this, tr("X2 Cable Connects to.."),
                                              tr("Connect to"), items, selectedindex, false, &ok);
         if (ok && !itemselected.isEmpty())
         {
@@ -1920,6 +1989,8 @@ void HardwareLayoutWidget::on_PropertiestreeWidget_itemDoubleClicked(QTreeWidget
         if (ok)
         {
             item->setText(1,text);
+
+            connectableHardware *hw = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
             if (hw)
                 hw->setPrimaryConnectionIndex(items.indexOf(itemselected));
 
@@ -1927,6 +1998,8 @@ void HardwareLayoutWidget::on_PropertiestreeWidget_itemDoubleClicked(QTreeWidget
             if (gfx)
                 gfx->setPrimaryConnectionIndex(items.indexOf(itemselected));
         }
+        */
+
     }
     else if (propertyname == tr("Name"))
     {
@@ -2004,16 +2077,137 @@ void HardwareLayoutWidget::on_PropertiestreeWidget_itemDoubleClicked(QTreeWidget
 
         }
     }
-    else
+    else if (propertyname == tr("Pin Count"))
     {
-        text = QInputDialog::getText((QWidget *) this->parentWidget(), QString("Property"),
-                                     QString(tr("%1 Value:").arg(item->text(0))), QLineEdit::Normal,
-                                     item->text(1), &ok);
+        int pincount;
+        QGraphicsItem *selected = scene->selectedItems()[0];
 
+        connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(selected);
+        if (h)
+            pincount = h->getPinCount();
+
+        connectableCable *c = qgraphicsitem_cast<connectableCable *>(scene->selectedItems()[0]);
+        if (c)
+            pincount = c->getWireCount();
+
+        int w = QInputDialog::getInteger(this, tr("Property"),tr("Wire / Pin Count:"), pincount, 0, 500, 1, &ok);
         if (ok)
         {
-            item->setText(1,text);
+            item->setText(1,QString::number(w));
+
+            if (h)
+                h->setPinCount(w);
+            if (c)
+                c->setWireCount(w);
+
         }
+    }
+    else
+    {
+        // Process the Node above to determine the value type
+        QString abovenode;
+        QTreeWidgetItem *upitem = item->parent();
+
+        if (upitem)
+        {
+            abovenode = upitem->text(0);
+
+            if (abovenode == tr("Pin Assignments"))
+            {
+                QString frompin = item->text(0);
+                QStringList items;
+                QList <connectableCable *> cables;
+                int selectedindex = 0;
+
+                connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
+                connectableCable *c = qgraphicsitem_cast<connectableCable *>(scene->selectedItems()[0]);
+                if (h && (column == 1))
+                {
+                    // A Hardware Item is selected
+                    cables = h->getCables();
+                    if (cables.size() == 1)
+                    {
+                        connectableHardware *startside = qgraphicsitem_cast<connectableHardware *>(cables[0]->getStartItem());
+                        connectableHardware *endside = qgraphicsitem_cast<connectableHardware *>(cables[0]->getEndItem());
+
+                        if (h == startside)
+                        {
+                            // leave these pointers
+                            qDebug() << "Not swapping ends";
+                        }
+                        else
+                        {
+                            // Reverse them
+                            qDebug() << "Swapping ends";
+
+                            endside = qgraphicsitem_cast<connectableHardware *>(cables[0]->getStartItem());
+                            startside = qgraphicsitem_cast<connectableHardware *>(cables[0]->getEndItem());
+                        }
+
+                        QStringList items = endside->getPinAssignments();
+
+                        QString itemselected = QInputDialog::getItem(this, tr("Connect to.. X1"),
+                                                             tr("Connect to"), items, selectedindex, false, &ok);
+                        if (ok && !itemselected.isEmpty())
+                        {
+                            qDebug() << "selected was PIN" << item->text(0) << " to be connected to " << selectedindex << " or " << items.indexOf(itemselected);
+
+                            item->setText(1, itemselected);
+
+                            // cables[0]->connectWire(item->text(0).toInt(), int sourcePin, int destPin);
+                        }
+
+                    }
+                }
+                else if (c && (column == 0))
+                {
+                    qDebug() << "We are setting the label going from pin " << frompin << " to " << item->text(1);
+
+                    if (c)
+                    {
+                        connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(c->getStartItem());
+                        items = h->getPinAssignments();
+                    }
+
+                    QString itemselected = QInputDialog::getItem(this, tr("X2 Cable Connects from.."),
+                                                         tr("Connect from"), items, selectedindex, false, &ok);
+                    if (ok && !itemselected.isEmpty())
+                    {
+                        item->setText(0, itemselected);
+                    }
+                }
+                else if (c && (column == 1))
+                {
+                    qDebug() << "We are setting the destination pin " << frompin << " to " << item->text(1);
+
+                    if (c)
+                    {
+                        connectableHardware *h = qgraphicsitem_cast<connectableHardware *>(c->getEndItem());
+                        items = h->getPinAssignments();
+                    }
+
+                    QString itemselected = QInputDialog::getItem(this, tr("Cable Connects to.. X3 "),
+                                                         tr("Connect to"), items, selectedindex, false, &ok);
+                    if (ok && !itemselected.isEmpty())
+                    {
+                        item->setText(1, itemselected);
+                    }
+
+                }
+            }
+        } else
+        {
+            // The following code doesn't do anything useful. It won't change underlying values
+            text = QInputDialog::getText((QWidget *) this->parentWidget(), QString("Property"),
+                                         QString(tr("%1 Value:").arg(item->text(0))), QLineEdit::Normal,
+                                         item->text(1), &ok);
+
+            if (ok)
+            {
+                item->setText(1,text);
+            }
+        }
+
     }
 
 }

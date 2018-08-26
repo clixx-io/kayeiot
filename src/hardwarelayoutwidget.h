@@ -44,7 +44,9 @@ public:
     QString getName() const { return(m_name); }
     QString getType();
     int getPinCount() const { return(m_pins); }
+    void setPinCount(int pins) { m_pins = pins; }
     int getRowCount() const { return(m_rows); }
+    void setRowCount(int rows) { m_rows = rows; }
     QString getBoardFile() const { return(m_boardfile); }
     QString getImageFilename() const { return(m_imagefilename); }
     double getWidth() const { return(m_width); }
@@ -53,7 +55,7 @@ public:
 
     void setName(QString name){ m_name = name; }
     void setWidth(double w){m_width = w; update(); }
-    void setHeight(double h){m_width = h; update(); }
+    void setHeight(double h){m_height = h; update(); }
     inline void setDisplayMode(ciDisplayMode mode){ m_displaymode = mode; update(); }
 
     void addCableConnection(connectableCable *cable);
@@ -149,6 +151,7 @@ public:
     QString getType(){ return(m_type); }
     QColor getColor(){ return m_cablecolor; }
     int getWireCount(){ return m_wires; }
+    void setWireCount(int wires);
     int getRows(){ return(m_rows); }
 
     QString getOtherEndConnection(QGraphicsItem *point, int pinnumber);
@@ -157,6 +160,7 @@ public:
     inline void setDisplayMode(ciDisplayMode mode){ m_displaymode = mode; update(); }
 
     bool connectNextAvailableWire(int sourcePin, int destPin, QString wireColor="Gray");
+    bool connectWire(int wire_index, int sourcePin, int destPin, QString wireColor="Gray");
 
     QMap <int, int> getStartPins(){ return(m_startpins); }
     QMap <int, int> getEndPins(){ return(m_endpins); }

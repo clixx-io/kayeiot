@@ -1385,7 +1385,7 @@ void MainWindow::AddConnection()
                                       "",
                                       userchoices["startitem"].toString(),
                                       userchoices["enditem"].toString(),
-                                      userchoices["wires"].toInt(),
+                                      userchoices["wirecount"].toInt(),
                                       userchoices["rows"].toInt(),
                                       color);
 
