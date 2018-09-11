@@ -1975,11 +1975,11 @@ void HardwareLayoutWidget::on_PropertiestreeWidget_itemDoubleClicked(QTreeWidget
     if (propertyname == tr("Connects"))
     {
 
-        /*
         connectableHardware *hw = qgraphicsitem_cast<connectableHardware *>(scene->selectedItems()[0]);
 
+        items = getConnectionPointNames();
 
-        QString itemselected = QInputDialog::getItem(this, tr("X2 Cable Connects to.."),
+        QString itemselected = QInputDialog::getItem(this, tr("Cable Connects to.."),
                                              tr("Connect to"), items, selectedindex, false, &ok);
         if (ok && !itemselected.isEmpty())
         {
@@ -1998,7 +1998,6 @@ void HardwareLayoutWidget::on_PropertiestreeWidget_itemDoubleClicked(QTreeWidget
             if (gfx)
                 gfx->setPrimaryConnectionIndex(items.indexOf(itemselected));
         }
-        */
 
     }
     else if (propertyname == tr("Name"))
@@ -2090,7 +2089,12 @@ void HardwareLayoutWidget::on_PropertiestreeWidget_itemDoubleClicked(QTreeWidget
         if (c)
             pincount = c->getWireCount();
 
+
+#if QT_VERSION >= 0x050000
+        int w = QInputDialog::getInt(this,tr("Property"),tr("Wire / Pin Count:"), pincount, 0, 500, 1, &ok);
+#else
         int w = QInputDialog::getInteger(this, tr("Property"),tr("Wire / Pin Count:"), pincount, 0, 500, 1, &ok);
+#endif
         if (ok)
         {
             item->setText(1,QString::number(w));
