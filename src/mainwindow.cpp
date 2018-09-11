@@ -2088,7 +2088,7 @@ void MainWindow::libraryUpdate()
     else
     {
         gitparams << "pull";
-        dirname = Projects->getKayeIoTLibraryDir();
+        // dirname = Projects->getKayeIoTLibraryDir();
 
         showStatusMessage(tr("Updating %1").arg(dirname));
     }
@@ -2098,7 +2098,7 @@ void MainWindow::libraryUpdate()
     QProcess *gitupdater = new QProcess(this);
 
     gitupdater->setProcessChannelMode(QProcess::MergedChannels);
-    gitupdater->setWorkingDirectory(Projects->getPartsLibraryDir());
+    gitupdater->setWorkingDirectory(dirname);
     gitupdater->start(gitcmd, gitparams);
 
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
