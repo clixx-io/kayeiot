@@ -73,6 +73,7 @@
 #include <QInputDialog>
 #include <QSettings>
 #include <QUrl>
+#include <QDesktopServices>
 
 #include "codeeditor.h"
 #include "arduinosketch.h"
@@ -2067,6 +2068,8 @@ void MainWindow::libraryUpdate()
 
     if (!QDir(dirname).exists())
     {
+        showStatusMessage(tr("Creating Parts Library Directory %1").arg(dirname));
+
         if (!QDir(Projects->getPartsLibraryDir()).exists())
         {
             if (QDir().mkpath(Projects->getPartsLibraryDir()))
@@ -2082,14 +2085,13 @@ void MainWindow::libraryUpdate()
 
         gitparams << "clone" << "https://github.com/clixx-io/kayeiot-parts.git";
 
+        dirname = Projects->getPartsLibraryDir();
         showStatusMessage(tr("Cloning to %1").arg(dirname));
 
     }
     else
     {
         gitparams << "pull";
-        // dirname = Projects->getKayeIoTLibraryDir();
-
         showStatusMessage(tr("Updating %1").arg(dirname));
     }
 
@@ -2097,8 +2099,8 @@ void MainWindow::libraryUpdate()
 
     QProcess *gitupdater = new QProcess(this);
 
-    gitupdater->setProcessChannelMode(QProcess::MergedChannels);
     gitupdater->setWorkingDirectory(dirname);
+    gitupdater->setProcessChannelMode(QProcess::MergedChannels);
     gitupdater->start(gitcmd, gitparams);
 
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
