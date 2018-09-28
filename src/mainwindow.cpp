@@ -115,14 +115,24 @@ MainWindow::MainWindow(const CustomSizeHintMap &customSizeHints,
     QCoreApplication::setApplicationName("Kayeiot");
 
     const char *platformname;
-    #ifdef Q_OS_MAC
-     platformname = "Mac";
+    #if defined(Q_OS_ANDROID)
+        platformname = "Android";
+    #elif defined(Q_OS_BLACKBERRY)
+        platformname = "Blackberry";
+    #elif defined(Q_OS_IOS)
+        platformname = "Ios";
+    #elif defined(Q_OS_MAC)
+        platformname = "OSX";
+    #elif defined(Q_OS_WINCE)
+        platformname = "WinCE";
+    #elif defined(Q_OS_WIN)
+        platformname = "Windows";
     #elif defined(Q_OS_LINUX)
-     platformname = "Linux";
-    #elif defined(Q_OS_WINDOWS)
-     platformname = "Windows"
+        platformname = "Linux";
+    #elif defined(Q_OS_UNIX)
+        platformname = "Unix";
     #else
-     platformname = "other Operating System";
+        platformname = "Unknown";
     #endif
 
     setObjectName("MainWindow");
