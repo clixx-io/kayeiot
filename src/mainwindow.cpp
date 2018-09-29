@@ -1679,7 +1679,11 @@ void MainWindow::importGithubSketch(QString sketchname)
 
         if (rawurl.startsWith("https://raw.githubusercontent.com/"))
         {
+#if defined(Q_OS_WIN)
+            QString wgetcmd("bitsadmin /transfer myDownloadJob /download /priority normal ");
+#else
             QString wgetcmd("wget");
+#endif
             QStringList wgetparams;
 
             wgetparams << rawurl;
