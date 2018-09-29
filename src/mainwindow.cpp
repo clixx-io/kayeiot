@@ -1679,27 +1679,27 @@ void MainWindow::importGithubSketch(QString sketchname)
 
         if (rawurl.startsWith("https://raw.githubusercontent.com/"))
         {
-#if defined(Q_OS_WIN)
-            QString wgetcmd("bitsadmin /transfer myDownloadJob /download /priority normal ");
-#else
             QString wgetcmd("wget");
-#endif
             QStringList wgetparams;
-
+#if defined(Q_OS_WIN)
+            wgetcmd = "bitsadmin.exe";
+            wgetparams << "/TRANSFER" << "kayeiotDownloadJob" << "/DOWNLOAD" << "/priority" << "normal";
             wgetparams << rawurl;
+#else
+            wgetparams << rawurl;
+#endif
 
             // Setup for the wget process
             QProcess *wget = new QProcess(this);
 
             // Determine the projectname and directory
             projectname = rawurl.left(rawurl.lastIndexOf("/"));
-            showStatusMessage(tr(" 1- Downloading to %1").arg(projectname));
+            showStatusMessage(tr("Downloading from %1").arg(projectname));
             projectname = projectname.right(projectname.length()-projectname.lastIndexOf("/")-1);
-            showStatusMessage(tr(" 2- Downloading to %1").arg(projectname));
 
             dirname = Projects->getProjectsDir() + "/" + projectname;
             wget->setWorkingDirectory(dirname);
-            showStatusMessage(tr(" - Downloading to %1").arg(dirname));
+            showStatusMessage(tr("Destination directory will be %1").arg(dirname));
 
             qDebug() << "projectname: " << projectname << ", downloading to " << dirname;
 
@@ -1714,7 +1714,6 @@ void MainWindow::importGithubSketch(QString sketchname)
                     showStatusMessage(tr("Unable to create Project Directory %1").arg(dirname));
                     return;
                 }
-                showStatusMessage(tr("Retrieving %1").arg(dirname));
             }
             else
             {
@@ -1723,16 +1722,28 @@ void MainWindow::importGithubSketch(QString sketchname)
 
             QDir::setCurrent(dirname);
 
+#if defined(Q_OS_WIN)
+            // The full name of the destination file is needed
+            // wgetparams << dirname + "\\"+ rawurl;
+            sketchname = projectname.right(projectname.length()-projectname.lastIndexOf("/")-1);
+
+            QString targetdownloaddest = QDir(dirname).absolutePath() + "/" + projectname + ".ino";
+            targetdownloaddest = targetdownloaddest.replace("/","\\\\");
+            showStatusMessage(tr("Destination for bitsadmin download is %1").arg(targetdownloaddest));
+            wgetparams << targetdownloaddest;
+#endif
             QApplication::setOverrideCursor(Qt::WaitCursor);
 
             wget->setProcessChannelMode(QProcess::MergedChannels);
             wget->start(wgetcmd, wgetparams);
 
+            showStatusMessage(tr("Running %1 %2").arg(wgetcmd).arg(wgetparams[0]));
+
             QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
             if (!wget->waitForFinished())
             {
-                showStatusMessage(tr("wget %1 failed - %2").arg(wgetparams[0]).arg(wget->errorString()));
+                showStatusMessage(tr("%1 %2 failed - %3").arg(wgetcmd).arg(wgetparams[0]).arg(wget->errorString()));
                 delete wget;
                 QApplication::restoreOverrideCursor();
                 return;
