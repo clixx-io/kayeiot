@@ -11,5 +11,7 @@
         <file>res/connectivity-32.png</file>
         <file>res/mainboard-rpi0.PNG</file>
         <file>res/mainboard-rpi3.PNG</file>
+        <file>res/logo-light-64.ico</file>
+        <file>res/splash.png</file>
     </qresource>
 </RCC>

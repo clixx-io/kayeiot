@@ -53,9 +53,17 @@
 #include <QPainter>
 #include <QMap>
 #include <QDebug>
+#include <QSplashScreen>
+#include <qthread.h>
 
 #include "clixxiotprojects.h"
 #include "mainwindow.h"
+
+class SplashWait : public QThread
+{
+public:
+    static void sleep(unsigned long secs) { QThread::sleep(secs); }
+};
 
 void render_qt_text(QPainter *painter, int w, int h, const QColor &color)
 {
@@ -180,6 +188,9 @@ int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/res/res/logo-light-64.ico"));
+    QPixmap pixmap(":/res/res/splash.png");
+    QSplashScreen splash(pixmap);
+    splash.show();
 
     MainWindow::CustomSizeHintMap customSizeHints;
     switch (parseCustomSizeHints(QCoreApplication::arguments(), &customSizeHints)) {
@@ -193,7 +204,11 @@ int main(int argc, char **argv)
         return 0;
     }
     MainWindow mainWin(customSizeHints);
+
+    SplashWait::sleep(2); // splash is shown for 2 seconds
     mainWin.resize(800, 600);
     mainWin.show();
+    splash.finish(&mainWin);
+
     return app.exec();
 }
