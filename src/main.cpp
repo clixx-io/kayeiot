@@ -179,6 +179,8 @@ static ParseCommandLineArgumentsResult
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+    app.setWindowIcon(QIcon(":/res/res/logo-light-64.ico"));
+
     MainWindow::CustomSizeHintMap customSizeHints;
     switch (parseCustomSizeHints(QCoreApplication::arguments(), &customSizeHints)) {
     case CommandLineArgumentsOk:
