@@ -1136,7 +1136,7 @@ void MainWindow::architectureLogic()
     {
         projectDock = new QDockWidget(tr("Project"),this);
         projectWindow = new ProjectWidget(projectDock);
-        addDockWidget(Qt::LeftDockWidgetArea, projectDock);
+        addDockWidget(Qt::RightDockWidgetArea, projectDock);
         projectWindow->setMainWindow(this);
         projectDock->setWidget(projectWindow);
         projectDock->show();
