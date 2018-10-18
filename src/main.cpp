@@ -187,7 +187,7 @@ static ParseCommandLineArgumentsResult
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
-    app.setWindowIcon(QIcon(":/res/res/logo-light-64.ico"));
+    app.setWindowIcon(QIcon(":/res/res/logo-blue-64x64.ico"));
     QPixmap pixmap(":/res/res/splash.png");
     QSplashScreen splash(pixmap);
     splash.show();

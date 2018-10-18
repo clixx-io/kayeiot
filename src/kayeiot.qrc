@@ -11,7 +11,15 @@
         <file>res/connectivity-32.png</file>
         <file>res/mainboard-rpi0.PNG</file>
         <file>res/mainboard-rpi3.PNG</file>
-        <file>res/logo-light-64.ico</file>
         <file>res/splash.png</file>
+        <file>res/logo-blue-64x64.ico</file>
+        <file>res/textedit-32.png</file>
+        <file>res/add-hardware-32x32.png</file>
+        <file>res/add-cable-32x32.png</file>
+        <file>res/add-graphic-32x32.png</file>
+        <file>res/add-shape-32x32.png</file>
+        <file>res/add-arrow-32x32.png</file>
+        <file>res/report-mode-32x32.png</file>
+        <file>res/add-cable1-32x32.png</file>
     </qresource>
 </RCC>

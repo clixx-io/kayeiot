@@ -35,13 +35,16 @@
    <property name="bottomMargin">
     <number>3</number>
    </property>
-   <item>
+   <item alignment="Qt::AlignTop">
     <widget class="QFrame" name="frame">
      <property name="minimumSize">
       <size>
-       <width>36</width>
+       <width>28</width>
        <height>0</height>
       </size>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -49,115 +52,123 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <widget class="QToolButton" name="toolButton_2">
-      <property name="geometry">
-       <rect>
-        <x>4</x>
-        <y>160</y>
-        <width>28</width>
-        <height>21</height>
-       </rect>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="spacing">
+       <number>4</number>
       </property>
-      <property name="text">
-       <string>...</string>
+      <property name="leftMargin">
+       <number>4</number>
       </property>
-     </widget>
-     <widget class="QToolButton" name="toolButton_3">
-      <property name="geometry">
-       <rect>
-        <x>4</x>
-        <y>134</y>
-        <width>28</width>
-        <height>21</height>
-       </rect>
+      <property name="topMargin">
+       <number>4</number>
       </property>
-      <property name="text">
-       <string>...</string>
+      <property name="rightMargin">
+       <number>4</number>
       </property>
-     </widget>
-     <widget class="QToolButton" name="toolButton_ImportSketch">
-      <property name="geometry">
-       <rect>
-        <x>4</x>
-        <y>108</y>
-        <width>28</width>
-        <height>21</height>
-       </rect>
+      <property name="bottomMargin">
+       <number>4</number>
       </property>
-      <property name="toolTip">
-       <string>Import Sketch</string>
-      </property>
-      <property name="text">
-       <string>i</string>
-      </property>
-     </widget>
-     <widget class="QToolButton" name="toolButton_Report">
-      <property name="geometry">
-       <rect>
-        <x>4</x>
-        <y>82</y>
-        <width>28</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="toolTip">
-       <string>Report Mode</string>
-      </property>
-      <property name="text">
-       <string>r</string>
-      </property>
-     </widget>
-     <widget class="QToolButton" name="toolButton_AddGraphic">
-      <property name="geometry">
-       <rect>
-        <x>4</x>
-        <y>56</y>
-        <width>28</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="toolTip">
-       <string>Add Graphic</string>
-      </property>
-      <property name="text">
-       <string>+g</string>
-      </property>
-     </widget>
-     <widget class="QToolButton" name="toolButton_AddHardware">
-      <property name="geometry">
-       <rect>
-        <x>4</x>
-        <y>4</y>
-        <width>28</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="toolTip">
-       <string>Add Component</string>
-      </property>
-      <property name="statusTip">
-       <string/>
-      </property>
-      <property name="text">
-       <string>+h</string>
-      </property>
-     </widget>
-     <widget class="QToolButton" name="toolButton_AddCable">
-      <property name="geometry">
-       <rect>
-        <x>4</x>
-        <y>30</y>
-        <width>28</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="toolTip">
-       <string>Add Cable</string>
-      </property>
-      <property name="text">
-       <string>+c</string>
-      </property>
-     </widget>
+      <item>
+       <widget class="QToolButton" name="toolButton_AddHardware">
+        <property name="toolTip">
+         <string>Add Component</string>
+        </property>
+        <property name="statusTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>+h</string>
+        </property>
+        <property name="icon">
+         <iconset resource="kayeiot.qrc">
+          <normaloff>:/res/res/add-hardware-32x32.png</normaloff>:/res/res/add-hardware-32x32.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_AddCable">
+        <property name="toolTip">
+         <string>Add Cable</string>
+        </property>
+        <property name="text">
+         <string>+c</string>
+        </property>
+        <property name="icon">
+         <iconset resource="kayeiot.qrc">
+          <normaloff>:/res/res/add-cable1-32x32.png</normaloff>:/res/res/add-cable1-32x32.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_AddGraphic">
+        <property name="toolTip">
+         <string>Add Graphic</string>
+        </property>
+        <property name="text">
+         <string>+g</string>
+        </property>
+        <property name="icon">
+         <iconset resource="kayeiot.qrc">
+          <normaloff>:/res/res/add-graphic-32x32.png</normaloff>:/res/res/add-graphic-32x32.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_AddShape">
+        <property name="toolTip">
+         <string>Add Shape</string>
+        </property>
+        <property name="text">
+         <string>+s</string>
+        </property>
+        <property name="icon">
+         <iconset resource="kayeiot.qrc">
+          <normaloff>:/res/res/add-shape-32x32.png</normaloff>:/res/res/add-shape-32x32.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_AddArrow">
+        <property name="toolTip">
+         <string>Add Arrow</string>
+        </property>
+        <property name="text">
+         <string>+l</string>
+        </property>
+        <property name="icon">
+         <iconset resource="kayeiot.qrc">
+          <normaloff>:/res/res/add-arrow-32x32.png</normaloff>:/res/res/add-arrow-32x32.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_Report">
+        <property name="toolTip">
+         <string>Report Mode</string>
+        </property>
+        <property name="text">
+         <string>r</string>
+        </property>
+        <property name="icon">
+         <iconset resource="kayeiot.qrc">
+          <normaloff>:/res/res/report-mode-32x32.png</normaloff>:/res/res/report-mode-32x32.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_ImportSketch">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Import Sketch</string>
+        </property>
+        <property name="text">
+         <string>i</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -276,6 +287,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="kayeiot.qrc"/>
+ </resources>
  <connections/>
 </ui>

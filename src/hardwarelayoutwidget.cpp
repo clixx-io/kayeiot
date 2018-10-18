@@ -1062,12 +1062,6 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     connect(m_timer, SIGNAL(timeout()), this, SLOT(advance()));
     m_timer->setInterval(100);
 
-    // Hide for now until we add some functions
-#if QT_VERSION >= 0x050000
-    ui->toolButton_2->setVisible(false);
-    ui->toolButton_3->setVisible(false);
-#endif
-
 }
 
 HardwareLayoutWidget::~HardwareLayoutWidget()

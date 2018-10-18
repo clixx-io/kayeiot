@@ -213,7 +213,7 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
 
     addAction(systemmenu->menuAction());
 
-    const QIcon logicIcon(QPixmap(":/res/res/logic-32.png"));
+    const QIcon logicIcon(QPixmap(":/res/res/textedit-32.png"));
     QAction *logicAction = addAction(logicIcon, tr("Logic"));
     connect(logicAction, &QAction::triggered, mainwindow, &MainWindow::architectureLogic);
 
@@ -421,7 +421,7 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
 
     addAction(systemmenu->menuAction());
 
-    const QIcon logicIcon(QPixmap(":/res/res/logic-32.png"));
+    const QIcon logicIcon(QPixmap(":/res/res/textedit-32.png"));
     QAction *logicAction = addAction(logicIcon, tr("Logic"));
     connect(logicAction, SIGNAL(triggered()), mainwindow, SLOT(architectureLogic()));
 
