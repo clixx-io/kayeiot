@@ -6,11 +6,9 @@
 #include <QFileDialog>
 #include <QClipboard>
 #include <QMimeData>
+#include <QMap>
 #if QT_VERSION >= 0x050000
     #include <QStandardPaths>
-    #include <QJsonObject>
-#else
-    #include <QMap>
 #endif
 
 #include "clixxiotprojects.h"
@@ -30,11 +28,7 @@ NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent) :
     ui->setupUi(this);
 }
 
-#if QT_VERSION >= 0x050000
-NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent, QJsonObject *results) :
-#else
 NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent, QMap <QString,QVariant> *results) :
-#endif
 
     QDialog(parent),
     ui(new Ui::NewHardwareItemDialog),
@@ -110,20 +104,6 @@ bool NewHardwareItemDialog::loadBoardList()
 void NewHardwareItemDialog::on_buttonBox_accepted()
 {
 
-#if QT_VERSION >= 0x050000
-    QJsonObject object
-    {
-        {"name", m_name },
-        {"boardfile", m_boardfile},
-        {"width", ui->WidthSpinBox->value()},
-        {"height", ui->HeightSpinBox->value()},
-        {"units", ui->mmRadioButton->isChecked() ? "mm" : "in"},
-        {"pins", ui->pinscomboBox->currentText().toInt()},
-        {"rows", ui->rowscomboBox->currentText().toInt()},
-        {"picturefilename", m_imagefilename}
-
-    };
-#else
     QMap <QString, QVariant> object;
     object["name"] = m_name;
     object["boardfile"] = m_boardfile;
@@ -133,7 +113,6 @@ void NewHardwareItemDialog::on_buttonBox_accepted()
     object["pins"] = ui->pinscomboBox->currentText().toInt();
     object["rows"] = ui->rowscomboBox->currentText().toInt();
     object["picturefilename"] = m_imagefilename;
-#endif
 
     if (ui->BoardNameslistWidget->selectedItems().count() > 0)
     {

@@ -145,6 +145,11 @@ public slots:
     void sampleArduinoOnGithub4();
     void sampleArduinoOnGithub5();
 
+    void fritzingVendorParts();
+    void fritzingSparkfunVendorParts();
+    void fritzingAdafruitVendorParts();
+    void fritzingSeeedStudioVendorParts();
+
     void actionTriggered(QAction *action);
     void saveLayout();
     void switchLayoutDirection();
@@ -196,6 +201,8 @@ private:
     void setupMenuBar();
     void setupDockWidgets(const CustomSizeHintMap &customSizeHints);
     void reloadRecentProjects();
+
+    void getfritzingVendorPartsLibrary(const QString &partsdir, const QString &partsurl);
 
     QList<ToolBar*> toolBars;
     QMenu *dockWidgetMenu;

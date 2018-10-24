@@ -189,8 +189,19 @@ void MainWindow::setupMenuBar()
     menu->addSeparator();
 
     QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
-    Librarysubmenu->addAction(tr("Board Library"), this, &MainWindow::showLibrary);
+    Librarysubmenu->addAction(tr("Show Part Library"), this, &MainWindow::showLibrary);
     Librarysubmenu->addAction(tr("Update Part Library"), this, &MainWindow::libraryUpdate);
+    Librarysubmenu->addSeparator();
+
+    /*
+    Librarysubmenu->addAction(tr("Vendor Part Libraries"), this, &MainWindow::libraryUpdate);
+    */
+
+    Librarysubmenu->addAction(tr("Fritzing Vendor Part Library"), this, &MainWindow::fritzingVendorParts);
+    Librarysubmenu->addAction(tr("Sparkfun Vendor Part Library"), this, &MainWindow::fritzingSparkfunVendorParts);
+    Librarysubmenu->addAction(tr("Adafruit Vendor Part Library"), this, &MainWindow::fritzingAdafruitVendorParts);
+    Librarysubmenu->addAction(tr("Seeed Studio Part Library"), this, &MainWindow::fritzingSeeedStudioVendorParts);
+
     menu->addSeparator();
 
     menu->addAction(tr("Print Pre&view"), this, &MainWindow::printPreview);
@@ -275,7 +286,7 @@ void MainWindow::setupMenuBar()
     // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
     QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
-    QAction* boardLibraryAction = Librarysubmenu->addAction("&Board Library");
+    QAction* boardLibraryAction = Librarysubmenu->addAction("&Show Part Library");
     connect(boardLibraryAction, SIGNAL(triggered()), this, SLOT(showLibrary()));
 
     QAction* updateLibraryAction = Librarysubmenu->addAction("&Update Part Library");
@@ -1288,11 +1299,7 @@ void MainWindow::loadDesignDiagram()
 
 void MainWindow::AddHardware()
 {
-#if QT_VERSION >= 0x050000
-    QJsonObject userchoices;
-#else
     QMap <QString, QVariant> userchoices;
-#endif
 
     architectureSystem();
 
@@ -1343,11 +1350,7 @@ void MainWindow::AddHardware()
 
 void MainWindow::AddConnection()
 {
-#if QT_VERSION >= 0x050000
-    QJsonObject userchoices;
-#else
     QMap <QString, QVariant> userchoices;
-#endif
 
     architectureSystem();
 
@@ -1408,11 +1411,7 @@ void MainWindow::AddConnection()
 
 void MainWindow::AddConnectableGraphic()
 {
-#if QT_VERSION >= 0x050000
-    QJsonObject userchoices;
-#else
     QMap <QString, QVariant> userchoices;
-#endif
 
     architectureSystem();
 
@@ -2143,6 +2142,89 @@ void MainWindow::libraryUpdate()
     QApplication::restoreOverrideCursor();
 
     delete gitupdater;
+}
+
+void MainWindow::getfritzingVendorPartsLibrary(const QString &partsdir, const QString &partsurl)
+{
+    QString gitcmd("git");
+    QStringList gitparams;
+
+    showStatusDock(true);
+
+    QString dirname = Projects->getPartsLibraryDir() + "/fritzing-vendor-libraries/" + partsdir;
+
+    if (!QDir(dirname).exists())
+    {
+        showStatusMessage(tr("Creating Parts Library Directory %1").arg(dirname));
+
+        if (!QDir(dirname).exists())
+        {
+            if (QDir().mkpath(dirname))
+            {
+                showStatusMessage(tr("Created Parts Library Directory %1").arg(dirname));
+            }
+            else
+            {
+                showStatusMessage(tr("Unable to Parts Library Directory %1").arg(dirname));
+                return;
+            }
+        }
+
+        gitparams << "clone" << partsurl;
+
+        showStatusMessage(tr("Cloning to %1").arg(dirname));
+
+    }
+    else
+    {
+        gitparams << "pull";
+        showStatusMessage(tr("Updating %1").arg(dirname));
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    QProcess *gitupdater = new QProcess(this);
+
+    gitupdater->setWorkingDirectory(dirname);
+    gitupdater->setProcessChannelMode(QProcess::MergedChannels);
+    gitupdater->start(gitcmd, gitparams);
+
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    if (!gitupdater->waitForFinished())
+    {
+        showStatusMessage(tr("git %1 failed - %2").arg(gitparams[0]).arg(gitupdater->errorString()));
+    } else
+    {
+        QString processOutput(gitupdater->readAll());
+
+        showStatusMessage(tr("git %1 succeeded - %2").arg(gitparams[0]).arg(processOutput));
+    }
+
+    QApplication::restoreOverrideCursor();
+
+    delete gitupdater;
+}
+
+
+void MainWindow::fritzingVendorParts()
+{
+    getfritzingVendorPartsLibrary("fritzing", "https://github.com/fritzing/fritzing-parts.git");
+}
+
+void MainWindow::fritzingSparkfunVendorParts()
+{
+    getfritzingVendorPartsLibrary("sparkfun", "https://github.com/sparkfun/Fritzing_Parts.git");
+}
+
+void MainWindow::fritzingAdafruitVendorParts()
+{
+    getfritzingVendorPartsLibrary("adafruit", "https://github.com/adafruit/Fritzing-Library.git");
+}
+
+void MainWindow::fritzingSeeedStudioVendorParts()
+{
+    getfritzingVendorPartsLibrary("seeedstudio", "https://github.com/Seeed-Studio/fritzing_parts.git");
 }
 
 void MainWindow::aboutDialog()

@@ -5,22 +5,19 @@
 #include <QDebug>
 #include <QGridLayout>
 #include <QLabel>
+#include <QMap>
+#include <time.h>
+
 #if QT_VERSION >= 0x050000
-    #include <QJsonObject>
     #include <QApplication>
 #else
-    #include <QMap>
     #include <QtGui/QApplication>
 #endif
 
 #include "newgraphicitemdialog.h"
 #include "ui_newgraphicitemdialog.h"
 
-#if QT_VERSION >= 0x050000
-NewGraphicItemDialog::NewGraphicItemDialog(QWidget *parent, QJsonObject *results) :
-#else
 NewGraphicItemDialog::NewGraphicItemDialog(QWidget *parent, QMap <QString, QVariant> *results) :
-#endif
 
     QDialog(parent),
     ui(new Ui::NewGraphicItemDialog),
@@ -45,7 +42,16 @@ void NewGraphicItemDialog::on_PastetoolButton_clicked()
     const QMimeData *mimeData = clipboard->mimeData();
 
     if (mimeData->hasImage()) {
+
+        QString tempDir = QDir::tempPath();
+
+        m_imagefilename = tr("%1/%2.png").arg(tempDir).arg((unsigned)time(NULL));
+
         ui->ComponentPicturelabel->setPixmap(qvariant_cast<QPixmap>(mimeData->imageData()));
+
+        qDebug() << "Saving to " << m_imagefilename;
+
+        ui->ComponentPicturelabel->pixmap()->save(m_imagefilename);
     }
     else
     {
@@ -133,26 +139,15 @@ void NewGraphicItemDialog::on_toolButton_clicked()
 
         m_imagefilename = files[0];
     }
-
 }
 
 void NewGraphicItemDialog::on_buttonBox_accepted()
 {
-#if QT_VERSION >= 0x050000
-    QJsonObject object
-    {
-        {"name", ui->nameLineEdit->text()},
-        {"width", ui->WidthSpinBox->value()},
-        {"height", ui->HeightSpinBox->value()},
-        {"picturefilename", m_imagefilename}
-    };
-#else
     QMap <QString, QVariant> object;
     object["name"] = ui->nameLineEdit->text();
     object["width"] = ui->WidthSpinBox->value();
     object["height"] = ui->HeightSpinBox->value();
     object["picturefilename"] = m_imagefilename;
-#endif
 
     *completed = object;
 
