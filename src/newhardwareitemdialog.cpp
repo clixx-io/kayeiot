@@ -7,6 +7,7 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <QMap>
+#include <time.h>
 #if QT_VERSION >= 0x050000
     #include <QStandardPaths>
 #endif
@@ -267,7 +268,17 @@ void NewHardwareItemDialog::on_PastetoolButton_clicked()
     const QMimeData *mimeData = clipboard->mimeData();
 
     if (mimeData->hasImage()) {
+
+        QString tempDir = QDir::tempPath();
+
+        m_imagefilename = tr("%1/%2.png").arg(tempDir).arg((unsigned)time(NULL));
+
         ui->ComponentPicturelabel->setPixmap(qvariant_cast<QPixmap>(mimeData->imageData()));
+
+        qDebug() << "Saving to " << m_imagefilename;
+
+        ui->ComponentPicturelabel->pixmap()->save(m_imagefilename);
+
     }
     else
     {

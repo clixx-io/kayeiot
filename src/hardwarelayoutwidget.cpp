@@ -2945,3 +2945,139 @@ void HardwareLayoutWidget::on_toolButton_ImportSketch_clicked()
    }
 
 }
+
+DraggableLineItem::DraggableLineItem(QGraphicsItem* parent):
+    QGraphicsLineItem(parent)
+{
+    setFlags(QGraphicsItem::ItemIsSelectable|
+             QGraphicsItem::ItemIsMovable);
+}
+
+DraggableTextItem::DraggableTextItem(QGraphicsItem* parent):
+    QGraphicsTextItem(parent)
+{
+    setFlags(QGraphicsItem::ItemIsSelectable|
+             QGraphicsItem::ItemIsMovable);
+}
+
+DraggableRectItem::DraggableRectItem(QGraphicsItem* parent):
+    QGraphicsRectItem(parent), m_dragged(false)
+{
+    setFlags(QGraphicsItem::ItemIsSelectable|
+             QGraphicsItem::ItemIsMovable);
+}
+
+void DraggableRectItem::setAnchorPoint(const QPointF &anchorPoint){
+    this->anchorPoint = anchorPoint;
+}
+
+void DraggableRectItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
+    // Commented out but needed
+    // m_dragged = true;
+    QGraphicsRectItem::mouseMoveEvent(event);
+}
+
+void DraggableRectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event){
+    if(m_dragged){
+        QList<QGraphicsItem*> colItems = collidingItems();
+        if(colItems.isEmpty())
+            this->setPos(anchorPoint);
+        else {
+            QGraphicsItem* closestItem = colItems.at(0);
+            qreal shortestDist = 100000;
+            foreach(QGraphicsItem* item, colItems){
+                QLineF line(item->sceneBoundingRect().center(),
+                            this->sceneBoundingRect().center());
+                if(line.length() < shortestDist){
+                    shortestDist = line.length();
+                    closestItem = item;
+                }
+            }
+            this->setPos(closestItem->scenePos());
+        }
+        m_dragged = false;
+    }
+    QGraphicsRectItem::mouseReleaseEvent(event);
+}
+
+
+void HardwareLayoutWidget::on_toolButton_AddShape_clicked()
+{
+    QRectF rect(0,0,80,40);
+    QBrush myBrush(Qt::darkGray, Qt::Dense5Pattern);
+
+    /*
+    QGraphicsRectItem *rItem1 = new QGraphicsRectItem(rect);
+    scene->addItem(rItem1);
+    rItem1->setPos(160,40);
+    rItem1->setBrush(myBrush);
+
+    QGraphicsRectItem *rItem2 = new QGraphicsRectItem(rect);
+    scene->addItem(rItem2);
+    rItem2->setPos(160,100);
+    rItem2->setBrush(myBrush);
+
+    QGraphicsRectItem *rItem3 = new QGraphicsRectItem(rect);
+    scene->addItem(rItem3);
+    rItem3->setPos(160,160);
+    rItem3->setBrush(myBrush);
+    */
+
+    DraggableRectItem* dItem = new DraggableRectItem;
+    scene->addItem(dItem);
+    dItem->setRect(rect);
+    dItem->setPos(30,100);
+    dItem->setBrush(QBrush(QColor("#ffa07a")));
+    dItem->setBrush(myBrush);
+    // dItem->setAnchorPoint(dItem->pos());
+
+    /*
+    DraggableLineItem *lItem1 = new DraggableLineItem;
+    scene->addItem(lItem1);
+    lItem1->setLine(40, 150, 200, 150);
+
+    QRectF rect2(0,0,10,10);
+    QGraphicsRectItem *rItem4 = new QGraphicsRectItem(rect2);
+    scene->addItem(rItem4);
+    rItem4->setPos(40,150);
+    */
+
+}
+
+void HardwareLayoutWidget::on_toolButton_AddArrow_clicked()
+{
+
+    QRectF rect(0,0,10,10);
+    QBrush myBrush(Qt::darkGray, Qt::Dense5Pattern);
+
+    DraggableLineItem *lItem1 = new DraggableLineItem;
+    scene->addItem(lItem1);
+    lItem1->setLine(40, 160, 200, 160);
+
+    DraggableRectItem* dItem = new DraggableRectItem;
+    scene->addItem(dItem);
+    dItem->setRect(rect);
+    dItem->setPos(lItem1->x()-rect.width(),lItem1->y()-rect.height());
+    dItem->setBrush(QBrush(QColor("#ffa07a")));
+    dItem->setBrush(myBrush);
+
+//        ui->graphicsView->setCursor(Qt::CrossCursor);
+//        ui->graphicsView->setCursor(Qt::ArrowCursor);
+
+}
+
+void HardwareLayoutWidget::on_toolButton_AddText_clicked()
+{
+    bool ok;
+    QString inputtext = QInputDialog::getText(this, tr("Add Text"),
+                                         tr("Text :"), QLineEdit::Normal,
+                                         "", &ok);
+
+    if (!ok)
+        return;
+
+    DraggableTextItem *tItem1 = new DraggableTextItem;
+    scene->addItem(tItem1);
+    tItem1->setPos(30,150);
+    tItem1->setPlainText(inputtext);
+}

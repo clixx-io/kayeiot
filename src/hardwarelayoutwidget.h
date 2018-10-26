@@ -6,6 +6,7 @@
 #include <QtGui>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
+#include <QGraphicsRectItem>
 #include <QList>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -195,7 +196,6 @@ class connectableGraphic : public QGraphicsItem
 public:
 
     connectableGraphic(QString ID, QString name, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = 0);
-//    connectableGraphic(QString ID, QGraphicsItem *parent = Q_NULLPTR);
 
     enum { Type = UserType + 3 };
     int type() const
@@ -203,6 +203,8 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return Type;
     }
+
+    enum { cGTypeFileGraphic, cGTypeRectangleGraphic, cGTypeTriangleGraphic, cGTypeCircleGraphic, cGTypeLineGraphic, cGTypeTextGraphic };
 
     QString getID(){ return(m_id); }
     QString getName(){ return(m_name); }
@@ -265,7 +267,6 @@ public:
     }
 
     QString getID(){ return(m_id); }
-    //QString getName(){ return(m_name); }
     double getWidth(){ return(m_width); }
     double getHeight(){ return(m_height); }
 
@@ -288,6 +289,54 @@ private:
            m_diagram_height;
 
     QGraphicsScene *m_scene;
+};
+
+/*
+class movesizeAnchor : public QGraphicsRectItem
+{
+    Q_OBJECT
+
+public:
+
+    movesizeAnchor(QGraphicsItem *parent = 0);
+
+    enum { Type = UserType + 5 };
+    int type() const
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    }
+
+protected:
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual QRectF boundingRect() const;
+
+};
+*/
+
+class DraggableRectItem : public QGraphicsRectItem
+{
+public:
+    DraggableRectItem(QGraphicsItem* parent = 0);
+    void setAnchorPoint(const QPointF& anchorPoint);
+protected:
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+private:
+    QPointF anchorPoint;
+    bool m_dragged;
+};
+
+class DraggableLineItem: public QGraphicsLineItem
+{
+public:
+    DraggableLineItem(QGraphicsItem* parent = 0);
+};
+
+class DraggableTextItem: public QGraphicsTextItem
+{
+public:
+    DraggableTextItem(QGraphicsItem* parent = 0);
 };
 
 class HardwareLayoutWidget : public QWidget
@@ -357,6 +406,12 @@ private slots:
     void on_toolButton_Report_clicked();
 
     void on_toolButton_ImportSketch_clicked();
+
+    void on_toolButton_AddShape_clicked();
+
+    void on_toolButton_AddArrow_clicked();
+
+    void on_toolButton_AddText_clicked();
 
 private:
 

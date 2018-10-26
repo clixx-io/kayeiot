@@ -142,6 +142,20 @@
        </widget>
       </item>
       <item>
+       <widget class="QToolButton" name="toolButton_AddText">
+        <property name="toolTip">
+         <string>Add Text</string>
+        </property>
+        <property name="text">
+         <string>T</string>
+        </property>
+        <property name="icon">
+         <iconset resource="kayeiot.qrc">
+          <normaloff>:/res/res/add-Text-32x32.png</normaloff>:/res/res/add-Text-32x32.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QToolButton" name="toolButton_Report">
         <property name="toolTip">
          <string>Report Mode</string>
