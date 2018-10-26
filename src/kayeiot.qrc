@@ -21,5 +21,6 @@
         <file>res/add-arrow-32x32.png</file>
         <file>res/report-mode-32x32.png</file>
         <file>res/add-cable1-32x32.png</file>
+        <file>res/add-Text-32x32.png</file>
     </qresource>
 </RCC>
