@@ -139,15 +139,12 @@ QMap <QString, QString> ClixxIoTProjects::getRecentProjects()
 {
     QMap <QString, QString> results;
 
-    MainWindow *mainwindow = (MainWindow *) getMainWindow();
-    QSettings *settings = mainwindow->settings;
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
 
     // Read the last five projects
     for (int i=0; i < 5; i++)
     {
-        QString lastproject = settings->value(QObject::tr("recent-projects/project-%1").arg(i + 1)).toString();
-
-        // qDebug() << "lastproject" << lastproject;
+        QString lastproject = settings.value(QObject::tr("recent-projects/project-%1").arg(i + 1)).toString();
 
         if (lastproject.length())
             results[QObject::tr("%1").arg(i+1)] = lastproject;

@@ -269,7 +269,7 @@ QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
     if (imagefile.startsWith("breadboard/") || imagefile.startsWith("icon/") || imagefile.startsWith("pcb/"))
         fullimagepath = m_dir + "/svg/core/" + imagefile;
     else
-        fullimagepath = m_dir + "/svg/core/icon" + imagefile;
+        fullimagepath = m_dir + "/svg/core/icon/" + imagefile;
 
     QFile file(fullimagepath);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -399,14 +399,14 @@ QStringList FritzingLibrary::convertFritzingBoards(QStringList inputFiles, QStri
         QFileInfo fi(filename);
         QString base = fi.fileName();
 
-        qDebug() << "Converting " << base << "." << filename << ".";
+        results << "Converting " << base << "." << filename << ".";
 
         dataValues = readPartFile(base);
         QString dest = outputDir + "/" + fi.baseName() + ".board";
 
         if (dataValues.size())
         {
-            writeBoardFile(dest, dataValues);
+            results += writeBoardFile(dest, dataValues);
         }
 
     }
@@ -414,8 +414,9 @@ QStringList FritzingLibrary::convertFritzingBoards(QStringList inputFiles, QStri
     return(results);
 }
 
-int FritzingLibrary::writeBoardFile(QString dest, QMap <QString, QVariant> dataValues)
+QStringList FritzingLibrary::writeBoardFile(QString dest, QMap <QString, QVariant> dataValues)
 {
+    QStringList results;
     QFileInfo fi(dest);
     QString destDir = fi.dir().absolutePath();
 
@@ -457,14 +458,14 @@ int FritzingLibrary::writeBoardFile(QString dest, QMap <QString, QVariant> dataV
     QString imagefilename = dataValues["fullimagepath"].toString();
     QFileInfo imagefileinfo(imagefilename);
     boardfile.setValue("image/file",imagefileinfo.fileName());
-    qDebug() << "Board File written to " << dest.toLocal8Bit();
+    results << "Board File written to " << dest.toLocal8Bit();
 
-    qDebug() << "fullimagepath: " << imagefilename;
+    results << "fullimagepath: " << imagefilename;
 
     // Copy the .svg to into the library directory
     if (!QFile::exists(imagefilename))
     {
-        qDebug() << "Source image " << imagefilename.toLocal8Bit() << " doesnt exist";
+        results << "Source image " << imagefilename.toLocal8Bit() << " doesnt exist";
     }
     else
     {
@@ -473,8 +474,11 @@ int FritzingLibrary::writeBoardFile(QString dest, QMap <QString, QVariant> dataV
         if (finalimagename.endsWith("/parts"))
         {
             finalimagename = finalimagename.left(destDir.length() - 6) + "/images/";
-            finalimagename += imagefileinfo.fileName();
         }
+        finalimagename += "/";
+        finalimagename += imagefileinfo.fileName();
+
+        qDebug() << "Trying to write" << finalimagename;
 
         if (QFile::exists(finalimagename))
         {
@@ -482,12 +486,12 @@ int FritzingLibrary::writeBoardFile(QString dest, QMap <QString, QVariant> dataV
         }
 
         if (QFile::copy(imagefilename, finalimagename))
-            qDebug() << "Image written to " << finalimagename;
+            results << "Image written to " << finalimagename;
         else
-            qDebug() << "Image not written to " << finalimagename;
+            results << "Image not written to " << finalimagename;
 
     }
 
-    return(0);
+    return(results);
 }
 

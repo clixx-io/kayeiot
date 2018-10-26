@@ -19,7 +19,7 @@ public:
 
     QMap <QString, QVariant> readPartFile(const QString partsfile);
     QMap <QString, QVariant> readImageFile(const QString imagefile);
-    int writeBoardFile(QString dest, QMap <QString, QVariant> dataValues);
+    QStringList writeBoardFile(QString dest, QMap <QString, QVariant> dataValues);
 
 signals:
 
