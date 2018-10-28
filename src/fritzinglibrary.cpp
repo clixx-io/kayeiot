@@ -264,8 +264,18 @@ QMap <QString, QVariant> FritzingLibrary::readPartFile(const QString partsfile)
 QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
 {
     QMap <QString, QVariant> results;
-    QString fullimagepath;
+    QString fullimagepath, baseimagename;
+    QFileInfo fileinfo(imagefile);
+    baseimagename = fileinfo.completeBaseName();
 
+    // We recursively search for the file
+    QDirIterator it(m_dir, QStringList() << baseimagename, QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext())
+    {
+        qDebug() << "Found image at:" << it.next();
+    }
+
+    // We guess the location of the file
     if (imagefile.startsWith("breadboard/") || imagefile.startsWith("icon/") || imagefile.startsWith("pcb/"))
         fullimagepath = m_dir + "/svg/core/" + imagefile;
     else
@@ -308,6 +318,11 @@ QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
                         units = "In";
                         wstr = wstr.left(wstr.length()-2);
                     }
+                    else if (wstr.toLower().endsWith("cm"))
+                    {
+                        units = "cm";
+                        wstr = wstr.left(wstr.length()-2);
+                    }
                     else if (wstr.toLower().endsWith("mm"))
                     {
                         units = "mm";
@@ -321,12 +336,20 @@ QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
 
                     width = wstr.toDouble();
                 }
+                else
+                    qDebug() << "No width element found in <svg>";
+
                 if (Rxml.attributes().hasAttribute("height")){
 
                     QString wstr = Rxml.attributes().value("height").toString();
                     if (wstr.toLower().endsWith("in"))
                     {
                         units = "In";
+                        wstr = wstr.left(wstr.length()-2);
+                    }
+                    else if (wstr.toLower().endsWith("cm"))
+                    {
+                        units = "cm";
                         wstr = wstr.left(wstr.length()-2);
                     }
                     else if (wstr.toLower().endsWith("mm"))
@@ -341,9 +364,12 @@ QMap <QString, QVariant> FritzingLibrary::readImageFile(const QString imagefile)
                     }
 
                     height = wstr.toDouble();
+                    qDebug() << "Height text=" << wstr;
                 }
+                else
+                    qDebug() << "No height element found in <svg>";
 
-                qDebug() << "Width:" << width << " Height " << height << " " << units;
+                qDebug() << "readImageFile() Width:" << width << " Height " << height << " " << units;
 
                 if (width != 0)
                     results[QObject::tr("board-width")] = width;

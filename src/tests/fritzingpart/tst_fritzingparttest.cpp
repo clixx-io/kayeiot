@@ -25,6 +25,7 @@ private Q_SLOTS:
     void testCaseWriteBoardPins();
     void testCaseReadBoardSizeIn();
     void testCaseConvertfpz1();
+    void testCaseWriteWeMosBoard();
 
 private:
     QString datadir;
@@ -374,6 +375,30 @@ void FritzingpartTest::testCaseWriteBoardPins()
     QVERIFY(p["board-units"] == "In");
 
     fzpl->writeBoardFile("Teensy 3.0.board",p);
+
+    delete fzpl;
+}
+
+void FritzingpartTest::testCaseWriteWeMosBoard()
+{
+
+    FritzingLibrary *fzpl = new FritzingLibrary(datadir);
+
+    QVERIFY(fzpl != 0);
+
+    QMap <QString, QVariant> p = fzpl->readPartFile("WeMos-D1-mini-WS2812B-RGB-Shield-no-headers.fzp");
+
+    qDebug() << "image" << p["image"].toString();
+    qDebug() << "image-file" << p["image-file"].toString();
+    qDebug() << "board-width" << p["board-width"].toFloat();
+    qDebug() << "board-height" << p["board-height"].toFloat();
+
+    QVERIFY(p.size() != 0);
+    QVERIFY(p["board-width"].toFloat() != 0.0);
+    QVERIFY(p["board-height"].toFloat() != 0.0);
+    QVERIFY(p["board-units"] == "cm");
+
+    fzpl->writeBoardFile("WeMos-D1-mini-WS2812B-RGB-Shield-no-headers.board",p);
 
     delete fzpl;
 }
