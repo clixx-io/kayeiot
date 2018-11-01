@@ -29,7 +29,7 @@ class connectableHardware : public QGraphicsItem
 
 public:
 
-    connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent = 0);
+    connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString units, QString graphicfile, QGraphicsItem *parent = 0);
     connectableHardware(QString ID, QString name, QString boardfile, QGraphicsItem *parent = 0);
     ~connectableHardware();
 

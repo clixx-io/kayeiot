@@ -89,8 +89,6 @@ bool NewHardwareItemDialog::loadBoardList()
 
         QString name = boardfile.value("overview/name","").toString();
 
-        // qDebug() << "Name" << boardfile.value("overview/name","").toString() << filename;
-
         QListWidgetItem *newItem = new QListWidgetItem;
         QString fullFilePath(filename);
         QVariant fullFilePathData(fullFilePath);
@@ -216,24 +214,26 @@ void NewHardwareItemDialog::on_BoardNameslistWidget_itemSelectionChanged()
         qDebug() << "Image file doesnt exist:" << imageFileName;
     }
 
-    ui->WidthSpinBox->setValue(boardfile.value("overview/width",ui->WidthSpinBox->value()).toDouble());
-    ui->HeightSpinBox->setValue(boardfile.value("overview/height",ui->HeightSpinBox->value()).toDouble());
     QString units = boardfile.value("overview/units","mm").toString().toLower();
+
+    if (units == "in")
+        ui->InchesRadioButton->setChecked(true);
+
+    if (units == "cm")
+    {
+        ui->WidthSpinBox->setValue(boardfile.value("overview/width",ui->WidthSpinBox->value()).toDouble() * 10);
+        ui->HeightSpinBox->setValue(boardfile.value("overview/height",ui->HeightSpinBox->value()).toDouble() * 10);
+        ui->mmRadioButton->setChecked(true);
+    } else
+    {
+        ui->WidthSpinBox->setValue(boardfile.value("overview/width",ui->WidthSpinBox->value()).toDouble());
+        ui->HeightSpinBox->setValue(boardfile.value("overview/height",ui->HeightSpinBox->value()).toDouble());
+    }
+
     if (units == "mm")
     {
-        // Cater for parts that actually should be in inches
-        if ((ui->WidthSpinBox->text().toDouble() < 1) &&
-            (ui->WidthSpinBox->text().toDouble() > 0.0) &&
-            (ui->HeightSpinBox->text().toDouble() < 1) &&
-            (ui->HeightSpinBox->text().toDouble() > 0.0))
-        {
-            // We will swap to inches
-            ui->InchesRadioButton->setChecked(true);
-        } else
-            ui->mmRadioButton->setChecked(true);
+        ui->mmRadioButton->setChecked(true);
     }
-    else if (units == "in")
-        ui->InchesRadioButton->setChecked(true);
 
 #if QT_VERSION >= 0x050000
     ui->pinscomboBox->setCurrentText(boardfile.value("gpio/pins",ui->pinscomboBox->currentText()).toString());

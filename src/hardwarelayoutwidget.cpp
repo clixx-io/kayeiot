@@ -27,9 +27,9 @@
 #include "mainwindow.h"
 #include "arduinosketch.h"
 
-connectableHardware::connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString graphicfile, QGraphicsItem *parent)
+connectableHardware::connectableHardware(QString ID, QString name, QString boardfile, int pins, int rows, qreal width, qreal height, QString units, QString graphicfile, QGraphicsItem *parent)
     : QGraphicsItem(parent), m_id(ID), m_name(name), m_boardfile(boardfile), m_type(htUndefined),
-      m_pins(pins), m_rows(rows), m_width(width), m_height(height), m_connectionpoint(0), m_image(0),
+      m_pins(pins), m_rows(rows), m_width(width), m_height(height), m_connectionpoint(0), m_image(0), m_units(units),
       m_progress(0), m_displaymode(dmImage)
 {
     if (graphicfile.length())
@@ -76,13 +76,13 @@ connectableHardware::connectableHardware(QString ID, QString name, QString board
 
     QString fullimagename =  imagedir + "/" + boardimagename;
 
-    // qDebug() << "full directory for" << boardfilename << " is " << imagedir;
-    // qDebug() << "full image location for" << boardfilename << " is " << fullimagename;
+    qDebug() << "full image location for" << boardfilename << " is " << fullimagename;
 
     if (boardimagename.length())
     {
         m_image = new QPixmap(fullimagename);
         m_imagefilename = fullimagename;
+
     }
     else
     {
@@ -93,21 +93,18 @@ connectableHardware::connectableHardware(QString ID, QString name, QString board
         height = boardfile.value("overview/height",50).toDouble();
         units = boardfile.value("overview/units","mm").toString();
 
-        if (width < 1)
-            width *= 25.4;
-        if (height < 1)
-            height *= 25.4;
+        // Anything smaller than 1mm looks a bit dodgy.
+        if (units.length()==0)
+        {
+            if (width < 1)
+                width *= 25.4;
+            if (height < 1)
+                height *= 25.4;
+        }
 
         m_width = width;
         m_height = height;
-
-        /*
-        if (units.toLower() == "in")
-        {
-            width *= 2.54;
-            height *= 2.54;
-        }
-        */
+        m_units = units;
 
         // Make up a blank image
         m_image = new QPixmap(width,height);
@@ -2310,7 +2307,7 @@ connectableHardware * HardwareLayoutWidget::addToScene(QString componentID, QStr
     convertSize(units, w, h);
     qDebug() << "Size after conversion " << w << ", "  << h;
 
-    connectableHardware *item = new connectableHardware(componentID,componentName,componentBoardFile,pins, rows, w, h, componentImageName);
+    connectableHardware *item = new connectableHardware(componentID,componentName,componentBoardFile,pins, rows, w, h, units, componentImageName);
 
     if (item)
     {
@@ -2694,6 +2691,11 @@ void HardwareLayoutWidget::convertSize(const QString units, double &w, double &h
                 w = w * 25.4;
                 h = h * 25.4;
             }
+            else if (units == "cm")
+            {
+                w = w * 10.0;
+                h = h * 10.0;
+            }
         }
         else if (m_unitSystem == "in")
         {
@@ -2701,6 +2703,11 @@ void HardwareLayoutWidget::convertSize(const QString units, double &w, double &h
             {
                 w = w / 25.4;
                 h = h / 25.4;
+            }
+            else if (units == "cm")
+            {
+                w = w / 2.54;
+                h = h / 2.54;
             }
         }
     }
