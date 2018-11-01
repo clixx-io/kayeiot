@@ -1,6 +1,9 @@
 # KayeIoT (pronounced Coyote) 
 
-KayeIoT is a CAD tool for Component and Cable-Level IoT and Electronics.
+## Screenshots
+![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-06-07-113759.png)
+
+## KayeIoT is a CAD tool for Component and Cable-Level IoT and Electronics.
 
 * It's like a Cable-Level version of Fritzing that can Autowires connections between parts.
 
@@ -40,21 +43,10 @@ If you prefer the command line, you can also build it like this:
     qmake kayeiot.pro
     make
 
-## How it works
-
-Use KayeIoT to add Boards to Designs
-
-
-## Screenshots
-![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-06-07-113759.png)
-
-## Project
-
-The KayeIoT project lives at <https://github.com/clixx-io/kayeiot/>.  
-
-To report a bug: <https://github.com/clixx-io/kayiot/issues>
 
 ## Contributing
+
+To report a bug: <https://github.com/clixx-io/kayiot/issues>
 
 We welcome pull requests from the community. Please take a look at the [TODO](https://github.com/trentm/python-markdown2/blob/master/TODO.txt) for opportunities to help this project. For those wishing to submit a pull request to `python-markdown2` please ensure it fulfills the following requirements:
 
