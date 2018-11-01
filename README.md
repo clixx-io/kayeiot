@@ -1,12 +1,20 @@
 # KayeIoT (pronounced Coyote) 
 
-KayeIoT is a Graphical tool for Component and Cable-Level IoT and Electronics.
+KayeIoT is a CAD tool for Component and Cable-Level IoT and Electronics.
 
-It's best features are:
+* It's like a Cable-Level version of Fritzing that can Autowires connections between parts.
 
-> It can Automatatically generate Cables and work out connection wiring.
-> Generates Diagrams that are very easy-to-read,
-> Preserve wiring records easily
+* It uses Fritzing Format Board files so there are thousands of parts that will work instantly.
+
+* Can produce a System diagram of an IoT Project by reading the Arduino Code.
+
+* Has updateable Parts Libraries.
+
+* Will produce a Printable Diagram of a Project within a minute.
+
+* Produces an animation of a project working.
+
+* Platform independent Qt and runs on Windows, Mac and Linux.
 
 Kayeiot is fast and written in C++. It has been written as an Open-Source
 tool to make designing and documenting IoT systems easier.
