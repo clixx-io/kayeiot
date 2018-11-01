@@ -2718,11 +2718,34 @@ void HardwareLayoutWidget::convertSize(const QString units, double &w, double &h
 void HardwareLayoutWidget::printPreview()
 {
     QPrinter printer;
-    if (QPrintPreviewDialog(&printer).exec() == QDialog::Accepted) {
-        QPainter painter(&printer);
-        painter.setRenderHint(QPainter::Antialiasing);
-        scene->render(&painter);
-    }
+    printer.setPaperSize(QPrinter::A4);
+    printer.setOrientation(QPrinter::Portrait);
+    printer.setFullPage(true);
+    printer.newPage();
+
+    QPrintPreviewDialog *printPreview = new QPrintPreviewDialog(&printer);
+    connect(printPreview, SIGNAL(paintRequested(QPrinter*)), this, SLOT(printPreView(QPrinter*)));
+
+    printPreview->setWindowTitle("Preview Dialog");
+    Qt::WindowFlags flags(Qt::WindowTitleHint);
+    printPreview->setWindowFlags(flags);
+    printPreview->exec();
+}
+
+void HardwareLayoutWidget:: printPreView( QPrinter * printer)
+{
+
+    QPainter painter(printer);
+    painter.begin(printer);
+    painter.setRenderHints(QPainter::Antialiasing |
+                           QPainter::TextAntialiasing |
+                           QPainter::SmoothPixmapTransform, true);
+
+    painter.drawText(100, 100, "Kayeiot Diagram! 123");
+    scene->render(&painter);
+
+    painter.end();
+
 }
 
 void HardwareLayoutWidget::deleteItem()

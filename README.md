@@ -1,12 +1,24 @@
 # KayeIoT (pronounced Coyote) 
 
-KayeIoT is a Graphical tool for Component and Cable-Level IoT and Electronics.
+![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-06-07-113759.png)
 
-It's best features are:
+## KayeIoT is a CAD tool for Component and Cable-Level IoT and Electronics.
 
-> It can Automatatically generate Cables and work out connection wiring.
-> Generates Diagrams that are very easy-to-read,
-> Preserve wiring records easily
+* It's like a Cable-Level version of Fritzing that can Autowires connections between parts.
+
+* It uses Fritzing Format Board files so there are thousands of parts that will work instantly.
+
+* Can produce a System diagram of an IoT Project by reading the Arduino Code.
+
+* Has updateable Parts Libraries.
+
+* Will produce a Printable Diagram of a Project within a minute.
+
+* Produces an animation of a project working.
+
+* Platform independent Qt and runs on Windows, Mac and Linux.
+
+* Registered in the Hackaday 2018 Challenge: https://hackaday.io/project/159288-kayeiot-cad-for-hacking-and-iot
 
 Kayeiot is fast and written in C++. It has been written as an Open-Source
 tool to make designing and documenting IoT systems easier.
@@ -32,21 +44,10 @@ If you prefer the command line, you can also build it like this:
     qmake kayeiot.pro
     make
 
-## How it works
-
-Use KayeIoT to add Boards to Designs
-
-
-## Screenshots
-![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-06-07-113759.png)
-
-## Project
-
-The KayeIoT project lives at <https://github.com/clixx-io/kayeiot/>.  
-
-To report a bug: <https://github.com/clixx-io/kayiot/issues>
 
 ## Contributing
+
+To report a bug: <https://github.com/clixx-io/kayiot/issues>
 
 We welcome pull requests from the community. Please take a look at the [TODO](https://github.com/trentm/python-markdown2/blob/master/TODO.txt) for opportunities to help this project. For those wishing to submit a pull request to `python-markdown2` please ensure it fulfills the following requirements:
 

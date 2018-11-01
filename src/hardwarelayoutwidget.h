@@ -13,6 +13,7 @@
 #include <QListWidgetItem>
 #include <QTimer>
 #include <QPointF>
+#include <QPrinter>
 
 QT_FORWARD_DECLARE_CLASS(connectableCable)
 
@@ -400,6 +401,7 @@ private slots:
     void panup();
     void pandown();
 
+    void printPreView( QPrinter * printer);
     void on_toolButton_AddHardware_clicked();
     void on_toolButton_AddCable_clicked();
     void on_toolButton_AddGraphic_clicked();
