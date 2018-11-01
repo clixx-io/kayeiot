@@ -1,6 +1,5 @@
 # KayeIoT (pronounced Coyote) 
 
-## Screenshots
 ![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-06-07-113759.png)
 
 ## KayeIoT is a CAD tool for Component and Cable-Level IoT and Electronics.
@@ -18,6 +17,8 @@
 * Produces an animation of a project working.
 
 * Platform independent Qt and runs on Windows, Mac and Linux.
+
+* Registered in the Hackaday 2018 Challenge: https://hackaday.io/project/159288-kayeiot-cad-for-hacking-and-iot
 
 Kayeiot is fast and written in C++. It has been written as an Open-Source
 tool to make designing and documenting IoT systems easier.
