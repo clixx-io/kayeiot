@@ -199,7 +199,7 @@ public slots:
 private:
     void setupToolBar();
     void setupMenuBar();
-    void setupDockWidgets(const CustomSizeHintMap &customSizeHints);
+    void setupDockWidgets();
     void reloadRecentProjects();
 
     void getfritzingVendorPartsLibrary(const QString &partsdir, const QString &partsurl);

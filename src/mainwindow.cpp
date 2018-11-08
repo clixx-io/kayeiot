@@ -144,9 +144,9 @@ MainWindow::MainWindow(const CustomSizeHintMap &customSizeHints,
 
     setupToolBar();
     setupMenuBar();
-    setupDockWidgets(customSizeHints);
+    setupDockWidgets();
 
-    statusBar()->showMessage(tr("Status Bar"));
+    statusBar()->showMessage(tr("Ready"));
 }
 
 void MainWindow::actionTriggered(QAction *action)
@@ -602,56 +602,17 @@ static QAction *addCornerAction(const QString &text, QMainWindow *mw, QMenu *men
 #endif
 }
 
-void MainWindow::setupDockWidgets(const CustomSizeHintMap &customSizeHints)
+void MainWindow::setupDockWidgets()
 {
-
-    architectureLogic();
-
-    return;
-
-    qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
-
-    QMenu *cornerMenu = dockWidgetMenu->addMenu(tr("Top left corner"));
-    QActionGroup *group = new QActionGroup(this);
-    group->setExclusive(true);
-    QAction *cornerAction = addCornerAction(tr("Top dock area"), this, cornerMenu, group, Qt::TopLeftCorner, Qt::TopDockWidgetArea);
-    cornerAction->setChecked(true);
-    addCornerAction(tr("Left dock area"), this, cornerMenu, group, Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
-
-    cornerMenu = dockWidgetMenu->addMenu(tr("Top right corner"));
-    group = new QActionGroup(this);
-    group->setExclusive(true);
-    cornerAction = addCornerAction(tr("Top dock area"), this, cornerMenu, group, Qt::TopRightCorner, Qt::TopDockWidgetArea);
-    cornerAction->setChecked(true);
-    addCornerAction(tr("Right dock area"), this, cornerMenu, group, Qt::TopRightCorner, Qt::RightDockWidgetArea);
-
-    cornerMenu = dockWidgetMenu->addMenu(tr("Bottom left corner"));
-    group = new QActionGroup(this);
-    group->setExclusive(true);
-    cornerAction = addCornerAction(tr("Bottom dock area"), this, cornerMenu, group, Qt::BottomLeftCorner, Qt::BottomDockWidgetArea);
-    cornerAction->setChecked(true);
-    addCornerAction(tr("Left dock area"), this, cornerMenu, group, Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
-
-    cornerMenu = dockWidgetMenu->addMenu(tr("Bottom right corner"));
-    group = new QActionGroup(this);
-    group->setExclusive(true);
-    cornerAction = addCornerAction(tr("Bottom dock area"), this, cornerMenu, group, Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
-    cornerAction->setChecked(true);
-    addCornerAction(tr("Right dock area"), this, cornerMenu, group, Qt::BottomRightCorner, Qt::RightDockWidgetArea);
-
-    dockWidgetMenu->addSeparator();
-
-#if QT_VERSION >= 0x050000
-    destroyDockWidgetMenu = new QMenu(tr("Destroy dock widget"), this);
-    destroyDockWidgetMenu->setEnabled(false);
-    connect(destroyDockWidgetMenu, &QMenu::triggered, this, &MainWindow::destroyDockWidget);
-
-    dockWidgetMenu->addSeparator();
-    dockWidgetMenu->addAction(tr("Add dock widget..."), this, &MainWindow::createDockWidget);
-    dockWidgetMenu->addMenu(destroyDockWidgetMenu);
-#endif
-
-}
+    if (settings->value("MainWindow/Mode").toString() == "Code")
+    {
+        architectureLogic();
+    }
+    else
+    {
+        architectureSystem();
+    }
+ }
 
 void MainWindow::switchLayoutDirection()
 {
@@ -1063,6 +1024,8 @@ void MainWindow::architectureSystem()
 
     setCentralWidget(systemDesign);
 
+    settings->setValue("MainWindow/Mode","Hardware");
+
 }
 
 void MainWindow::architectureConnectivity()
@@ -1162,6 +1125,8 @@ void MainWindow::architectureLogic()
     center = new CodeEditor(this);
     center->setMinimumSize(400, 205);
     setCentralWidget(center);
+
+    settings->setValue("MainWindow/Mode","Code");
 
 }
 
