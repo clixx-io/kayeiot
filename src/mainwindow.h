@@ -228,6 +228,8 @@ private:
     QAction *checkAction;
     QAction *runAction;
 
+    QString m_editorfilename;
+
 };
 
 QMainWindow* getMainWindow();

@@ -804,15 +804,6 @@ void MainWindow::setProjectDir(QString dirname)
 
 }
 
-void MainWindow::LoadCodeSource(const QString filename)
-{
-    QFile file(filename);
-
-    file.open(QFile::ReadOnly | QFile::Text);
-    center->setPlainText(file.readAll());
-
-}
-
 void MainWindow::setBuildButtonToggles(const bool alloption, const bool cleanoption, const bool transferoption, const bool checkoption,const bool runoption)
 {
     buildAction->setEnabled(alloption);
@@ -1216,13 +1207,34 @@ void MainWindow::showWelcome()
     return;
 }
 
+void MainWindow::LoadCodeSource(const QString filename)
+{
+    QFile file(filename);
+
+    file.open(QFile::ReadOnly | QFile::Text);
+    center->setPlainText(file.readAll());
+
+    m_editorfilename = filename;
+
+}
+
 void MainWindow::saveFile()
 {
     if (systemDesign)
     {
         systemDesign->SaveComponents(currentProject->getProjectDir() + "/hardware.layout");
+        showStatusMessage(tr("Saved."));
+    }
+    else
+    {
+        QFile mFile(m_editorfilename);
 
-        showStatusMessage(tr("Saved"));
+        if (mFile.open(QIODevice::WriteOnly)) {
+            QTextStream out(&mFile);
+            out << center->toPlainText();
+
+            showStatusMessage(tr("Saved."));
+        }
     }
 }
 
