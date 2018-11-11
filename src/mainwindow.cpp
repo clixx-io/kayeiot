@@ -967,7 +967,7 @@ void MainWindow::buildProject()
 
 void MainWindow::deployProject()
 {
-    projectWindow->buildProject("deploy");
+    projectWindow->deployProject();
 }
 
 void MainWindow::cleanProject()

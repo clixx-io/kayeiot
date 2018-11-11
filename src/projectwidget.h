@@ -42,6 +42,11 @@ private:
 
     QProcess *builder;
 
+    QString m_buildsystem,
+            m_buildtoolspath,
+            m_targetplatform,
+            m_serialport;
+
 };
 
 #endif // PROJECTWIDGET_H

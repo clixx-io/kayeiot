@@ -20,7 +20,16 @@ ProjectWidget::ProjectWidget(QWidget *parent) :
     mainwindow(0),
     builder(0)
 {
+    // Temporary hardcoding of variables
+    m_buildsystem = "arduino-cli";
+    m_buildtoolspath = QDir::homePath() + "/go/bin";
+    m_targetplatform = "arduino:avr:mega";
+    m_serialport = "COM4";
+    QStringList buildsystems;
+    buildsystems << "gnu" << "cmake" << "arduino-cli" << "qmake";
+
     ui->setupUi(this);
+
 }
 
 ProjectWidget::~ProjectWidget()
@@ -49,62 +58,74 @@ bool ProjectWidget::loadProject(const QString dir)
             ui->projectFileList->addTopLevelItem(item);
         }
 
-        // -- From the list of files, see if we have something that we
-        //    can recognise like a Makefile
-        if (files.contains("Makefile"))
+        if (m_buildsystem == "gnu")
         {
-            QStringList makefile;
-            QString filename(mainwindow->currentProject->getProjectDir() + "/Makefile");
-            QFile file(filename);
 
-            if (file.open(QIODevice::ReadOnly))
+            // -- From the list of files, see if we have something that we
+            //    can recognise like a Makefile
+            if (files.contains("Makefile"))
             {
-                while(!file.atEnd())
-                    makefile.append(file.readLine());
+                QStringList makefile;
+                QString filename(mainwindow->currentProject->getProjectDir() + "/Makefile");
+                QFile file(filename);
 
-                file.close();
+                if (file.open(QIODevice::ReadOnly))
+                {
+                    while(!file.atEnd())
+                        makefile.append(file.readLine());
+
+                    file.close();
+                }
+                else
+                {
+                    mainwindow->showStatusMessage(tr("Error opening %1").arg(filename));
+                    return(false);
+                }
+
+                mainwindow->clearStatusMessages();
+
+                // - Check the Makefile for all, clean, check
+                foreach (QString line, makefile)
+                {
+                    if (line.startsWith("all:"))
+                    {
+                        allOption = true;
+                    }
+                    else if (line.startsWith("clean:"))
+                    {
+                        cleanOption = true;
+                    }
+                    else if (line.startsWith("deploy") || (line.startsWith("transfer")))
+                    {
+                        transferOption = true;
+                    }
+                    else if (line.startsWith("check:"))
+                    {
+                        checkOption = true;
+                    }
+                }
+
+                QString makeoptions;
+                if (allOption)
+                    makeoptions += "all,";
+                if (cleanOption)
+                    makeoptions += "clean,";
+                if (checkOption)
+                    makeoptions += "check";
+                if (makeoptions.endsWith(','))
+                    makeoptions = makeoptions.left(makeoptions.length()-1);
+
+                mainwindow->showStatusMessage(tr("GNU style makefile found with %1 options.").arg(makeoptions));
+
             }
-            else
-            {
-                mainwindow->showStatusMessage(tr("Error opening %1").arg(filename));
-                return(false);
-            }
-
-            mainwindow->clearStatusMessages();
-
-            // - Check the Makefile for all, clean, check
-            foreach (QString line, makefile)
-            {
-                if (line.startsWith("all:"))
-                {
-                    allOption = true;
-                }
-                else if (line.startsWith("clean:"))
-                {
-                    cleanOption = true;
-                }
-                else if (line.startsWith("deploy") || (line.startsWith("transfer")))
-                {
-                    transferOption = true;
-                }
-                else if (line.startsWith("check:"))
-                {
-                    checkOption = true;
-                }
-            }
-
-            QString makeoptions;
-            if (allOption)
-                makeoptions += "all,";
-            if (cleanOption)
-                makeoptions += "clean,";
-            if (checkOption)
-                makeoptions += "check";
-            if (makeoptions.endsWith(','))
-                makeoptions = makeoptions.left(makeoptions.length()-1);
-
-            mainwindow->showStatusMessage(tr("GNU style makefile found with %1 options.").arg(makeoptions));
-
+        }
+        else if (m_buildsystem == "arduino-cli")
+        {
+            // Default options for Arduino-cli
+            allOption = true;
+            cleanOption = true;
+            transferOption = true;
+            checkOption = false;
         }
 
         if (files.contains(hardwareLayoutFilename))
@@ -132,15 +153,30 @@ bool ProjectWidget::loadProject(const QString dir)
 bool ProjectWidget::buildProject(const QString buildspecifier)
 {
 
+    QString make;
+    QStringList makeparams;
+
+    if (m_buildsystem == "gnu")
+    {
+
 #ifdef Q_OS_WIN32
-    // TODO : fix this
-    QString make("mingw32-make.exe");
+        make = "mingw32-make.exe";
 #else
-    QString make("make");
+        make = "make";
 #endif
 
-    QStringList makeparams;
-    makeparams << "-f" << "Makefile" << buildspecifier;
+        makeparams << "-f" << "Makefile" << buildspecifier;
+    } else if (m_buildsystem == "arduino-cli")
+    {
+#ifdef Q_OS_WIN32
+        make = m_buildtoolspath + "/arduino-cli.exe";
+#else
+        make = m_buildtoolspath + "/arduino-cli";
+#endif
+        makeparams << "compile" << "--fqbn" << m_targetplatform;
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
 
     if (!builder)
         builder = new QProcess(this);
@@ -160,14 +196,57 @@ bool ProjectWidget::buildProject(const QString buildspecifier)
         mainwindow->showStatusMessage(tr("Build succeeded - %1").arg(processOutput));
     }
 
+    QApplication::restoreOverrideCursor();
+
 }
 
 void ProjectWidget::deployProject()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    QString make;
+    QStringList makeparams;
 
-    return;
+    if (m_buildsystem == "gnu")
+    {
+
+#ifdef Q_OS_WIN32
+        make = "mingw32-make.exe";
+#else
+        make = "make";
+#endif
+
+        makeparams << "deploy";
+
+    } else if (m_buildsystem == "arduino-cli")
+    {
+#ifdef Q_OS_WIN32
+        make = m_buildtoolspath + "/arduino-cli.exe";
+#else
+        make = m_buildtoolspath + "/arduino-cli";
+#endif
+        makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform;
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    if (!builder)
+        builder = new QProcess(this);
+
+    builder->setProcessChannelMode(QProcess::MergedChannels);
+    builder->setWorkingDirectory(mainwindow->currentProject->getProjectDir());
+    builder->start(make,makeparams);
+
+    if (!builder->waitForFinished())
+    {
+        mainwindow->showStatusMessage(tr("Upload failed - %1").arg(builder->errorString()));
+
+    } else
+    {
+        QString processOutput(builder->readAll());
+
+        mainwindow->showStatusMessage(tr("Upload succeeded - %1").arg(processOutput));
+    }
+
+    QApplication::restoreOverrideCursor();
 }
 
 void ProjectWidget::cleanProject()

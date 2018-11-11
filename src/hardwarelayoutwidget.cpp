@@ -2726,9 +2726,6 @@ void HardwareLayoutWidget::printPreview()
     QPrintPreviewDialog *printPreview = new QPrintPreviewDialog(&printer);
     connect(printPreview, SIGNAL(paintRequested(QPrinter*)), this, SLOT(printPreView(QPrinter*)));
 
-    printPreview->setWindowTitle("Preview Dialog");
-    Qt::WindowFlags flags(Qt::WindowTitleHint);
-    printPreview->setWindowFlags(flags);
     printPreview->exec();
 }
 
