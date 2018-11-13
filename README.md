@@ -1,6 +1,6 @@
 # KayeIoT (pronounced Coyote) 
 
-![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-06-07-113759.png)
+![Screenshot](https://github.com/clixx-io/kayeiot/raw/master/doc/images/2018-11-13-windows.PNG)
 
 ## KayeIoT is a CAD tool for Component and Cable-Level IoT and Electronics.
 
