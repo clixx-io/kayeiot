@@ -10,6 +10,8 @@
 
 * Can produce a System diagram of an IoT Project by reading the Arduino Code.
 
+* Edits and Compiles Code for Arduino and many other Boards using GNU-Make and Arduino-CLI
+
 * Has updateable Parts Libraries.
 
 * Will produce a Printable Diagram of a Project within a minute.
