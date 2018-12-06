@@ -197,17 +197,22 @@ void ClixxIoTProject::setProjectDir(QString dirname)
 
     if (QDir().setCurrent(dirname))
     {
-        qDebug() << "Working directory changed to " << dirname;
+        projectpath = QDir().absolutePath();
+        name = QDir(projectpath).dirName();
+
+        qDebug() << "Project Name: " << name << "and Working directory changed to " << projectpath;
     }
     else
         qDebug() << "Unable to change working directory to " << dirname;
 
-    projectpath = dirname;
 }
 
 QString ClixxIoTProject::getprojectconfigpath()
 {
-    return(projectpath + "/" + name + ".ini");
+    if (name.length())
+        return(projectpath + "/" + name + ".ini");
+    else
+        return("");
 }
 
 int ClixxIoTProject::Open(QString projectname)

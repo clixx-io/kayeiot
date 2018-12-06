@@ -59,10 +59,23 @@ bool ProjectWidget::loadProject(const QString dir)
         ui->projectFileList->clear();
         for(int i=0; i< files.size(); i++)
         {
+            // Check for extensions to skip
+            if (files[i].endsWith(".hex") ||
+                files[i].endsWith(".elf"))
+                continue;
+
+            // Add the file to the widget
             QTreeWidgetItem * item = new QTreeWidgetItem();
             item->setText(0,files[i]);
             ui->projectFileList->addTopLevelItem(item);
         }
+
+        // Open the project configuration file if it exists
+        QString projectfilename = mainwindow->currentProject->getprojectconfigpath();
+        QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+        // Open the configuration file
+        m_buildsystem = boardfile.value("Project/Type","arduino-cli").toString();
 
         if (m_buildsystem == "gnu")
         {

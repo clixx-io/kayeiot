@@ -196,6 +196,10 @@ public slots:
     void showLibrary();
     void aboutDialog();
 
+    void ProjectTypeToggled(bool checked);
+
+    void PortToggled(bool checked);
+
 private:
     void setupToolBar();
     void setupMenuBar();
@@ -227,6 +231,10 @@ private:
     QAction *cleanAction;
     QAction *checkAction;
     QAction *runAction;
+
+    QAction *m_ArduinoCLI,
+            *m_NodeMcu,
+            *m_LinuxCplus;
 
     QString m_editorfilename;
 

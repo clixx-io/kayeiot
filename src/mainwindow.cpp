@@ -229,6 +229,17 @@ void MainWindow::setupMenuBar()
     checkAction = buildWindowMenu->addAction(tr("Unit Test"), this, &MainWindow::checkProject);
     runAction = buildWindowMenu->addAction(tr("Run"), this, &MainWindow::runProject);
 
+    // Scan all the Serial Ports and add them to the menu
+    QMenu* submenuBoard = buildWindowMenu->addMenu(tr("Programming Port"));
+
+    foreach (const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts())
+    {
+        QAction* b1 = submenuBoard->addAction(serialPortInfo.portName());
+        b1->setCheckable(true);
+
+        connect(b1, SIGNAL(toggled(bool)),this, SLOT(PortToggled(bool)));
+    }
+
     setBuildButtonToggles();
 
     QMenu *toolBarMenu = menuBar()->addMenu(tr("&Design"));
@@ -240,21 +251,20 @@ void MainWindow::setupMenuBar()
     toolBarMenu->addAction(tr("Color Theme"), this, &MainWindow::designThemeSelect);
 //  toolBarMenu->addAction(tr("Communication Buses"), this, &MainWindow::architectureBuses);
 //  toolBarMenu->addAction(tr("Software Interrupts"), this, &MainWindow::architectureInterrupts);
+
     QMenu* submenuA = toolBarMenu->addMenu(tr("Deployment Architecture"));
-    QAction* actionNodeMcu = submenuA->addAction( "NodeMCU" );
-    actionNodeMcu->setCheckable(true);
 
-    QAction* actionWiring = submenuA->addAction( "Wiring/Arduino" );
-    actionWiring->setCheckable(true);
+    m_ArduinoCLI = submenuA->addAction("Arduino CLI");
+    m_ArduinoCLI->setCheckable(true);
+    connect(m_ArduinoCLI, SIGNAL(toggled(bool)),this, SLOT(ProjectTypeToggled(bool)));
 
-    QAction* actionLinuxCplus = submenuA->addAction( "Linux C++" );
-    actionLinuxCplus->setCheckable(true);
+    m_NodeMcu = submenuA->addAction("NodeMCU");
+    m_NodeMcu->setCheckable(true);
+    connect(m_NodeMcu, SIGNAL(toggled(bool)),this, SLOT(ProjectTypeToggled(bool)));
 
-    QAction* actionClixxIot = submenuA->addAction( "Clixx.io IoT C++" );
-    actionClixxIot->setCheckable(true);
-    actionClixxIot->setChecked(true);
-
-//  toolBarMenu->addAction(tr("Operating System"), this, &MainWindow::architectureOS);
+    m_LinuxCplus = submenuA->addAction("GNU C++");
+    m_LinuxCplus->setCheckable(true);
+    connect(m_LinuxCplus, SIGNAL(toggled(bool)),this, SLOT(ProjectTypeToggled(bool)));
 
     AnalyseMenu = menuBar()->addMenu(tr("&Analyse"));
     AnalyseMenu->addAction(tr("Generate Visualisation"), this, &MainWindow::Visualise);
@@ -397,7 +407,7 @@ void MainWindow::setupMenuBar()
     QAction* actionNodeMcu = submenuA->addAction( "NodeMCU" );
     actionNodeMcu->setCheckable(true);
 
-    QAction* actionWiring = submenuA->addAction( "Wiring/Arduino" );
+    QAction* actionWiring = submenuA->addAction( "Arduino CLI" );
     actionWiring->setCheckable(true);
 
     QAction* actionLinuxCplus = submenuA->addAction( "Linux C++" );
@@ -770,6 +780,40 @@ void MainWindow::setProjectDir(QString dirname)
 
     }
 
+    // Open the project configuration file if it exists
+    QString projectfilename = currentProject->getprojectconfigpath();
+    qDebug() << "Project filename:" << projectfilename;
+    if (projectfilename.length())
+    {
+        QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+        QString projectfile = boardfile.value("project/type","arduino-cli").toString().toLower();
+
+        if (projectfile == "nodemcu")
+        {
+            m_ArduinoCLI->setChecked(false);
+            m_NodeMcu->setChecked(true);
+            m_LinuxCplus->setChecked(false);
+        }
+        else if (projectfile == "arduino-cli")
+        {
+            m_ArduinoCLI->setChecked(true);
+            m_NodeMcu->setChecked(false);
+            m_LinuxCplus->setChecked(false);
+        }
+        else if (projectfile == "gnu")
+        {
+            m_ArduinoCLI->setChecked(false);
+            m_NodeMcu->setChecked(false);
+            m_LinuxCplus->setChecked(true);
+        } else
+        {
+            m_ArduinoCLI->setChecked(false);
+            m_NodeMcu->setChecked(false);
+            m_LinuxCplus->setChecked(false);
+        }
+    }
+
     // Read the last five projects
     QStringList recentProjects;
     QString projectdir(dirname), lastproject;
@@ -814,6 +858,60 @@ void MainWindow::setBuildButtonToggles(const bool alloption, const bool cleanopt
 
     if (toolBar)
         toolBar->setBuildButtonToggles(alloption, cleanoption, transferoption, checkoption, runoption);
+}
+
+void MainWindow::ProjectTypeToggled(bool checked)
+{
+    QString projecttype;
+
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action)
+    {
+        action->setChecked(checked);
+        QString checkstate = checked ? "On" : "Off";
+        qDebug() << action->text() << " clicked " << checkstate;
+
+        if (checked)
+        {
+            if (action == m_ArduinoCLI)
+            {
+                projecttype = "arduino-cli";
+                m_NodeMcu->setChecked(false);
+                m_LinuxCplus->setChecked(false);
+            }
+            else if (action == m_NodeMcu) {
+                projecttype = "nodemcu";
+                m_ArduinoCLI->setChecked(false);
+                m_LinuxCplus->setChecked(false);
+            }
+            else if (action == m_LinuxCplus) {
+                projecttype = "gnu";
+                m_NodeMcu->setChecked(false);
+                m_ArduinoCLI->setChecked(false);
+            }
+
+            // Open the project configuration file if it exists
+            QString projectfilename = currentProject->getprojectconfigpath();
+            if (projectfilename.length())
+            {
+                QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+                boardfile.setValue("project/type",projecttype);
+                boardfile.sync();
+            }
+        }
+    }
+}
+
+void MainWindow::PortToggled(bool checked)
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action)
+    {
+         action->setChecked(checked);
+         QString checkstate = checked ? "On" : "Off";
+         qDebug() << action->text() << " clicked " << checkstate;
+    }
 }
 
 void MainWindow::newProject()
@@ -883,6 +981,36 @@ void MainWindow::loadProject()
     {
         qDebug() << "Loading Project " << dir;
         setProjectDir(dir);
+
+        // Open the project configuration file if it exists
+        QString projectfilename = currentProject->getprojectconfigpath();
+        QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+        // Open the configuration file
+        QString buildsystem = boardfile.value("project/type","arduino-cli").toString().toLower();
+        if (buildsystem == "arduino-cli")
+        {
+            m_ArduinoCLI->setChecked(true);
+            m_NodeMcu->setChecked(false);
+            m_LinuxCplus->setChecked(false);
+        }
+        else if (buildsystem == "gnu")
+        {
+            m_ArduinoCLI->setChecked(false);
+            m_NodeMcu->setChecked(false);
+            m_LinuxCplus->setChecked(true);
+        }
+        else if (buildsystem == "nodemcu")
+        {
+            m_ArduinoCLI->setChecked(false);
+            m_NodeMcu->setChecked(true);
+            m_LinuxCplus->setChecked(false);
+        } else
+        {
+            m_ArduinoCLI->setChecked(false);
+            m_NodeMcu->setChecked(false);
+            m_LinuxCplus->setChecked(false);
+        }
 
     }
 
