@@ -234,7 +234,13 @@ void MainWindow::setupMenuBar()
 
     foreach (const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts())
     {
+
+    #if defined(Q_OS_LINUX)
+        QAction* b1 = submenuBoard->addAction(tr("/dev/%1").arg(serialPortInfo.portName()));
+    #else
         QAction* b1 = submenuBoard->addAction(serialPortInfo.portName());
+    #endif
+
         b1->setCheckable(true);
 
         connect(b1, SIGNAL(toggled(bool)),this, SLOT(PortToggled(bool)));
@@ -911,6 +917,19 @@ void MainWindow::PortToggled(bool checked)
          action->setChecked(checked);
          QString checkstate = checked ? "On" : "Off";
          qDebug() << action->text() << " clicked " << checkstate;
+
+         if (checked)
+         {
+             // Open the project configuration file if it exists
+             QString projectfilename = currentProject->getprojectconfigpath();
+             if (projectfilename.length())
+             {
+                 QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+                 boardfile.setValue("upload/port",action->text());
+                 boardfile.sync();
+             }
+         }
     }
 }
 

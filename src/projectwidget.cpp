@@ -23,7 +23,7 @@ ProjectWidget::ProjectWidget(QWidget *parent) :
     // Temporary hardcoding of variables
     m_buildsystem = "arduino-cli";
     m_buildtoolspath = QDir::homePath() + "/go/bin";
-    m_targetplatform = "arduino:avr:mega";
+    m_targetplatform = "";
     // Serial ports should be read in via available serial port list
 #ifdef Q_OS_WIN32
     m_serialport = "COM4";
@@ -175,6 +175,15 @@ bool ProjectWidget::buildProject(const QString buildspecifier)
     QString make;
     QStringList makeparams;
 
+    // Open the project configuration file if it exists
+    QString projectfilename = mainwindow->currentProject->getprojectconfigpath();
+    if (projectfilename.length())
+    {
+        QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+        m_targetplatform = boardfile.value("board/type","arduino:avr:mega").toString();
+    }
+
     if (m_buildsystem == "gnu")
     {
 
@@ -224,25 +233,37 @@ void ProjectWidget::deployProject()
     QString make;
     QStringList makeparams;
 
+    // Open the project configuration file if it exists
+    QString projectfilename = mainwindow->currentProject->getprojectconfigpath();
+    if (projectfilename.length())
+    {
+        QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+        m_serialport = boardfile.value("upload/port").toString();
+        m_targetplatform = boardfile.value("board/type","arduino:avr:mega").toString();
+    }
+
     if (m_buildsystem == "gnu")
     {
 
-#ifdef Q_OS_WIN32
-        make = "mingw32-make.exe";
-#else
-        make = "make";
-#endif
+        #ifdef Q_OS_WIN32
+            make = "mingw32-make.exe";
+        #else
+            make = "make";
+        #endif
 
         makeparams << "deploy";
 
     } else if (m_buildsystem == "arduino-cli")
     {
-#ifdef Q_OS_WIN32
-        make = m_buildtoolspath + "/arduino-cli.exe";
-#else
-        make = m_buildtoolspath + "/arduino-cli";
-#endif
-        makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform;
+        #ifdef Q_OS_WIN32
+            make = m_buildtoolspath + "/arduino-cli.exe";
+        #else
+            make = m_buildtoolspath + "/arduino-cli";
+        #endif
+        makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform << mainwindow->currentProject->getProjectDir();
+
+        qDebug() << "Uploading using Arduino-cli" << makeparams;
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -270,7 +291,10 @@ void ProjectWidget::deployProject()
 
 void ProjectWidget::cleanProject()
 {
-    return;
+    if (m_buildsystem == "arduino-cli")
+    {
+
+    }
 }
 
 void ProjectWidget::checkProject()
