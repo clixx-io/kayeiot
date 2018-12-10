@@ -24,12 +24,6 @@ ProjectWidget::ProjectWidget(QWidget *parent) :
     m_buildsystem = "arduino-cli";
     m_buildtoolspath = QDir::homePath() + "/go/bin";
     m_targetplatform = "";
-    // Serial ports should be read in via available serial port list
-#ifdef Q_OS_WIN32
-    m_serialport = "COM4";
-#else
-    m_serialport = "/dev/ttyACM0";
-#endif
 
     QStringList buildsystems;
     buildsystems << "gnu" << "cmake" << "arduino-cli" << "qmake";
