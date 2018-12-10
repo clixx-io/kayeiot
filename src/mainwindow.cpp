@@ -188,19 +188,22 @@ void MainWindow::setupMenuBar()
     menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
     menu->addSeparator();
 
-    QMenu* Librarysubmenu = menu->addMenu(tr("Library"));
-    Librarysubmenu->addAction(tr("Show Part Library"), this, &MainWindow::showLibrary);
-    Librarysubmenu->addAction(tr("Update Part Library"), this, &MainWindow::libraryUpdate);
-    Librarysubmenu->addSeparator();
+    QMenu* hwLibrarysubmenu = menu->addMenu(tr("Hardware Library"));
+    hwLibrarysubmenu->addAction(tr("Show Part Library"), this, &MainWindow::showLibrary);
+    hwLibrarysubmenu->addAction(tr("Update Part Library"), this, &MainWindow::libraryUpdate);
+    hwLibrarysubmenu->addSeparator();
+
+    QMenu* swLibrarysubmenu = menu->addMenu(tr("Software Library"));
+    swLibrarysubmenu->addAction(tr("Add Software Library"), this, &MainWindow::addswLibrary);
 
     /*
     Librarysubmenu->addAction(tr("Vendor Part Libraries"), this, &MainWindow::libraryUpdate);
-    */
 
     Librarysubmenu->addAction(tr("Fritzing Vendor Part Library"), this, &MainWindow::fritzingVendorParts);
     Librarysubmenu->addAction(tr("Sparkfun Vendor Part Library"), this, &MainWindow::fritzingSparkfunVendorParts);
     Librarysubmenu->addAction(tr("Adafruit Vendor Part Library"), this, &MainWindow::fritzingAdafruitVendorParts);
     Librarysubmenu->addAction(tr("Seeed Studio Part Library"), this, &MainWindow::fritzingSeeedStudioVendorParts);
+    */
 
     menu->addSeparator();
 
@@ -2349,6 +2352,50 @@ void MainWindow::fritzingAdafruitVendorParts()
 void MainWindow::fritzingSeeedStudioVendorParts()
 {
     getfritzingVendorPartsLibrary("seeedstudio", "https://github.com/Seeed-Studio/fritzing_parts.git");
+}
+
+void MainWindow::addswLibrary()
+{
+    // This should be visible for Arduino-CLI
+    bool ok;
+    QString libraryname = QInputDialog::getText(this, tr("Enter Library Name"),
+                                         tr("Library Name :"), QLineEdit::Normal,
+                                         "", &ok);
+
+    if (!ok || libraryname.isEmpty())
+        return;
+
+    QString libcmd;
+    QStringList libparams;
+
+    libcmd = QDir::homePath() + "/go/bin/arduino-cli";
+    libparams << "lib" << "install" << libraryname;
+
+    showStatusDock(true);
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    QProcess *libraryinstaller = new QProcess(this);
+
+    libraryinstaller->setProcessChannelMode(QProcess::MergedChannels);
+    libraryinstaller->start(libcmd, libparams);
+
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    if (!libraryinstaller->waitForFinished())
+    {
+        showStatusMessage(tr("%1 failed - %2").arg(libparams[0]).arg(libraryinstaller->errorString()));
+    } else
+    {
+        QString processOutput(libraryinstaller->readAll());
+
+        showStatusMessage(tr("%1 succeeded - %2").arg(libparams[0]).arg(processOutput));
+    }
+
+    QApplication::restoreOverrideCursor();
+
+    delete libraryinstaller;
+
 }
 
 void MainWindow::aboutDialog()

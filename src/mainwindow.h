@@ -150,6 +150,8 @@ public slots:
     void fritzingAdafruitVendorParts();
     void fritzingSeeedStudioVendorParts();
 
+    void addswLibrary();
+
     void actionTriggered(QAction *action);
     void saveLayout();
     void switchLayoutDirection();
