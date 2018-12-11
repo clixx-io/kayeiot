@@ -151,6 +151,8 @@ public slots:
     void fritzingSeeedStudioVendorParts();
 
     void addswLibrary();
+    void addswCore();
+    void swCoreSelect();
 
     void actionTriggered(QAction *action);
     void saveLayout();

@@ -193,9 +193,6 @@ void MainWindow::setupMenuBar()
     hwLibrarysubmenu->addAction(tr("Update Part Library"), this, &MainWindow::libraryUpdate);
     hwLibrarysubmenu->addSeparator();
 
-    QMenu* swLibrarysubmenu = menu->addMenu(tr("Software Library"));
-    swLibrarysubmenu->addAction(tr("Add Software Library"), this, &MainWindow::addswLibrary);
-
     /*
     Librarysubmenu->addAction(tr("Vendor Part Libraries"), this, &MainWindow::libraryUpdate);
 
@@ -216,24 +213,16 @@ void MainWindow::setupMenuBar()
     EditMenu->addAction(tr("Cut"),this, &MainWindow::cutText);
     EditMenu->addAction(tr("Copy"), this, &MainWindow::copyText);
     EditMenu->addAction(tr("Paste"), this, &MainWindow::pasteText);
-    menu->addSeparator();
+    EditMenu->addSeparator();
     EditMenu->addAction(tr("Select All"), this, &MainWindow::selectAllText);
-    menu->addSeparator();
+    EditMenu->addSeparator();
     EditMenu->addAction(tr("Find/Replace"), this, &MainWindow::FindReplaceText);
-    menu->addSeparator();
+    EditMenu->addSeparator();
     EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
-    menu->addSeparator();
-    EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
-
-    buildWindowMenu = menuBar()->addMenu(tr("&Build"));
-    buildAction = buildWindowMenu->addAction(tr("Build.."),this, &MainWindow::buildProject);
-    deployAction = buildWindowMenu->addAction(tr("Deploy.."), this, &MainWindow::deployProject);
-    cleanAction = buildWindowMenu->addAction(tr("Clean"), this, &MainWindow::cleanProject);
-    checkAction = buildWindowMenu->addAction(tr("Unit Test"), this, &MainWindow::checkProject);
-    runAction = buildWindowMenu->addAction(tr("Run"), this, &MainWindow::runProject);
-
+    EditMenu->addSeparator();
+    QMenu* swLibrarysubmenu = EditMenu->addMenu(tr("Arduino-CLI Settings"));
     // Scan all the Serial Ports and add them to the menu
-    QMenu* submenuBoard = buildWindowMenu->addMenu(tr("Programming Port"));
+    QMenu* submenuBoard = swLibrarysubmenu->addMenu(tr("Programming Port"));
 
     foreach (const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts())
     {
@@ -248,6 +237,24 @@ void MainWindow::setupMenuBar()
 
         connect(b1, SIGNAL(toggled(bool)),this, SLOT(PortToggled(bool)));
     }
+
+    // QMenu* submenuCore = swLibrarysubmenu->addMenu(tr("Core"));
+    swLibrarysubmenu->addAction(tr("Core"), this, &MainWindow::swCoreSelect);
+
+    swLibrarysubmenu->addSeparator();
+    QAction *swAddCore = swLibrarysubmenu->addAction(tr("Add Core Support"), this, &MainWindow::addswCore);
+    swLibrarysubmenu->addAction(tr("Add Software Library"), this, &MainWindow::addswLibrary);
+
+    EditMenu->addSeparator();
+
+    EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
+
+    buildWindowMenu = menuBar()->addMenu(tr("&Build"));
+    buildAction = buildWindowMenu->addAction(tr("Build.."),this, &MainWindow::buildProject);
+    deployAction = buildWindowMenu->addAction(tr("Deploy.."), this, &MainWindow::deployProject);
+    cleanAction = buildWindowMenu->addAction(tr("Clean"), this, &MainWindow::cleanProject);
+    checkAction = buildWindowMenu->addAction(tr("Unit Test"), this, &MainWindow::checkProject);
+    runAction = buildWindowMenu->addAction(tr("Run"), this, &MainWindow::runProject);
 
     setBuildButtonToggles();
 
@@ -2395,6 +2402,77 @@ void MainWindow::addswLibrary()
     QApplication::restoreOverrideCursor();
 
     delete libraryinstaller;
+
+}
+
+void MainWindow::addswCore()
+{
+    // This should be visible for Arduino-CLI
+    bool ok;
+    QString corename = QInputDialog::getText(this, tr("Enter Core Name"),
+                                         tr("Core :"), QLineEdit::Normal,
+                                         "", &ok);
+
+    if (!ok || corename.isEmpty())
+        return;
+
+    QString libcmd;
+    QStringList libparams;
+
+    libcmd = QDir::homePath() + "/go/bin/arduino-cli";
+    libparams << "core" << "install" << corename;
+
+    showStatusDock(true);
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    QProcess *libraryinstaller = new QProcess(this);
+
+    libraryinstaller->setProcessChannelMode(QProcess::MergedChannels);
+    libraryinstaller->start(libcmd, libparams);
+
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    if (!libraryinstaller->waitForFinished())
+    {
+        showStatusMessage(tr("%1 failed - %2").arg(libparams[0]).arg(libraryinstaller->errorString()));
+    } else
+    {
+        QString processOutput(libraryinstaller->readAll());
+
+        showStatusMessage(tr("%1 succeeded - %2").arg(libparams[0]).arg(processOutput));
+    }
+
+    QApplication::restoreOverrideCursor();
+
+    delete libraryinstaller;
+
+}
+
+void MainWindow::swCoreSelect()
+{
+    QString coretype;
+    QString projectfilename = currentProject->getprojectconfigpath();
+    QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+    // Open the project configuration file if it exists
+    if (projectfilename.length())
+    {
+        coretype = boardfile.value("board/type","arduino:avr:mega").toString();
+    }
+    else
+        return;
+
+    // This should be visible for Arduino-CLI
+    bool ok;
+    QString corename = QInputDialog::getText(this, tr("Enter Core Name"),
+                                         tr("Core :"), QLineEdit::Normal,
+                                         coretype, &ok);
+
+    if (!ok || corename.isEmpty())
+        return;
+
+    boardfile.setValue("board/type",coretype);
 
 }
 
