@@ -183,13 +183,13 @@ ClixxIoTProject::ClixxIoTProject(QString project)
     if (!project.length())
         return;
 
-    projectpath = project;
+    m_projectpath = project;
 
 }
 
 QString ClixxIoTProject::getProjectDir()
 {
-    return(projectpath);
+    return(m_projectpath);
 }
 
 void ClixxIoTProject::setProjectDir(QString dirname)
@@ -197,10 +197,10 @@ void ClixxIoTProject::setProjectDir(QString dirname)
 
     if (QDir().setCurrent(dirname))
     {
-        projectpath = QDir().absolutePath();
-        name = QDir(projectpath).dirName();
+        m_projectpath = QDir().absolutePath();
+        m_name = QDir(m_projectpath).dirName();
 
-        qDebug() << "Project Name: " << name << "and Working directory changed to " << projectpath;
+        qDebug() << "Project Name: " << m_name << "and Working directory changed to " << m_projectpath;
     }
     else
         qDebug() << "Unable to change working directory to " << dirname;
@@ -209,8 +209,8 @@ void ClixxIoTProject::setProjectDir(QString dirname)
 
 QString ClixxIoTProject::getprojectconfigpath()
 {
-    if (name.length())
-        return(projectpath + "/" + name + ".ini");
+    if (m_name.length())
+        return(m_projectpath + "/" + m_name + ".ini");
     else
         return("");
 }
@@ -225,7 +225,7 @@ int ClixxIoTProject::Open(QString projectname)
 QStringList ClixxIoTProject::listfiles()
 {
 
-    QDir dir(projectpath);
+    QDir dir(m_projectpath);
     dir.setFilter(QDir::Files | QDir::NoSymLinks);
     QStringList results;
 

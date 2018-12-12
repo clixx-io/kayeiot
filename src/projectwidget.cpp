@@ -257,7 +257,20 @@ void ProjectWidget::deployProject()
         #endif
         makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform << mainwindow->currentProject->getProjectDir();
 
-        qDebug() << "Uploading using Arduino-cli" << makeparams;
+        if (m_targetplatform == "esp32:esp32:esp32")
+        {
+            // eg: esptool --chip esp32 --port COM3: --baud=921600 write_flash 0x10000 /Users/david/kayeiot/projects/helloworld/helloworld.esp32.esp32.esp32.bin
+            make = "esptool";
+            QString binname = mainwindow->currentProject->getProjectDir() + "/" + mainwindow->currentProject->name() + "." + m_targetplatform.replace(':','.') + ".bin";
+
+            makeparams.clear();
+            makeparams << "--chip=esp32" << "--port" << m_serialport << "--baud=921600" << "write_flash" << "0x10000" << binname;
+
+        }
+        else
+            qDebug() << "Uploading using Arduino-cli" << makeparams;
+
+
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);

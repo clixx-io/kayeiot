@@ -31,8 +31,8 @@ public:
 
 class ClixxIoTProject
 {
-    QString name,
-            projectpath;
+    QString m_name,
+            m_projectpath;
 
 protected:
     QSettings *settings;
@@ -40,6 +40,7 @@ protected:
 public:
     ClixxIoTProject(QString project = "");
 
+    QString name() { return m_name; }
     QString getProjectDir();
     QString getprojectconfigpath();
     void setProjectDir(QString dirname);
