@@ -30,7 +30,6 @@ NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent) :
 }
 
 NewHardwareItemDialog::NewHardwareItemDialog(QWidget *parent, QMap <QString,QVariant> *results) :
-
     QDialog(parent),
     ui(new Ui::NewHardwareItemDialog),
     havepastedimage(false),

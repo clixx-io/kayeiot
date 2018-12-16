@@ -1,25 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <author/>
- <comment/>
- <exportmacro/>
  <class>NewProjectDialog</class>
- <widget name="NewProjectDialog" class="QDialog">
+ <widget class="QDialog" name="NewProjectDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>526</width>
+    <height>471</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Create new Project</string>
   </property>
-  <widget name="buttonBox" class="QDialogButtonBox">
+  <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>240</y>
+     <x>170</x>
+     <y>430</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -31,8 +29,129 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
+  <widget class="QTreeWidget" name="treeWidget_Architecture">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>250</y>
+     <width>251</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <column>
+    <property name="text">
+     <string>Architecture</string>
+    </property>
+   </column>
+   <item>
+    <property name="text">
+     <string>ESP32</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>ESP8266</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>AVR</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>GNU</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QTreeWidget" name="treeWidget_Language">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>250</y>
+     <width>241</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <column>
+    <property name="text">
+     <string>Language</string>
+    </property>
+   </column>
+   <item>
+    <property name="text">
+     <string>Arduino</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>C++</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QTreeWidget" name="treeWidget_boardName">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>50</y>
+     <width>241</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <column>
+    <property name="text">
+     <string>Board</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QLineEdit" name="projectName">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>20</y>
+     <width>461</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="clearButtonEnabled">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>20</y>
+     <width>47</width>
+     <height>13</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Name</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_BoardImage">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>50</y>
+     <width>251</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Image</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
  </widget>
- <pixmapfunction/>
  <resources/>
  <connections>
   <connection>

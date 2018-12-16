@@ -24,7 +24,9 @@ HEADERS += mainwindow.h toolbar.h \
     fritzinglibrary.h \
     neweventsignaldialog.h \
     settingsdialog.h \
-    arduinosketch.h
+    arduinosketch.h \
+    arduinoclinterface.h \
+    newprojectdialog.h
 SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     codeeditor.cpp \
     outputwidget.cpp \
@@ -41,7 +43,9 @@ SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     fritzinglibrary.cpp \
     neweventsignaldialog.cpp \
     settingsdialog.cpp \
-    arduinosketch.cpp
+    arduinosketch.cpp \
+    arduinoclinterface.cpp \
+    newprojectdialog.cpp
 build_all:!build_pass {
     CONFIG -= build_all
     CONFIG += release
@@ -65,4 +69,5 @@ FORMS += \
     newconnectionitemdialog.ui \
     newgraphicitemdialog.ui \
     neweventsignaldialog.ui \
-    settingsdialog.ui
+    settingsdialog.ui \
+    newprojectdialog.ui

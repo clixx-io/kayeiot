@@ -169,6 +169,11 @@ bool ProjectWidget::buildProject(const QString buildspecifier)
     QString make;
     QStringList makeparams;
 
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    mainwindow->clearStatusMessages();
+    mainwindow->showStatusMessage(tr("Starting Build"));
+
     // Open the project configuration file if it exists
     QString projectfilename = mainwindow->currentProject->getprojectconfigpath();
     if (projectfilename.length())
@@ -227,6 +232,11 @@ void ProjectWidget::deployProject()
     QString make;
     QStringList makeparams;
 
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    mainwindow->clearStatusMessages();
+    mainwindow->showStatusMessage(tr("Starting Upload"));
+
     // Open the project configuration file if it exists
     QString projectfilename = mainwindow->currentProject->getprojectconfigpath();
     if (projectfilename.length())
@@ -270,7 +280,6 @@ void ProjectWidget::deployProject()
         else
             qDebug() << "Uploading using Arduino-cli" << makeparams;
 
-
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -298,6 +307,11 @@ void ProjectWidget::deployProject()
 
 void ProjectWidget::cleanProject()
 {
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    mainwindow->clearStatusMessages();
+    mainwindow->showStatusMessage(tr("Starting Clean"));
+
     if (m_buildsystem == "arduino-cli")
     {
 

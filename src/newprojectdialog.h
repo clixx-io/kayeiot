@@ -13,10 +13,18 @@ class NewProjectDialog : public QDialog
 
 public:
     explicit NewProjectDialog(QWidget *parent = 0);
+    NewProjectDialog(QWidget *parent, QMap <QString,QVariant> *results);
+
     ~NewProjectDialog();
+
+private slots:
+    void on_buttonBox_accepted();
 
 private:
     Ui::NewProjectDialog *ui;
+
+    QMap <QString, QVariant> *completed;
+
 };
 
 #endif // NEWPROJECTDIALOG_H

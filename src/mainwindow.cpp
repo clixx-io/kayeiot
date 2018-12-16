@@ -85,6 +85,7 @@
 #include "toolbar.h"
 #include "hardwarelayoutwidget.h"
 #include "hardwaregpio.h"
+#include "newprojectdialog.h"
 #include "newhardwareitemdialog.h"
 #include "newconnectionitemdialog.h"
 #include "newgraphicitemdialog.h"
@@ -945,6 +946,7 @@ void MainWindow::PortToggled(bool checked)
 
 void MainWindow::newProject()
 {
+    QMap <QString, QVariant> userchoices;
 
     QString dirname = Projects->getProjectsDir();
 
@@ -967,13 +969,21 @@ void MainWindow::newProject()
             return;
     }
 
-    bool projectnameok = false;
+    bool projectnameok(false), ok;
     while (!projectnameok)
     {
-        bool ok;
-        QString projectname = QInputDialog::getText(this, tr("Enter Project Name"),
-                                             tr("Project Name :"), QLineEdit::Normal,
-                                             QDir::home().dirName(), &ok);
+
+        QString projectname;
+
+        NewProjectDialog newProject(this, &userchoices);
+
+        int result = newProject.exec();
+        if(result == QDialog::Accepted)
+        {
+            projectname = userchoices["name"].toString();
+            ok = true;
+        } else
+            ok = false;
 
         if (!ok)
             break;
@@ -2472,7 +2482,8 @@ void MainWindow::swCoreSelect()
     if (!ok || corename.isEmpty())
         return;
 
-    boardfile.setValue("board/type",coretype);
+    boardfile.setValue("board/type",corename);
+    boardfile.sync();
 
 }
 
