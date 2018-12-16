@@ -25,7 +25,6 @@ HEADERS += mainwindow.h toolbar.h \
     neweventsignaldialog.h \
     settingsdialog.h \
     arduinosketch.h \
-    arduinoclinterface.h \
     newprojectdialog.h
 SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     codeeditor.cpp \
@@ -44,7 +43,6 @@ SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     neweventsignaldialog.cpp \
     settingsdialog.cpp \
     arduinosketch.cpp \
-    arduinoclinterface.cpp \
     newprojectdialog.cpp
 build_all:!build_pass {
     CONFIG -= build_all
