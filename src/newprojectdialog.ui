@@ -13,144 +13,112 @@
   <property name="windowTitle">
    <string>Create new Project</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>170</x>
-     <y>430</y>
-     <width>341</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QTreeWidget" name="treeWidget_Architecture">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>250</y>
-     <width>251</width>
-     <height>161</height>
-    </rect>
-   </property>
-   <column>
-    <property name="text">
-     <string>Architecture</string>
-    </property>
-   </column>
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <property name="text">
-     <string>ESP32</string>
-    </property>
+    <widget class="QLabel" name="label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+    </widget>
    </item>
    <item>
-    <property name="text">
-     <string>ESP8266</string>
-    </property>
+    <widget class="QLineEdit" name="projectName">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
    <item>
-    <property name="text">
-     <string>AVR</string>
-    </property>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QTreeWidget" name="treeWidget_boardName">
+        <column>
+         <property name="text">
+          <string>Board</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="label_BoardImage">
+        <property name="text">
+         <string>Image</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QTreeWidget" name="treeWidget_Architecture">
+        <column>
+         <property name="text">
+          <string>Architecture</string>
+         </property>
+        </column>
+        <item>
+         <property name="text">
+          <string>ESP32</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>ESP8266</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>AVR</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QTreeWidget" name="treeWidget_Language">
+        <column>
+         <property name="text">
+          <string>Language</string>
+         </property>
+        </column>
+        <item>
+         <property name="text">
+          <string>Arduino-CLI</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
-    <property name="text">
-     <string>GNU</string>
-    </property>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
    </item>
-  </widget>
-  <widget class="QTreeWidget" name="treeWidget_Language">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>250</y>
-     <width>241</width>
-     <height>161</height>
-    </rect>
-   </property>
-   <column>
-    <property name="text">
-     <string>Language</string>
-    </property>
-   </column>
-   <item>
-    <property name="text">
-     <string>Arduino</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>C++</string>
-    </property>
-   </item>
-  </widget>
-  <widget class="QTreeWidget" name="treeWidget_boardName">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>50</y>
-     <width>241</width>
-     <height>191</height>
-    </rect>
-   </property>
-   <column>
-    <property name="text">
-     <string>Board</string>
-    </property>
-   </column>
-  </widget>
-  <widget class="QLineEdit" name="projectName">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>20</y>
-     <width>461</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-   <property name="clearButtonEnabled">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>20</y>
-     <width>47</width>
-     <height>13</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Name</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_BoardImage">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>50</y>
-     <width>251</width>
-     <height>191</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Image</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
+  </layout>
  </widget>
  <resources/>
  <connections>

@@ -961,7 +961,7 @@ void MainWindow::newProject()
 
             if (!QDir().mkpath(dirname))
             {
-                showStatusMessage(tr("Unable to Parts Library Directory %1").arg(dirname));
+                showStatusMessage(tr("Unable to Projects Directory %1").arg(dirname));
                 return;
             }
         }
@@ -980,7 +980,7 @@ void MainWindow::newProject()
         int result = newProject.exec();
         if(result == QDialog::Accepted)
         {
-            projectname = userchoices["name"].toString();
+            projectname = userchoices["projectname"].toString();
             ok = true;
         } else
             ok = false;
@@ -995,12 +995,39 @@ void MainWindow::newProject()
 
             if (!QDir().mkpath(fullprojectdir))
             {
-                showStatusMessage(tr("Unable to create Project Library Directory %1").arg(fullprojectdir));
+                showStatusMessage(tr("Unable to create Project Directory %1").arg(fullprojectdir));
             }
             else
             {
                 projectnameok = true;
                 dirname = fullprojectdir;
+
+                // Create the configuration in there with basic details
+                QString projectfilename = fullprojectdir + "/" + userchoices["projectname"].toString() + ".ini";
+                qDebug() << "Creating Project filename:" << projectfilename;
+                if (projectfilename.length())
+                {
+                    QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+                    boardfile.setValue("project/type",userchoices["architecture"].toString());
+                    boardfile.setValue("project/language",userchoices["language"].toString());
+                    boardfile.setValue("project/boardname",userchoices["boardname"].toString());
+                    boardfile.setValue("project/boardfile",userchoices["boardfile"].toString());
+                    boardfile.setValue("project/fbqn",userchoices["fbqn"].toString());
+                    boardfile.sync();
+                }
+
+                // Create simple .ino
+                QFile file(fullprojectdir + "/" + userchoices["projectname"].toString() + ".ino");
+                file.open(QIODevice::WriteOnly);
+                QTextStream qout(&file);
+
+                QStringList baseIno;
+                baseIno << "// -- Automatically Generated Source file." << "" << "void setup() {" << "" << "}" << "" << "void loop() {" << "" << "}";
+                foreach (QString line, baseIno)
+                    qout << line << endl;
+
+                file.close();
 
                 setProjectDir(dirname);
             }

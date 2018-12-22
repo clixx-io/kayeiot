@@ -180,7 +180,7 @@ bool ProjectWidget::buildProject(const QString buildspecifier)
     {
         QSettings boardfile(projectfilename, QSettings::IniFormat);
 
-        m_targetplatform = boardfile.value("board/type","arduino:avr:mega").toString();
+        m_targetplatform = boardfile.value("board/fbqn","arduino:avr:mega").toString();
     }
 
     if (m_buildsystem == "gnu")
@@ -244,7 +244,7 @@ void ProjectWidget::deployProject()
         QSettings boardfile(projectfilename, QSettings::IniFormat);
 
         m_serialport = boardfile.value("upload/port").toString();
-        m_targetplatform = boardfile.value("board/type","arduino:avr:mega").toString();
+        m_targetplatform = boardfile.value("board/fbqn","arduino:avr:mega").toString();
     }
 
     if (m_buildsystem == "gnu")
