@@ -2495,7 +2495,7 @@ void MainWindow::swCoreSelect()
     // Open the project configuration file if it exists
     if (projectfilename.length())
     {
-        coretype = boardfile.value("board/type","arduino:avr:mega").toString();
+        coretype = boardfile.value("project/fbqn","arduino:avr:mega").toString();
     }
     else
         return;
@@ -2509,7 +2509,7 @@ void MainWindow::swCoreSelect()
     if (!ok || corename.isEmpty())
         return;
 
-    boardfile.setValue("board/type",corename);
+    boardfile.setValue("project/fbqn",corename);
     boardfile.sync();
 
 }

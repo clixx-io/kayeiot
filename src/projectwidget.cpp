@@ -69,7 +69,7 @@ bool ProjectWidget::loadProject(const QString dir)
         QSettings boardfile(projectfilename, QSettings::IniFormat);
 
         // Open the configuration file
-        m_buildsystem = boardfile.value("Project/Type","arduino-cli").toString();
+        m_buildsystem = boardfile.value("project/language","arduino-cli").toString().toLower();
 
         if (m_buildsystem == "gnu")
         {
@@ -180,7 +180,7 @@ bool ProjectWidget::buildProject(const QString buildspecifier)
     {
         QSettings boardfile(projectfilename, QSettings::IniFormat);
 
-        m_targetplatform = boardfile.value("board/fbqn","arduino:avr:mega").toString();
+        m_targetplatform = boardfile.value("project/fbqn","arduino:avr:mega").toString();
     }
 
     if (m_buildsystem == "gnu")
@@ -244,7 +244,7 @@ void ProjectWidget::deployProject()
         QSettings boardfile(projectfilename, QSettings::IniFormat);
 
         m_serialport = boardfile.value("upload/port").toString();
-        m_targetplatform = boardfile.value("board/fbqn","arduino:avr:mega").toString();
+        m_targetplatform = boardfile.value("project/fbqn","arduino:avr:mega").toString();
     }
 
     if (m_buildsystem == "gnu")
@@ -267,7 +267,7 @@ void ProjectWidget::deployProject()
         #endif
         makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform << mainwindow->currentProject->getProjectDir();
 
-        if (m_targetplatform == "esp32:esp32:esp32")
+        if (m_targetplatform.startsWith("esp32:esp32"))
         {
             // eg: esptool --chip esp32 --port COM3: --baud=921600 write_flash 0x10000 /Users/david/kayeiot/projects/helloworld/helloworld.esp32.esp32.esp32.bin
             make = "esptool";

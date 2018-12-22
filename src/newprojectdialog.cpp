@@ -56,7 +56,7 @@ void NewProjectDialog::on_buttonBox_accepted()
 
     if (ui->treeWidget_Architecture->selectedItems().count())
     {
-        object["architecture"] = ui->treeWidget_Architecture->selectedItems()[0]->text(0);
+        object["architecture"] = ui->treeWidget_Architecture->selectedItems()[0]->text(0).toLower();
     }
     else
         object["architecture"] = "";
@@ -75,11 +75,10 @@ void NewProjectDialog::on_buttonBox_accepted()
 
         // Try to locate the appropriate fbqn
         if (object["architecture"].toString().toLower() == "esp32")
-            object["fbqn"] = "esp32:esp32";
+            object["fbqn"] = "esp32:esp32:esp32";
         else if (object["architecture"].toString().toLower() == "esp8266")
-            object["fbqn"] = "esp8266:esp8266";
+            object["fbqn"] = "esp8266:esp8266:esp8266";
         else if (object["architecture"].toString().toLower() == "avr")
-
             // arduino:avr
             // Arduino UNO: arduino:avr:uno
             // Arduino Mega: arduino:avr:mega
