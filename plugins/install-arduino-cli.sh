@@ -1,12 +1,17 @@
 #!/bin/sh
 
 export GOPATH=$HOME/go
-export GOROOT=$HOME/.local/share/go
+#export GOROOT=$HOME/.local/share/go
 ACLIDIR=$HOME/go/bin
 ACLCMD=arduino-cli
 ACLCONFIG=$HOME/go/bin/.cli-config.yml
 
-go version >/dev/null 2>&1 || { echo "Go is required but it's not installed. Exiting."; exit 1; }
+if [ -x "$(go version)" ] 
+then 
+	echo "Go is required but it's not installed. Exiting."
+	exit 1
+fi
+	
 go get -u github.com/arduino/arduino-cli
 
 if [ -e $ACLIDIR/$ACLCMD ]
