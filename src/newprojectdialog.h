@@ -3,6 +3,9 @@
 
 #include <QDialog>
 
+#include "partslibrary.h"
+#include "mainwindow.h"
+
 namespace Ui {
 class NewProjectDialog;
 }
@@ -17,13 +20,19 @@ public:
 
     ~NewProjectDialog();
 
+    bool loadBoardList();
+
 private slots:
     void on_buttonBox_accepted();
+
+    void on_listWidget_boardName_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
 private:
     Ui::NewProjectDialog *ui;
 
     QMap <QString, QVariant> *completed;
+
+    PartsLibrary m_partslibrary;
 
 };
 

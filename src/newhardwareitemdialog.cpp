@@ -80,9 +80,9 @@ QStringList NewHardwareItemDialog::loadBoardFiles()
 
 bool NewHardwareItemDialog::loadBoardList()
 {
-    componentfiles = loadBoardFiles();
+    m_componentfiles = loadBoardFiles();
 
-    foreach (QString filename, componentfiles)
+    foreach (QString filename, m_componentfiles)
     {
         QSettings boardfile(filename, QSettings::IniFormat);
 
@@ -127,7 +127,7 @@ void NewHardwareItemDialog::searchLibrary(QString searchString)
 {
     ui->BoardNameslistWidget->clear();
 
-    foreach (QString filename, componentfiles)
+    foreach (QString filename, m_componentfiles)
     {
         QSettings boardfile(filename, QSettings::IniFormat);
 

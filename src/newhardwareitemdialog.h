@@ -58,7 +58,7 @@ private:
     bool havepastedimage,
          havesavedimage;
 
-    QStringList componentfiles;
+    QStringList m_componentfiles;
 
 };
 

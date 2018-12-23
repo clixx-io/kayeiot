@@ -48,17 +48,8 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QTreeWidget" name="treeWidget_boardName">
-        <column>
-         <property name="text">
-          <string>Board</string>
-         </property>
-        </column>
-       </widget>
-      </item>
       <item row="0" column="1">
-       <widget class="QLabel" name="label_BoardImage">
+       <widget class="QLabel" name="label_PartPicture">
         <property name="text">
          <string>Image</string>
         </property>
@@ -104,6 +95,9 @@
          </property>
         </item>
        </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QListWidget" name="listWidget_boardName"/>
       </item>
      </layout>
     </widget>

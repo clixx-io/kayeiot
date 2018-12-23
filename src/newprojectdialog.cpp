@@ -33,12 +33,19 @@ NewProjectDialog::NewProjectDialog(QWidget *parent, QMap <QString,QVariant> *res
         i->setSelected(true);
     }
 
-    // loadBoardList();
+    loadBoardList();
 }
 
 NewProjectDialog::~NewProjectDialog()
 {
     delete ui;
+}
+
+bool NewProjectDialog::loadBoardList()
+{
+
+    m_partslibrary.find(ui->listWidget_boardName,"","mcu");
+
 }
 
 void NewProjectDialog::on_buttonBox_accepted()
@@ -62,9 +69,9 @@ void NewProjectDialog::on_buttonBox_accepted()
         object["architecture"] = "";
 
     object["boardfile"] = "";
-    if (ui->treeWidget_boardName->selectedItems().count() > 0)
+    if (ui->listWidget_boardName->selectedItems().count() > 0)
     {
-        object["boardname"] = ui->treeWidget_boardName->selectedItems()[0]->text(0);
+        object["boardname"] = ui->listWidget_boardName->selectedItems()[0]->text();
     }
     else
         object["boardname"] = "";
@@ -92,4 +99,43 @@ void NewProjectDialog::on_buttonBox_accepted()
         object["fbqn"] = "";
 
     *completed = object;
+}
+
+
+void NewProjectDialog::on_listWidget_boardName_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+{
+    MainWindow *mainwindow = (MainWindow *) getMainWindow();
+    QVariant data = current->data(Qt::UserRole);
+    QString fullFilePath = data.toString();
+
+    QSettings boardfile(fullFilePath, QSettings::IniFormat);
+
+    QString imageFileName = mainwindow->Projects->getImagePathofBoardfile(fullFilePath) + "/" +
+                            boardfile.value("image/file","").toString();
+
+    QFileInfo check_file(imageFileName);
+
+    // check if file exists and if yes: Is it really a file and no directory?
+    if (check_file.exists() && check_file.isFile()) {
+
+        QPixmap pixmap(imageFileName);
+        if (pixmap.height())
+        {
+            qreal ar = (100 * pixmap.width()) / pixmap.height();
+
+            ui->label_PartPicture->setPixmap(pixmap);
+            ui->label_PartPicture->setScaledContents(true);
+            ui->label_PartPicture->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored );
+            ui->label_PartPicture->setFixedWidth(ui->label_PartPicture->height() * (ar / 100));
+            ui->label_PartPicture->update();
+        }
+        else
+        {
+            qDebug() << "Image file cannot be loaded:" << imageFileName;
+        }
+
+    } else {
+        ui->label_PartPicture->clear();
+        qDebug() << "Image file doesnt exist:" << imageFileName;
+    }
 }
