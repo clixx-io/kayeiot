@@ -25,7 +25,8 @@ HEADERS += mainwindow.h toolbar.h \
     neweventsignaldialog.h \
     settingsdialog.h \
     arduinosketch.h \
-    newprojectdialog.h
+    newprojectdialog.h \
+    partslibrary.h
 SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     codeeditor.cpp \
     outputwidget.cpp \
@@ -43,7 +44,8 @@ SOURCES += mainwindow.cpp toolbar.cpp main.cpp \
     neweventsignaldialog.cpp \
     settingsdialog.cpp \
     arduinosketch.cpp \
-    newprojectdialog.cpp
+    newprojectdialog.cpp \
+    partslibrary.cpp
 build_all:!build_pass {
     CONFIG -= build_all
     CONFIG += release
