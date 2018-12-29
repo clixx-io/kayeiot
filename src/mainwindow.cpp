@@ -1017,6 +1017,12 @@ void MainWindow::newProject()
                     boardfile.sync();
                 }
 
+                if (systemDesign)
+                {
+                    qDebug() << "Boardfile: " << userchoices["boardfile"].toString();
+                    systemDesign->addToScene(userchoices["boardname"].toString(),userchoices["boardfile"].toString());
+                }
+
                 // Create simple .ino
                 QFile file(fullprojectdir + "/" + userchoices["projectname"].toString() + ".ino");
                 file.open(QIODevice::WriteOnly);

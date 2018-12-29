@@ -68,7 +68,10 @@ void NewProjectDialog::on_buttonBox_accepted()
     else
         object["architecture"] = "";
 
-    object["boardfile"] = "";
+    QListWidgetItem *item = ui->listWidget_boardName->selectedItems()[0];
+    QVariant data = item->data(Qt::UserRole);
+    object["boardfile"] = data.toString();
+
     if (ui->listWidget_boardName->selectedItems().count() > 0)
     {
         object["boardname"] = ui->listWidget_boardName->selectedItems()[0]->text();
