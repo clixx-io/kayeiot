@@ -1023,16 +1023,31 @@ void MainWindow::newProject()
                     systemDesign->addToScene(userchoices["boardname"].toString(),userchoices["boardfile"].toString());
                 }
 
-                // Create simple .ino
-                QFile file(fullprojectdir + "/" + userchoices["projectname"].toString() + ".ino");
+                qDebug() << "Language:" << userchoices["language"].toString();
+                QStringList baseFile;
+                QString scriptname;
+                if (userchoices["language"].toString().toLower() == "nodemcu")
+                {
+                    scriptname = "init.lua";
+                    baseFile << "--init.lua";
+                }
+                else if (userchoices["language"].toString().toLower() == "arduino-cli")
+                {
+                    scriptname = userchoices["projectname"].toString() + ".ino";
+                    baseFile << "// -- Automatically Generated Source file." << "" << "void setup() {" << "" << "}" << "" << "void loop() {" << "" << "}";
+                }
+                else if (userchoices["language"].toString().toLower() == "c++")
+                {
+                    scriptname = userchoices["projectname"].toString() + ".cpp";
+                    baseFile << "// -- Automatically Generated Source file." << "" << "int main() {" << "    return(0)" << "}";
+                }
+
+                // Create file object and write it
+                QFile file(fullprojectdir + "/" + scriptname);
                 file.open(QIODevice::WriteOnly);
                 QTextStream qout(&file);
-
-                QStringList baseIno;
-                baseIno << "// -- Automatically Generated Source file." << "" << "void setup() {" << "" << "}" << "" << "void loop() {" << "" << "}";
-                foreach (QString line, baseIno)
+                foreach (QString line, baseFile)
                     qout << line << endl;
-
                 file.close();
 
                 setProjectDir(dirname);

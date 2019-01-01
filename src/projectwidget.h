@@ -27,10 +27,11 @@ public:
     const QString hardwareLayoutFilename = "hardware.layout";
 
 public slots:
-    void deployProject();
     void cleanProject();
     void checkProject();
+    void deployProject();
     void runProject();
+    void deployFirmWare();
 
 private slots:
     void on_projectFileList_itemDoubleClicked(QTreeWidgetItem *item, int column);

@@ -26,7 +26,7 @@ ProjectWidget::ProjectWidget(QWidget *parent) :
     m_targetplatform = "";
 
     QStringList buildsystems;
-    buildsystems << "gnu" << "cmake" << "arduino-cli" << "qmake";
+    buildsystems << "gnu" << "cmake" << "arduino-cli" << "qmake" << "nodemcu";
 
     ui->setupUi(this);
 
@@ -258,6 +258,12 @@ void ProjectWidget::deployProject()
 
         makeparams << "deploy";
 
+    } else if (m_buildsystem == "nodemcu")
+    {
+
+        make = "nodemcu-uploader";
+        makeparams << "--port" << m_serialport << "upload" << m_targetplatform << mainwindow->currentProject->getProjectDir();
+
     } else if (m_buildsystem == "arduino-cli")
     {
         #ifdef Q_OS_WIN32
@@ -265,7 +271,7 @@ void ProjectWidget::deployProject()
         #else
             make = m_buildtoolspath + "/arduino-cli";
         #endif
-        makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform << mainwindow->currentProject->getProjectDir();
+        makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform << mainwindow->currentProject->getProjectDir()  + "/" + mainwindow->currentProject->name() + ".lua";
 
         if (m_targetplatform.startsWith("esp32:esp32"))
         {
@@ -335,3 +341,54 @@ void ProjectWidget::on_projectFileList_itemDoubleClicked(QTreeWidgetItem *item, 
     mainwindow->LoadCodeSource(filename);
 
 }
+
+void ProjectWidget::deployFirmWare()
+{
+    QString make;
+    QStringList makeparams;
+
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    mainwindow->clearStatusMessages();
+    mainwindow->showStatusMessage(tr("Starting Upload"));
+
+    // Open the project configuration file if it exists
+    QString projectfilename = mainwindow->currentProject->getprojectconfigpath();
+    if (projectfilename.length())
+    {
+        QSettings boardfile(projectfilename, QSettings::IniFormat);
+
+        m_serialport = boardfile.value("upload/port").toString();
+    }
+
+    if (m_buildsystem == "nodemcu")
+    {
+        // Example esptool --port COM10 write_flash 0x1000 nodemcu-1.5.4.1-final-7-modules-2018-12-31-22-53-39-integer.bin
+        make = "espool";
+        makeparams << "--port" << m_serialport << "write_flash" << "0x1000" << "nodemcu-1.5.4.1-final-7-modules-2018-12-31-22-53-39-integer.bin";
+
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    if (!builder)
+        builder = new QProcess(this);
+
+    builder->setProcessChannelMode(QProcess::MergedChannels);
+    builder->setWorkingDirectory(mainwindow->currentProject->getProjectDir());
+    builder->start(make,makeparams);
+
+    if (!builder->waitForFinished())
+    {
+        mainwindow->showStatusMessage(tr("Upload failed - %1").arg(builder->errorString()));
+
+    } else
+    {
+        QString processOutput(builder->readAll());
+
+        mainwindow->showStatusMessage(tr("Upload succeeded - %1").arg(processOutput));
+    }
+
+    QApplication::restoreOverrideCursor();
+}
+
