@@ -222,22 +222,10 @@ void MainWindow::setupMenuBar()
     EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
     EditMenu->addSeparator();
     QMenu* swLibrarysubmenu = EditMenu->addMenu(tr("Arduino-CLI Settings"));
+
     // Scan all the Serial Ports and add them to the menu
-    QMenu* submenuBoard = swLibrarysubmenu->addMenu(tr("Programming Port"));
-
-    foreach (const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts())
-    {
-
-    #if defined(Q_OS_LINUX)
-        QAction* b1 = submenuBoard->addAction(tr("/dev/%1").arg(serialPortInfo.portName()));
-    #else
-        QAction* b1 = submenuBoard->addAction(serialPortInfo.portName());
-    #endif
-
-        b1->setCheckable(true);
-
-        connect(b1, SIGNAL(toggled(bool)),this, SLOT(PortToggled(bool)));
-    }
+    submenuProgPort = swLibrarysubmenu->addMenu(tr("Programming Port"));
+    connect(submenuProgPort,SIGNAL(aboutToShow()),this, SLOT(updateSerialPorts()));
 
     // QMenu* submenuCore = swLibrarysubmenu->addMenu(tr("Core"));
     swLibrarysubmenu->addAction(tr("Core"), this, &MainWindow::swCoreSelect);
@@ -2591,6 +2579,24 @@ void MainWindow::showStatusDock(bool viewStatus)
 
 }
 
+void MainWindow::updateSerialPorts()
+{
+    submenuProgPort->clear();
+    foreach (const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts())
+    {
+
+    #if defined(Q_OS_LINUX)
+        QAction* b1 = submenuProgPort->addAction(tr("/dev/%1").arg(serialPortInfo.portName()));
+    #else
+        QAction* b1 = submenuProgPort->addAction(serialPortInfo.portName());
+    #endif
+
+        b1->setCheckable(true);
+
+        connect(b1, SIGNAL(toggled(bool)),this, SLOT(PortToggled(bool)));
+    }
+}
+
 void MainWindow::showStatusMessage(const QString &message)
 {
     if (userMessages)
@@ -2611,4 +2617,5 @@ QMainWindow* getMainWindow()
             return (QMainWindow*) (*i);
     return NULL;
 }
+
 

@@ -110,6 +110,7 @@ public:
     QSettings *settings;
     HardwareGPIO *gpio;
     QDockWidget *gpioDock;
+    QMenu* submenuProgPort;
 
 public slots:
 
@@ -153,6 +154,8 @@ public slots:
     void addswLibrary();
     void addswCore();
     void swCoreSelect();
+
+    void updateSerialPorts();
 
     void actionTriggered(QAction *action);
     void saveLayout();
