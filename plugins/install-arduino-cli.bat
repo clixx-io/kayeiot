@@ -16,5 +16,6 @@ if not exist %ACLIDIR%\.cli-config.yml (
  echo  .cli-config.yml already installed.
 )
 %ACLIDIR%\arduino-cli core update-index
+%ACLIDIR%\arduino-cli core install arduino:avr
 %ACLIDIR%\arduino-cli core install esp8266:esp8266
 %ACLIDIR%\arduino-cli core install esp32:esp32
