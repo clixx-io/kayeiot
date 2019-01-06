@@ -258,11 +258,24 @@ void ProjectWidget::deployProject()
 
         makeparams << "deploy";
 
-    } else if (m_buildsystem == "nodemcu")
+    }
+    else if (m_buildsystem == "espidf")
+    {
+
+        #ifdef Q_OS_WIN32
+            make = "mingw32-make.exe";
+        #else
+            make = "make";
+        #endif
+
+        makeparams << "flash";
+
+    }
+    else if (m_buildsystem == "nodemcu")
     {
 
         make = "nodemcu-uploader";
-        makeparams << "--port" << m_serialport << "upload" << m_targetplatform << mainwindow->currentProject->getProjectDir();
+        makeparams << "--port" << m_serialport << "upload" << m_targetplatform << mainwindow->currentProject->getProjectDir() + "/" + mainwindow->currentProject->name() + ".lua";
 
     } else if (m_buildsystem == "arduino-cli")
     {
@@ -271,7 +284,7 @@ void ProjectWidget::deployProject()
         #else
             make = m_buildtoolspath + "/arduino-cli";
         #endif
-        makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform << mainwindow->currentProject->getProjectDir()  + "/" + mainwindow->currentProject->name() + ".lua";
+        makeparams << "upload" << "--port" << m_serialport << "--fqbn" << m_targetplatform << mainwindow->currentProject->getProjectDir();
 
         if (m_targetplatform.startsWith("esp32:esp32"))
         {
