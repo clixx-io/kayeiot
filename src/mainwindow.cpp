@@ -221,20 +221,6 @@ void MainWindow::setupMenuBar()
     EditMenu->addSeparator();
     EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
     EditMenu->addSeparator();
-    QMenu* swLibrarysubmenu = EditMenu->addMenu(tr("Arduino-CLI Settings"));
-
-    // Scan all the Serial Ports and add them to the menu
-    submenuProgPort = swLibrarysubmenu->addMenu(tr("Programming Port"));
-    connect(submenuProgPort,SIGNAL(aboutToShow()),this, SLOT(updateSerialPorts()));
-
-    // QMenu* submenuCore = swLibrarysubmenu->addMenu(tr("Core"));
-    swLibrarysubmenu->addAction(tr("Core"), this, &MainWindow::swCoreSelect);
-
-    swLibrarysubmenu->addSeparator();
-    QAction *swAddCore = swLibrarysubmenu->addAction(tr("Add Core Support"), this, &MainWindow::addswCore);
-    swLibrarysubmenu->addAction(tr("Add Software Library"), this, &MainWindow::addswLibrary);
-
-    EditMenu->addSeparator();
 
     EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
 
@@ -244,6 +230,19 @@ void MainWindow::setupMenuBar()
     cleanAction = buildWindowMenu->addAction(tr("Clean"), this, &MainWindow::cleanProject);
     checkAction = buildWindowMenu->addAction(tr("Unit Test"), this, &MainWindow::checkProject);
     runAction = buildWindowMenu->addAction(tr("Run"), this, &MainWindow::runProject);
+
+    buildWindowMenu->addSeparator();
+    QMenu* swLibrarysubmenu = buildWindowMenu->addMenu(tr("Arduino-CLI Settings"));
+
+    // Scan all the Serial Ports and add them to the menu
+    submenuProgPort = swLibrarysubmenu->addMenu(tr("Programming Port"));
+    connect(submenuProgPort,SIGNAL(aboutToShow()),this, SLOT(updateSerialPorts()));
+
+    swLibrarysubmenu->addAction(tr("Core"), this, &MainWindow::swCoreSelect);
+    swLibrarysubmenu->addSeparator();
+
+    QAction *swAddCore = swLibrarysubmenu->addAction(tr("Add Core Support"), this, &MainWindow::addswCore);
+    swLibrarysubmenu->addAction(tr("Add Software Library"), this, &MainWindow::addswLibrary);
 
     setBuildButtonToggles();
 
