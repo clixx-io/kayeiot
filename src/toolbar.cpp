@@ -225,9 +225,21 @@ ToolBar::ToolBar(const QString &title, QWidget *parent)
     const QIcon buildIcon(QPixmap(":/res/res/build-32.png"));
     buildmenu->setIcon(buildIcon);
     buildAction = buildmenu->addAction(genIcon(iconSize(), "A", Qt::blue), tr("Build"));
+    const QIcon smallbuildIcon(QPixmap(":/res/res/build-16x16.png"));
+    buildAction->setIcon(smallbuildIcon);
+
     deployAction = buildmenu->addAction(genIcon(iconSize(), "B", Qt::blue), tr("Deploy / Upload"));
+    const QIcon uploadIcon(QPixmap(":/res/res/upload.png"));
+    deployAction->setIcon(uploadIcon);
+
     checkAction = buildmenu->addAction(genIcon(iconSize(), "C", Qt::blue), tr("Run Unit Tests"));
+    const QIcon testIcon(QPixmap(":/res/res/test-16x16.png"));
+    checkAction->setIcon(testIcon);
+
     cleanAction = buildmenu->addAction(genIcon(iconSize(), "D", Qt::blue), tr("Clean"));
+    const QIcon cleanIcon(QPixmap(":/res/res/clean-16x16.png"));
+    cleanAction->setIcon(cleanIcon);
+
     addAction(buildmenu->menuAction());
     buildmenu->setDefaultAction(buildAction);
     connect(buildAction, &QAction::triggered, mainwindow, &MainWindow::buildProject);

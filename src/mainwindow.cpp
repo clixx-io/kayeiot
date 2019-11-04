@@ -172,9 +172,17 @@ void MainWindow::setupMenuBar()
     QMenu *menu = menuBar()->addMenu(tr("&File"));
 
 #if QT_VERSION >= 0x050000
-    menu->addAction(tr("New Project.."),this, &MainWindow::newProject);
-    menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
+    QAction *newProjectAction = menu->addAction(tr("New Project.."),this, &MainWindow::newProject);
+    const QIcon newProjectIcon(QPixmap(":/res/res/new-16x16.png"));
+    newProjectAction->setIcon(newProjectIcon);
+
+    QAction *loadProjectAction = menu->addAction(tr("Load Project.."), this, &MainWindow::loadProject);
+    const QIcon loadProjectIcon(QPixmap(":/res/res/project-edit-16x16.png"));
+    loadProjectAction->setIcon(loadProjectIcon);
+
     recentProjectsmenu = menu->addMenu(tr("Recent Projects"));
+    const QIcon recentProjectIcon(QPixmap(":/res/res/project-recent-16x16.png"));
+    recentProjectsmenu->setIcon(recentProjectIcon);
 
     menu->addSeparator();
 
@@ -186,7 +194,9 @@ void MainWindow::setupMenuBar()
     // QAction* actionArduinoBoardImport = Importsubmenu->addAction("Arduino Board Files" );
     // QAction* actionArduinoLibraryImport = Importsubmenu->addAction("Arduino Libraries" );
 
-    menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
+    QAction *saveProjectAction = menu->addAction(tr("&Save"), this, &MainWindow::saveFile);
+    const QIcon saveProjectIcon(QPixmap(":/res/res/save-16x16.png"));
+    saveProjectAction->setIcon(saveProjectIcon);
     menu->addSeparator();
 
     QMenu* hwLibrarysubmenu = menu->addMenu(tr("Hardware Library"));
@@ -206,30 +216,69 @@ void MainWindow::setupMenuBar()
     menu->addSeparator();
 
     menu->addAction(tr("Print Pre&view"), this, &MainWindow::printPreview);
-    menu->addAction(tr("&Print"), this, &MainWindow::printFile);
+    QAction *printAction = menu->addAction(tr("&Print"), this, &MainWindow::printFile);
+    const QIcon printIcon(QPixmap(":/res/res/print-16x16.png"));
+    printAction->setIcon(printIcon);
     menu->addSeparator();
-    menu->addAction(tr("&Quit"), this, &QWidget::close);
+
+    QAction *quitAction = menu->addAction(tr("&Quit"), this, &QWidget::close);
+    const QIcon quitIcon(QPixmap(":/res/res/quit-16x16.png"));
+    quitAction->setIcon(quitIcon);
 
     EditMenu = menuBar()->addMenu(tr("&Edit"));
-    EditMenu->addAction(tr("Cut"),this, &MainWindow::cutText);
-    EditMenu->addAction(tr("Copy"), this, &MainWindow::copyText);
-    EditMenu->addAction(tr("Paste"), this, &MainWindow::pasteText);
-    EditMenu->addSeparator();
-    EditMenu->addAction(tr("Select All"), this, &MainWindow::selectAllText);
-    EditMenu->addSeparator();
-    EditMenu->addAction(tr("Find/Replace"), this, &MainWindow::FindReplaceText);
-    EditMenu->addSeparator();
-    EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
+
+    QAction *cutAction = EditMenu->addAction(tr("Cut"),this, &MainWindow::cutText);
+    const QIcon cutIcon(QPixmap(":/res/res/clipboard-cut.png"));
+    cutAction->setIcon(cutIcon);
+
+    QAction *copyAction = EditMenu->addAction(tr("Copy"), this, &MainWindow::copyText);
+    const QIcon copyIcon(QPixmap(":/res/res/clipboard-copy.png"));
+    copyAction->setIcon(copyIcon);
+
+    QAction *pasteAction = EditMenu->addAction(tr("Paste"), this, &MainWindow::pasteText);
+    const QIcon pasteIcon(QPixmap(":/res/res/clipboard-paste.png"));
+    pasteAction->setIcon(pasteIcon);
     EditMenu->addSeparator();
 
-    EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
+    QAction *selectAllAction = EditMenu->addAction(tr("Select All"), this, &MainWindow::selectAllText);
+    const QIcon selectallIcon(QPixmap(":/res/res/select-all.png"));
+    selectAllAction->setIcon(selectallIcon);
+    EditMenu->addSeparator();
+
+    QAction *findAction = EditMenu->addAction(tr("Find/Replace"), this, &MainWindow::FindReplaceText);
+    const QIcon findIcon(QPixmap(":/res/res/text-search.png"));
+    findAction->setIcon(findIcon);
+    EditMenu->addSeparator();
+
+    QAction *gotoAction = EditMenu->addAction(tr("Goto Line"), this, &MainWindow::GotoLineText);
+    const QIcon gotoIcon(QPixmap(":/res/res/text-goto.png"));
+    gotoAction->setIcon(gotoIcon);
+    EditMenu->addSeparator();
+
+    QAction *settingsAction = EditMenu->addAction(tr("Settings"), this, &MainWindow::UserSettings);
+    const QIcon settingsIcon(QPixmap(":/res/res/settings.png"));
+    settingsAction->setIcon(settingsIcon);
 
     buildWindowMenu = menuBar()->addMenu(tr("&Build"));
+    const QIcon buildIcon(QPixmap(":/res/res/build-16x16.png"));
     buildAction = buildWindowMenu->addAction(tr("Build.."),this, &MainWindow::buildProject);
+    buildAction->setIcon(buildIcon);
+
     deployAction = buildWindowMenu->addAction(tr("Deploy.."), this, &MainWindow::deployProject);
+    const QIcon uploadIcon(QPixmap(":/res/res/upload.png"));
+    deployAction->setIcon(uploadIcon);
+
     cleanAction = buildWindowMenu->addAction(tr("Clean"), this, &MainWindow::cleanProject);
+    const QIcon cleanIcon(QPixmap(":/res/res/clean-16x16.png"));
+    cleanAction->setIcon(cleanIcon);
+
     checkAction = buildWindowMenu->addAction(tr("Unit Test"), this, &MainWindow::checkProject);
+    const QIcon testIcon(QPixmap(":/res/res/test-16x16.png"));
+    checkAction->setIcon(testIcon);
+
     runAction = buildWindowMenu->addAction(tr("Run"), this, &MainWindow::runProject);
+    const QIcon runIcon(QPixmap(":/res/res/run-16x16.png"));
+    runAction->setIcon(runIcon);
 
     buildWindowMenu->addSeparator();
     QMenu* swLibrarysubmenu = buildWindowMenu->addMenu(tr("Arduino-CLI Settings"));

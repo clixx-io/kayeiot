@@ -22,5 +22,23 @@
         <file>res/report-mode-32x32.png</file>
         <file>res/add-cable1-32x32.png</file>
         <file>res/add-Text-32x32.png</file>
+        <file>res/text-search.png</file>
+        <file>res/clipboard-copy.png</file>
+        <file>res/clipboard-cut.png</file>
+        <file>res/clipboard-paste.png</file>
+        <file>res/settings.png</file>
+        <file>res/text-goto.png</file>
+        <file>res/select-all.png</file>
+        <file>res/upload.png</file>
+        <file>res/build-16x16.png</file>
+        <file>res/clean-16x16.png</file>
+        <file>res/test-16x16.png</file>
+        <file>res/run-16x16.png</file>
+        <file>res/new-16x16.png</file>
+        <file>res/project-edit-16x16.png</file>
+        <file>res/project-recent-16x16.png</file>
+        <file>res/save-16x16.png</file>
+        <file>res/quit-16x16.png</file>
+        <file>res/print-16x16.png</file>
     </qresource>
 </RCC>
