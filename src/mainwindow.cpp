@@ -1175,16 +1175,28 @@ void MainWindow::selectAllText()
 
 void MainWindow::FindReplaceText()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    bool ok;
+
+    QString searchtext = QInputDialog::getText(this, tr("Search"), tr("Please enter search text :"), QLineEdit::Normal, "", &ok);
+    if (ok)
+    {
+        QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("%1 not found").arg(searchtext),QMessageBox::Ok);
+        msgBox.exec();
+    }
 
     return;
 }
 
 void MainWindow::GotoLineText()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    bool ok;
+    int i = QInputDialog::getInt(this, tr("Goto Line"),
+                                 tr("Linenumber:"), 25, 0, 100, 1, &ok);
+    if (ok)
+    {
+        QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Line %1 not found").arg(i),QMessageBox::Ok);
+        msgBox.exec();
+    }
 
     return;
 }
