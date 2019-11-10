@@ -1143,32 +1143,40 @@ void MainWindow::loadProject()
 
 void MainWindow::cutText()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    if (center)
+    {
+        center->cut();
+    }
 
     return;
 }
 
 void MainWindow::copyText()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    if (center)
+    {
+        center->copy();
+    }
 
     return;
 }
 
 void MainWindow::pasteText()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    if (center)
+    {
+        center->paste();
+    }
 
     return;
 }
 
 void MainWindow::selectAllText()
 {
-    QMessageBox msgBox(QMessageBox::Critical, tr("Problem"), tr("Not yet implemented"),QMessageBox::Ok);
-    msgBox.exec();
+    if (center)
+    {
+        center->selectAll();
+    }
 
     return;
 }
