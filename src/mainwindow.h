@@ -107,7 +107,6 @@ public:
     CodeEditor *center;
     CommunicatorSerialWidget *commWindow;
     ToolBar *toolBar;
-    QSettings *settings;
     HardwareGPIO *gpio;
     QDockWidget *gpioDock;
     QMenu* submenuProgPort;

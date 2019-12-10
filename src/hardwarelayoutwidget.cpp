@@ -1050,9 +1050,9 @@ HardwareLayoutWidget::HardwareLayoutWidget(QGraphicsScene *existingScene, QWidge
     connect(addgraphicshortcut, SIGNAL(activated()), mainwindow, SLOT(AddConnectableGraphic()));
 
     // Restore the last theme
-    MainWindow *mw = (MainWindow * ) getMainWindow();
-    setDesignTheme(mw->settings->value("System_Designer/Theme","default").toString());
-    m_unitSystem = mw->settings->value("global/units","mm").toString();
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
+    setDesignTheme(settings.value("System_Designer/Theme","default").toString());
+    m_unitSystem = settings.value("global/units","mm").toString();
 
     // Setup the Timer to control the scene
     m_timer = new QTimer(this);
@@ -2880,8 +2880,8 @@ void HardwareLayoutWidget::finalMode()
         m_finalmode = false;
 
         // Add the Color theme back
-        MainWindow *mw = (MainWindow * ) getMainWindow();
-        setDesignTheme(mw->settings->value("System_Designer/Theme","default").toString());
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
+        setDesignTheme(settings.value("System_Designer/Theme","default").toString());
 
     }
 

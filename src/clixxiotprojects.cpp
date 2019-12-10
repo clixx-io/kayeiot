@@ -159,11 +159,11 @@ QMap <QString, QString> ClixxIoTProjects::getRecentProjects()
 QString ClixxIoTProjects::getProjectsDir()
 {
 
-    QString projectDir("/KayeIoT/projects");
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
 
-    projectDir = projectDir.insert(0,QDir::homePath());
+    QString projectsdir = settings.value(QObject::tr("directories/projects"),QObject::tr("%1/KayeIoT/projects").arg(QDir::homePath())).toString();
 
-    return(projectDir);
+    return(projectsdir);
 
 }
 

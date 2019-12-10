@@ -103,7 +103,6 @@ MainWindow::MainWindow(const CustomSizeHintMap &customSizeHints,
     systemDesign(Q_NULLPTR),
     commWindow(Q_NULLPTR),
     toolBar(Q_NULLPTR),
-    settings(Q_NULLPTR),
     gpio(Q_NULLPTR),
     gpioDock(Q_NULLPTR),
     UserMsgDock(Q_NULLPTR),
@@ -141,7 +140,6 @@ MainWindow::MainWindow(const CustomSizeHintMap &customSizeHints,
 
     Projects = new ClixxIoTProjects();
     currentProject = new ClixxIoTProject();
-    settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
 
     setupToolBar();
     setupMenuBar();
@@ -667,7 +665,9 @@ static QAction *addCornerAction(const QString &text, QMainWindow *mw, QMenu *men
 
 void MainWindow::setupDockWidgets()
 {
-    if (settings->value("MainWindow/Mode").toString() == "Code")
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
+
+    if (settings.value("MainWindow/Mode").toString() == "Code")
     {
         architectureLogic();
     }
@@ -868,11 +868,12 @@ void MainWindow::setProjectDir(QString dirname)
     }
 
     // Read the last five projects
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
     QStringList recentProjects;
     QString projectdir(dirname), lastproject;
     for (int i=0; i < 5; i++)
     {
-        lastproject = settings->value(QObject::tr("recent-projects/project-%1").arg(i + 1)).toString();
+        lastproject = settings.value(QObject::tr("recent-projects/project-%1").arg(i + 1)).toString();
 
         if (lastproject != projectdir)
         {
@@ -894,7 +895,7 @@ void MainWindow::setProjectDir(QString dirname)
         else
             lastproject = "";
 
-        settings->setValue(QObject::tr("recent-projects/project-%1").arg(i + 1),lastproject);
+        settings.setValue(QObject::tr("recent-projects/project-%1").arg(i + 1),lastproject);
 
     }
     reloadRecentProjects();
@@ -1286,7 +1287,8 @@ void MainWindow::architectureSystem()
 
     setCentralWidget(systemDesign);
 
-    settings->setValue("MainWindow/Mode","Hardware");
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
+    settings.setValue("MainWindow/Mode","Hardware");
 
 }
 
@@ -1388,7 +1390,8 @@ void MainWindow::architectureLogic()
     center->setMinimumSize(400, 205);
     setCentralWidget(center);
 
-    settings->setValue("MainWindow/Mode","Code");
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
+    settings.setValue("MainWindow/Mode","Code");
 
 }
 
@@ -1444,9 +1447,10 @@ void MainWindow::designThemeSelect()
             systemDesign->setDesignTheme(item);
 
             // Save the value
-            settings->beginGroup("System_Designer");
-            settings->setValue("Theme",item);
-            settings->endGroup();
+            QSettings settings(QSettings::IniFormat, QSettings::UserScope, "clixx.io", "Kayeiot");
+            settings.beginGroup("System_Designer");
+            settings.setValue("Theme",item);
+            settings.endGroup();
 
         }
 
